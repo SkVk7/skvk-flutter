@@ -1,0 +1,128 @@
+THIRD-PARTY LICENSES
+====================
+
+This application uses the following third-party libraries and components:
+
+1. SWISS EPHEMERIS
+   License: Professional Commercial License
+   Copyright: © Astrodienst AG, Zurich, Switzerland
+   Website: https://www.astro.com/swisseph/
+   Email: swiss@astro.ch
+   
+   This application uses Swiss Ephemeris under a professional commercial license
+   purchased from Astrodienst AG. Commercial use is permitted for this specific
+   application only. Attribution is required in the application interface.
+
+2. FLUTTER
+   License: BSD License
+   Copyright: Copyright 2014 The Flutter Authors. All rights reserved.
+   Website: https://flutter.dev/
+   
+   Redistribution and use in source and binary forms, with or without modification,
+   are permitted provided that the following conditions are met:
+   - Redistributions of source code must retain the above copyright notice
+   - Redistributions in binary form must reproduce the above copyright notice
+   - Neither the name of Google Inc. nor the names of its contributors may be used
+     to endorse or promote products derived from this software without specific
+     prior written permission.
+
+3. GOOGLE FONTS
+   License: Open Font License
+   Copyright: Copyright (c) 2010-2023, Google LLC
+   Website: https://fonts.google.com/
+   
+   This Font Software is licensed under the SIL Open Font License, Version 1.1.
+   This license is available with a FAQ at: https://openfontlicense.org
+
+4. LUCIDE ICONS
+   License: ISC License
+   Copyright: Copyright (c) 2020, Lucide Contributors
+   Website: https://lucide.dev/
+   
+   Permission to use, copy, modify, and/or distribute this software for any purpose
+   with or without fee is hereby granted, provided that the above copyright notice
+   and this permission notice appear in all copies.
+
+5. RIVERPOD
+   License: MIT License
+   Copyright: Copyright (c) 2020 Remi Rousselet
+   Website: https://riverpod.dev/
+   
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software.
+
+6. HTTP
+   License: BSD License
+   Copyright: Copyright (c) 2013, the Dart project authors
+   Website: https://pub.dev/packages/http
+
+7. SHARED_PREFERENCES
+   License: BSD License
+   Copyright: Copyright 2013 The Flutter Authors
+   Website: https://pub.dev/packages/shared_preferences
+
+8. PATH_PROVIDER
+   License: BSD License
+   Copyright: Copyright 2013 The Flutter Authors
+   Website: https://pub.dev/packages/path_provider
+
+9. CONNECTIVITY_PLUS
+   License: BSD License
+   Copyright: Copyright 2013 The Flutter Authors
+   Website: https://pub.dev/packages/connectivity_plus
+
+10. GEOLOCATOR
+    License: BSD License
+    Copyright: Copyright (c) 2018 Baseflow
+    Website: https://pub.dev/packages/geolocator
+
+11. PERMISSION_HANDLER
+    License: BSD License
+    Copyright: Copyright (c) 2018 Baseflow
+    Website: https://pub.dev/packages/permission_handler
+
+12. CACHED_NETWORK_IMAGE
+    License: MIT License
+    Copyright: Copyright (c) 2018 Rene Floor
+    Website: https://pub.dev/packages/cached_network_image
+
+13. SHIMMER
+    License: MIT License
+    Copyright: Copyright (c) 2018 Simon Lightfoot
+    Website: https://pub.dev/packages/shimmer
+
+14. LOTTIE
+    License: Apache License 2.0
+    Copyright: Copyright 2019 xvrh
+    Website: https://pub.dev/packages/lottie
+
+15. TABLE_CALENDAR
+    License: MIT License
+    Copyright: Copyright (c) 2019 Aleksander Woźniak
+    Website: https://pub.dev/packages/table_calendar
+
+16. EQUATABLE
+    License: MIT License
+    Copyright: Copyright (c) 2018 Felix Angelov
+    Website: https://pub.dev/packages/equatable
+
+17. DARTZ
+    License: MIT License
+    Copyright: Copyright (c) 2016-2017 Paolo Soares
+    Website: https://pub.dev/packages/dartz
+
+18. INTL
+    License: BSD License
+    Copyright: Copyright 2013 The Dart project authors
+    Website: https://pub.dev/packages/intl
+
+For the complete license texts, please refer to the individual package documentation
+or visit the respective websites listed above.
+
+IMPORTANT NOTICE:
+The Swiss Ephemeris library is used under a professional commercial license.
+This license is specific to this application and does not grant rights to
+redistribute or use Swiss Ephemeris in other applications.
