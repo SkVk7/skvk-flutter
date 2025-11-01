@@ -182,6 +182,15 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
   
   // Calculate dynamic cooldown based on time difference
   void _calculateAndApplyDynamicCooldown() {
+    // If cooldown duration is zero, button should always be enabled
+    if (_cooldownDuration.inSeconds == 0) {
+      setState(() {
+        _isButtonDisabled = false;
+        _remainingCooldown = Duration.zero;
+      });
+      return;
+    }
+    
     if (_lastTriggerTime == null) {
       // No previous trigger, button should be enabled
       setState(() {
@@ -395,7 +404,8 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     setState(() {
       _pradakshanaCount++;
       _lastTriggerTime = DateTime.now();
-      _isButtonDisabled = true;
+      // Only disable button if cooldown duration is greater than zero
+      _isButtonDisabled = _cooldownDuration.inSeconds > 0;
     });
     
     // Save count and trigger time to storage
@@ -407,8 +417,8 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
       _countAnimationController.reverse();
     });
     
-    // Start dynamic cooldown timer
-    _startDynamicCooldownTimer();
+    // Calculate and apply cooldown immediately (handles zero cooldown case)
+    _calculateAndApplyDynamicCooldown();
   }
 
 
@@ -435,97 +445,147 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => _buildTimeSelectorSheet(),
     );
   }
 
   Widget _buildTimeSelectorSheet() {
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.8,
-      ),
-      decoration: BoxDecoration(
-        color: ThemeProperties.getSurfaceColor(context),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            width: ResponsiveSystem.spacing(context, baseSpacing: 40),
-            height: ResponsiveSystem.spacing(context, baseSpacing: 4),
-            margin: ResponsiveSystem.symmetric(context, vertical: 12),
-            decoration: BoxDecoration(
-              color: ThemeProperties.getDividerColor(context),
-              borderRadius: ResponsiveSystem.circular(context, baseRadius: 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculate responsive max height based on screen size and safe area
+        final screenHeight = MediaQuery.of(context).size.height;
+        final safeAreaPadding = MediaQuery.of(context).padding;
+        final availableHeight = screenHeight - safeAreaPadding.top - safeAreaPadding.bottom;
+        final maxHeight = ResponsiveSystem.responsive(
+          context,
+          mobile: availableHeight * 0.85,
+          tablet: availableHeight * 0.80,
+          desktop: availableHeight * 0.75,
+          largeDesktop: availableHeight * 0.75,
+        );
+        
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: maxHeight,
+          ),
+          decoration: BoxDecoration(
+            color: ThemeProperties.getSurfaceColor(context),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 20)),
+              topRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 20)),
             ),
           ),
-          
-          // Title
-          Padding(
-            padding: ResponsiveSystem.symmetric(context, horizontal: 20, vertical: 8),
-            child: Text(
-              'Set Each Pradakshana Time',
-              style: TextStyle(
-                fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                fontWeight: FontWeight.bold,
-                color: ThemeProperties.getPrimaryTextColor(context),
-              ),
-            ),
-          ),
-          
-          // Editable time input boxes
-          Padding(
-            padding: ResponsiveSystem.symmetric(context, horizontal: 20, vertical: 8),
-            child: _buildEditableTimeInputs(),
-          ),
-          
-          // Time selector with scroll wheels
-          Container(
-            height: ResponsiveSystem.spacing(context, baseSpacing: 200),
-            padding: ResponsiveSystem.all(context, baseSpacing: 16),
-            child: _buildCrownTimeSelector(),
-          ),
-          
-          // Save button
-          Padding(
-            padding: ResponsiveSystem.symmetric(context, horizontal: 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () async {
-                  await _saveCooldownDuration();
-                  // Recalculate cooldown with new time setting
-                  _calculateAndApplyDynamicCooldown();
-                  Navigator.pop(context);
-                  _showMessage('Time set to ${_cooldownDuration.inHours}h ${_cooldownDuration.inMinutes % 60}m');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ThemeProperties.getPrimaryColor(context),
-                  foregroundColor: Colors.white,
-                  padding: ResponsiveSystem.symmetric(context, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-                  ),
-                ),
-                child: Text(
-                  'Set Time',
-                  style: TextStyle(
-                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                    fontWeight: FontWeight.w600,
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle bar
+              Container(
+                width: ResponsiveSystem.spacing(context, baseSpacing: 40),
+                height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                margin: ResponsiveSystem.symmetric(context, vertical: 12),
+                decoration: BoxDecoration(
+                  color: ThemeProperties.getDividerColor(context),
+                  borderRadius: ResponsiveSystem.circular(context, baseRadius: 2),
                 ),
               ),
-            ),
+              
+              // Scrollable content
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Title
+                      Padding(
+                        padding: ResponsiveSystem.symmetric(context, horizontal: 20, vertical: 8),
+                        child: Text(
+                          'Set Each Pradakshana Time',
+                          style: TextStyle(
+                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                            fontWeight: FontWeight.bold,
+                            color: ThemeProperties.getPrimaryTextColor(context),
+                          ),
+                        ),
+                      ),
+                      
+                      // Editable time input boxes
+                      Padding(
+                        padding: ResponsiveSystem.symmetric(context, horizontal: 20, vertical: 8),
+                        child: _buildEditableTimeInputs(),
+                      ),
+                      
+                      // Time selector with scroll wheels - responsive sizing
+                      LayoutBuilder(
+                        builder: (context, innerConstraints) {
+                          // Calculate responsive height based on available space
+                          final availableSpace = maxHeight - 
+                              ResponsiveSystem.spacing(context, baseSpacing: 200); // Account for other elements
+                          final scrollHeight = ResponsiveSystem.responsive(
+                            context,
+                            mobile: availableSpace * 0.5,
+                            tablet: availableSpace * 0.55,
+                            desktop: availableSpace * 0.60,
+                            largeDesktop: availableSpace * 0.60,
+                          ).clamp(
+                            ResponsiveSystem.spacing(context, baseSpacing: 150),
+                            ResponsiveSystem.spacing(context, baseSpacing: 280),
+                          );
+                          
+                          return Container(
+                            constraints: BoxConstraints(
+                              maxHeight: scrollHeight,
+                              minHeight: ResponsiveSystem.spacing(context, baseSpacing: 150),
+                            ),
+                            height: scrollHeight,
+                            padding: ResponsiveSystem.all(context, baseSpacing: 16),
+                            child: _buildCrownTimeSelector(scrollHeight),
+                          );
+                        },
+                      ),
+                      
+                      // Save button
+                      Padding(
+                        padding: ResponsiveSystem.symmetric(context, horizontal: 20, vertical: 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await _saveCooldownDuration();
+                              // Recalculate cooldown with new time setting
+                              _calculateAndApplyDynamicCooldown();
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: ThemeProperties.getPrimaryColor(context),
+                              foregroundColor: Colors.white,
+                              padding: ResponsiveSystem.symmetric(context, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                              ),
+                            ),
+                            child: Text(
+                              'Set Time',
+                              style: TextStyle(
+                                fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      
+                      // Bottom padding for safe area
+                      SizedBox(height: MediaQuery.of(context).padding.bottom + ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          
-          ResponsiveSystem.sizedBox(context, height: 20),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -665,12 +725,29 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     );
   }
 
-  Widget _buildCrownTimeSelector() {
+  Widget _buildCrownTimeSelector(double containerHeight) {
+    // Calculate responsive itemExtent based on container height
+    // Show 3-4 visible items, with some padding
+    // Subtract padding and label space from container height
+    final padding = ResponsiveSystem.spacing(context, baseSpacing: 16) * 2; // top and bottom padding
+    final labelHeight = ResponsiveSystem.spacing(context, baseSpacing: 28); // label and spacing
+    final scrollViewHeight = (containerHeight - padding - labelHeight).clamp(
+      ResponsiveSystem.spacing(context, baseSpacing: 120),
+      ResponsiveSystem.spacing(context, baseSpacing: 220),
+    );
+    
+    // Calculate itemExtent to show 3-4 items (25-33% of scrollViewHeight per item)
+    final itemExtent = (scrollViewHeight / 3.5).clamp(
+      ResponsiveSystem.spacing(context, baseSpacing: 35),
+      ResponsiveSystem.spacing(context, baseSpacing: 60),
+    );
+    
     return Row(
       children: [
         // Hours scroll wheel
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Hours',
@@ -681,48 +758,58 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
                 ),
               ),
               ResponsiveSystem.sizedBox(context, height: 8),
-              Container(
-                height: ResponsiveSystem.spacing(context, baseSpacing: 120),
-                decoration: BoxDecoration(
-                  color: ThemeProperties.getSurfaceColor(context),
-                  borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-                  border: Border.all(
-                    color: ThemeProperties.getBorderColor(context),
-                    width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: scrollViewHeight,
+                    minHeight: ResponsiveSystem.spacing(context, baseSpacing: 120),
                   ),
-                ),
-                child: ListWheelScrollView.useDelegate(
-                  controller: _hoursScrollController,
-                  itemExtent: ResponsiveSystem.spacing(context, baseSpacing: 40),
-                  perspective: 0.005,
-                  diameterRatio: 1.2,
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      final hours = index;
-                      final minutes = _cooldownDuration.inMinutes % 60;
-                      _cooldownDuration = Duration(hours: hours, minutes: minutes);
-                    });
-                    // Sync text controller
-                    _hoursTextController.text = index.toString();
-                  },
-                  childDelegate: ListWheelChildBuilderDelegate(
-                    builder: (context, index) {
-                      final isSelected = index == _cooldownDuration.inHours;
-                      return Container(
-                        alignment: Alignment.center,
-                        child: Text(
-                          index.toString().padLeft(2, '0'),
-                          style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected 
-                                ? ThemeProperties.getPrimaryColor(context)
-                                : ThemeProperties.getPrimaryTextColor(context),
-                          ),
-                        ),
-                      );
+                  height: scrollViewHeight,
+                  decoration: BoxDecoration(
+                    color: ThemeProperties.getSurfaceColor(context),
+                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    border: Border.all(
+                      color: ThemeProperties.getBorderColor(context),
+                      width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                    ),
+                  ),
+                  child: ListWheelScrollView.useDelegate(
+                    controller: _hoursScrollController,
+                    itemExtent: itemExtent,
+                    perspective: 0.005,
+                    diameterRatio: 1.2,
+                    physics: const FixedExtentScrollPhysics(),
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        final hours = index;
+                        final minutes = _cooldownDuration.inMinutes % 60;
+                        _cooldownDuration = Duration(hours: hours, minutes: minutes);
+                      });
+                      // Sync text controller
+                      _hoursTextController.text = index.toString();
                     },
-                    childCount: 24, // 0-23 hours
+                    childDelegate: ListWheelChildBuilderDelegate(
+                      builder: (context, index) {
+                        final isSelected = index == _cooldownDuration.inHours;
+                        return Container(
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.symmetric(
+                            vertical: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                          ),
+                          child: Text(
+                            index.toString().padLeft(2, '0'),
+                            style: TextStyle(
+                              fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected 
+                                  ? ThemeProperties.getPrimaryColor(context)
+                                  : ThemeProperties.getPrimaryTextColor(context),
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: 24, // 0-23 hours
+                    ),
                   ),
                 ),
               ),
@@ -735,6 +822,7 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
         // Minutes scroll wheel
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Minutes',
@@ -745,48 +833,58 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
                 ),
               ),
               ResponsiveSystem.sizedBox(context, height: 8),
-              Container(
-                height: ResponsiveSystem.spacing(context, baseSpacing: 120),
-                decoration: BoxDecoration(
-                  color: ThemeProperties.getSurfaceColor(context),
-                  borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-                  border: Border.all(
-                    color: ThemeProperties.getBorderColor(context),
-                    width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxHeight: scrollViewHeight,
+                    minHeight: ResponsiveSystem.spacing(context, baseSpacing: 120),
                   ),
-                ),
-                child: ListWheelScrollView.useDelegate(
-                  controller: _minutesScrollController,
-                  itemExtent: ResponsiveSystem.spacing(context, baseSpacing: 40),
-                  perspective: 0.005,
-                  diameterRatio: 1.2,
-                  onSelectedItemChanged: (index) {
-                    setState(() {
-                      final hours = _cooldownDuration.inHours;
-                      final minutes = index;
-                      _cooldownDuration = Duration(hours: hours, minutes: minutes);
-                    });
-                    // Sync text controller
-                    _minutesTextController.text = index.toString();
-                  },
-                  childDelegate: ListWheelChildBuilderDelegate(
-                    builder: (context, index) {
-                      final isSelected = index == (_cooldownDuration.inMinutes % 60);
-                      return Container(
-                        alignment: Alignment.center,
-                        child: Text(
-                          index.toString().padLeft(2, '0'),
-                          style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected 
-                                ? ThemeProperties.getPrimaryColor(context)
-                                : ThemeProperties.getPrimaryTextColor(context),
-                          ),
-                        ),
-                      );
+                  height: scrollViewHeight,
+                  decoration: BoxDecoration(
+                    color: ThemeProperties.getSurfaceColor(context),
+                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    border: Border.all(
+                      color: ThemeProperties.getBorderColor(context),
+                      width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                    ),
+                  ),
+                  child: ListWheelScrollView.useDelegate(
+                    controller: _minutesScrollController,
+                    itemExtent: itemExtent,
+                    perspective: 0.005,
+                    diameterRatio: 1.2,
+                    physics: const FixedExtentScrollPhysics(),
+                    onSelectedItemChanged: (index) {
+                      setState(() {
+                        final hours = _cooldownDuration.inHours;
+                        final minutes = index;
+                        _cooldownDuration = Duration(hours: hours, minutes: minutes);
+                      });
+                      // Sync text controller
+                      _minutesTextController.text = index.toString();
                     },
-                    childCount: 60, // 0-59 minutes
+                    childDelegate: ListWheelChildBuilderDelegate(
+                      builder: (context, index) {
+                        final isSelected = index == (_cooldownDuration.inMinutes % 60);
+                        return Container(
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.symmetric(
+                            vertical: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                          ),
+                          child: Text(
+                            index.toString().padLeft(2, '0'),
+                            style: TextStyle(
+                              fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected 
+                                  ? ThemeProperties.getPrimaryColor(context)
+                                  : ThemeProperties.getPrimaryTextColor(context),
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: 60, // 0-59 minutes
+                    ),
                   ),
                 ),
               ),
@@ -926,6 +1024,7 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
         ],
       ),
       child: Stack(
+        alignment: Alignment.center,
         children: [
           // Reset button in top right corner
           Positioned(
@@ -951,9 +1050,10 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
               ),
             ),
           ),
-          // Main content
+          // Main content - centered
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
           
           // Count display with animation
@@ -964,6 +1064,7 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
                 scale: _countScaleAnimation.value,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
+                  alignment: Alignment.center,
                   child: Text(
                     '$_pradakshanaCount',
                     style: TextStyle(
