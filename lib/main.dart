@@ -15,15 +15,16 @@ import 'features/user/presentation/screens/user_profile_screen.dart' as user_scr
 import 'features/user/presentation/screens/user_edit_screen.dart' as edit_user_screen;
 import 'features/matching/presentation/screens/matching_screen.dart' as matching_screen;
 import 'features/horoscope/presentation/screens/horoscope_screen.dart' as horoscope_screen;
-import 'features/calendar/presentation/screens/hindu_calendar_screen.dart' as calendar_screen;
+import 'features/calendar/presentation/screens/calendar_screen.dart' as calendar_screen;
 import 'features/predictions/presentation/screens/predictions_screen.dart' as predictions_screen;
 
 // Service imports
-import 'astrology/astrology_library.dart';
-import 'core/di/astrology_di_container.dart';
+import 'core/utils/timezone_util.dart';
 
 // Logging system
 import 'core/logging/app_logger.dart';
+import 'core/services/daily_prediction_scheduler.dart';
+import 'core/services/daily_prediction_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,23 +75,29 @@ Future<void> main() async {
     throw Exception('Failed to initialize application modules: $e');
   }
 
-  // Initialize the centralized astrology library with 100% precise calculations
+  await AppLogger().info('Astrology data will be fetched from API service', source: 'main');
+
+  // Initialize timezone utility for UTC-local conversions
   try {
-    await AstrologyLibrary.initialize();
-    await AppLogger().info('Astrology library initialized with maximum precision', source: 'main');
+    await TimezoneUtil.initialize();
+    await AppLogger().info('Timezone utility initialized', source: 'main');
   } catch (e) {
-    await AppLogger().error('Failed to initialize AstrologyLibrary: $e', source: 'main');
-    // Don't continue if astrology service fails - precision is critical
-    throw Exception('Failed to initialize precise astrology library: $e');
+    await AppLogger().error('Failed to initialize timezone utility: $e', source: 'main');
+    throw Exception('Failed to initialize timezone utility: $e');
   }
 
-  // Initialize Astrology Facade and related DI so feature screens can use AstrologyFacade.instance
+  // Initialize daily prediction scheduler and notification service
   try {
-    await AstrologyDIContainer.instance.initialize();
-    await AppLogger().info('Astrology DI (Facade/Engine/Business) initialized', source: 'main');
+    final scheduler = DailyPredictionScheduler.instance;
+    await scheduler.initialize();
+    await AppLogger().info('Daily prediction scheduler initialized', source: 'main');
+    
+    final notificationService = DailyPredictionNotificationService.instance;
+    await notificationService.initialize();
+    await AppLogger().info('Daily prediction notification service initialized', source: 'main');
   } catch (e) {
-    await AppLogger().error('Failed to initialize Astrology DI: $e', source: 'main');
-    throw Exception('Failed to initialize Astrology DI: $e');
+    await AppLogger().error('Failed to initialize daily prediction services: $e', source: 'main');
+    // Don't throw - app should still work without notifications
   }
 
   // Log production configuration
@@ -119,6 +126,32 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkNotificationNavigation();
+  }
+
+  /// Check if app was opened from notification
+  void _checkNotificationNavigation() {
+    // Check if app was opened from notification
+    final payload = DailyPredictionNotificationService.lastNotificationPayload;
+    if (payload == 'predictions') {
+      // Navigate to predictions screen after a short delay
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).pushNamed('/predictions');
+        }
+      });
+      // Clear the payload
+      DailyPredictionNotificationService.clearLastNotificationPayload();
+    } else if (payload == 'create_profile') {
+      // Navigate to profile creation screen after a short delay
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.of(context).pushNamed('/edit-profile');
+        }
+      });
+      // Clear the payload
+      DailyPredictionNotificationService.clearLastNotificationPayload();
+    }
   }
 
   @override
@@ -151,7 +184,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         '/user': (context) => const edit_user_screen.UserEditScreen(),
         '/matching': (context) => const matching_screen.MatchingScreen(),
         '/horoscope': (context) => const horoscope_screen.HoroscopeScreen(),
-        '/calendar': (context) => const calendar_screen.HinduCalendarScreen(),
+        '/calendar': (context) => const calendar_screen.CalendarScreen(),
         '/predictions': (context) => const predictions_screen.PredictionsScreen(),
         '/edit-profile': (context) => const edit_user_screen.UserEditScreen(),
         '/profile': (context) => const user_screen.UserProfileScreen(),

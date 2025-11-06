@@ -5,8 +5,6 @@ library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/usecases/get_daily_predictions_usecase.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/entities/astrology_entities.dart';
 
 /// Daily predictions state
 class DailyPredictionsState {
@@ -44,7 +42,7 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
 
   /// Get daily predictions
   Future<void> getDailyPredictions({
-    required FixedBirthData birthData,
+    required Map<String, dynamic> birthData,
     required DateTime date,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
@@ -81,13 +79,7 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
 
 /// Provider for daily predictions use case
 final dailyPredictionsUseCaseProvider = Provider<GetDailyPredictionsUseCase>((ref) {
-  final astrologyFacade = ref.watch(astrologyFacadeProvider);
-  return GetDailyPredictionsUseCase(astrologyFacade: astrologyFacade);
-});
-
-/// Provider for astrology facade
-final astrologyFacadeProvider = Provider<AstrologyFacade>((ref) {
-  return AstrologyFacade.instance;
+  return GetDailyPredictionsUseCase();
 });
 
 /// Provider for daily predictions notifier

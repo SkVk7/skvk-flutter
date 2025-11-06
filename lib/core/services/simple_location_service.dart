@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import '../utils/app_logger.dart';
 
 /// Simple, production-ready location service using free APIs
@@ -99,6 +100,152 @@ class SimpleLocationService {
       }
       return LocationResult.error('Error reverse geocoding: $e');
     }
+  }
+
+  /// Get device current location with fallback to country-level location
+  /// Returns device location if permission granted, otherwise country-level location
+  Future<LocationResult> getDeviceLocationWithFallback() async {
+    try {
+      // Try to get device location first
+      final deviceLocation = await getDeviceLocation();
+      if (deviceLocation.isSuccess) {
+        return deviceLocation;
+      }
+
+      // Fallback to country-level location (less accurate but sufficient for calendar)
+      if (kDebugMode) {
+        AppLogger.debug('Device location not available, using country-level location', 'LocationService');
+      }
+
+      // Get country from device locale or use default
+      final countryCode = await _getCountryCode();
+      final countryLocation = await getCoordinatesFromPlaceName(countryCode);
+      
+      if (countryLocation.isSuccess) {
+        return countryLocation;
+      }
+
+      // Final fallback: Use India's center coordinates (default)
+      return LocationResult.success(
+        latitude: 20.5937, // India center latitude
+        longitude: 78.9629, // India center longitude
+        placeName: 'India',
+        address: 'India',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.error('Error getting location with fallback: $e', e, StackTrace.current, 'LocationService');
+      }
+      // Final fallback: Use India's center coordinates
+      return LocationResult.success(
+        latitude: 20.5937,
+        longitude: 78.9629,
+        placeName: 'India',
+        address: 'India',
+      );
+    }
+  }
+
+  /// Get device current location
+  Future<LocationResult> getDeviceLocation() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return LocationResult.error('Location services are disabled');
+      }
+
+      // Check location permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return LocationResult.error('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return LocationResult.error('Location permissions are permanently denied');
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.medium, // Medium accuracy is sufficient for calendar
+      );
+
+      if (kDebugMode) {
+        AppLogger.debug('Device location: ${position.latitude}, ${position.longitude}', 'LocationService');
+      }
+
+      return LocationResult.success(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        placeName: 'Current Location',
+        address: 'Current Location',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        AppLogger.error('Error getting device location: $e', e, StackTrace.current, 'LocationService');
+      }
+      return LocationResult.error('Error getting device location: $e');
+    }
+  }
+
+  /// Get country code from device locale
+  Future<String> _getCountryCode() async {
+    try {
+      // Try to get country from device locale
+      final locale = PlatformDispatcher.instance.locale;
+      if (locale.countryCode != null && locale.countryCode!.isNotEmpty) {
+        // Get country name from country code
+        final countryName = await _getCountryNameFromCode(locale.countryCode!);
+        return countryName;
+      }
+      return 'India'; // Default fallback
+    } catch (e) {
+      return 'India'; // Default fallback
+    }
+  }
+
+  /// Get country name from country code
+  Future<String> _getCountryNameFromCode(String countryCode) async {
+    // Map of common country codes to country names
+    final countryMap = {
+      'IN': 'India',
+      'US': 'United States',
+      'GB': 'United Kingdom',
+      'CA': 'Canada',
+      'AU': 'Australia',
+      'DE': 'Germany',
+      'FR': 'France',
+      'IT': 'Italy',
+      'ES': 'Spain',
+      'BR': 'Brazil',
+      'MX': 'Mexico',
+      'JP': 'Japan',
+      'CN': 'China',
+      'KR': 'South Korea',
+      'SG': 'Singapore',
+      'MY': 'Malaysia',
+      'TH': 'Thailand',
+      'ID': 'Indonesia',
+      'PH': 'Philippines',
+      'VN': 'Vietnam',
+      'AE': 'United Arab Emirates',
+      'SA': 'Saudi Arabia',
+      'ZA': 'South Africa',
+      'EG': 'Egypt',
+      'NG': 'Nigeria',
+      'KE': 'Kenya',
+      'PK': 'Pakistan',
+      'BD': 'Bangladesh',
+      'LK': 'Sri Lanka',
+      'NP': 'Nepal',
+      'BT': 'Bhutan',
+      'MM': 'Myanmar',
+    };
+
+    return countryMap[countryCode.toUpperCase()] ?? countryCode;
   }
 
   /// Search for places by query

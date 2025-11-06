@@ -140,7 +140,7 @@ class TranslationService {
       'matching_ayanamsha_system': 'Ayanamsha System',
 
       // Calendar Screen
-      'hindu_calendar': 'Hindu Calendar',
+      'calendar': 'Calendar',
       'year': 'Year',
       'month': 'Month',
       'week': 'Week',
@@ -328,7 +328,7 @@ class TranslationService {
       'matching_ayanamsha_system': 'अयनांश प्रणाली',
 
       // Calendar Screen
-      'hindu_calendar': 'हिंदू कैलेंडर',
+      'calendar': 'हिंदू कैलेंडर',
       'year': 'वर्ष',
       'month': 'महीना',
       'week': 'सप्ताह',
@@ -506,7 +506,7 @@ class TranslationService {
       'matching_ayanamsha_system': 'అయనాంశ వ్యవస్థ',
 
       // Calendar Screen
-      'hindu_calendar': 'హిందూ క్యాలెండర్',
+      'calendar': 'హిందూ క్యాలెండర్',
       'year': 'సంవత్సరం',
       'month': 'నెల',
       'week': 'వారం',
@@ -684,7 +684,7 @@ class TranslationService {
       'matching_ayanamsha_system': 'அயனாங்க வழிமுறை',
 
       // Calendar Screen
-      'hindu_calendar': 'இந்து நாட்காட்டி',
+      'calendar': 'இந்து நாட்காட்டி',
       'year': 'ஆண்டு',
       'month': 'மாதம்',
       'week': 'வாரம்',

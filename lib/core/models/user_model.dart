@@ -5,7 +5,6 @@ library;
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-import '../../astrology/core/enums/astrology_enums.dart';
 
 /// Time of birth model
 class TimeOfBirth extends Equatable {
@@ -79,8 +78,8 @@ class UserModel extends Equatable {
   final String sex;
   final String? gender;
   final String? timezone;
-  final AyanamshaType ayanamsha;
-  final HouseSystem houseSystem;
+  final String ayanamsha;
+  final String houseSystem;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -98,8 +97,8 @@ class UserModel extends Equatable {
     required this.sex,
     this.gender,
     this.timezone,
-    this.ayanamsha = AyanamshaType.lahiri,
-    this.houseSystem = HouseSystem.placidus,
+    this.ayanamsha = 'lahiri',
+    this.houseSystem = 'placidus',
     this.createdAt,
     this.updatedAt,
   });
@@ -120,14 +119,8 @@ class UserModel extends Equatable {
       sex: json['sex'] as String,
       gender: json['gender'] as String?,
       timezone: json['timezone'] as String?,
-      ayanamsha: AyanamshaType.values.firstWhere(
-        (e) => e.name == json['ayanamsha'],
-        orElse: () => AyanamshaType.lahiri,
-      ),
-      houseSystem: HouseSystem.values.firstWhere(
-        (e) => e.name == json['houseSystem'],
-        orElse: () => HouseSystem.placidus,
-      ),
+      ayanamsha: json['ayanamsha'] as String? ?? 'lahiri',
+      houseSystem: json['houseSystem'] as String? ?? 'placidus',
       // Removed: UTC birth time fields - timezone conversion now handled by AstrologyFacade
       // Astrology data handled separately
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt'] as String) : null,
@@ -151,8 +144,8 @@ class UserModel extends Equatable {
       'sex': sex,
       'gender': gender,
       'timezone': timezone,
-      'ayanamsha': ayanamsha.name,
-      'houseSystem': houseSystem.name,
+      'ayanamsha': ayanamsha,
+      'houseSystem': houseSystem,
       // Removed: UTC birth time fields - timezone conversion now handled by AstrologyFacade
       // Astrology data handled separately
       'createdAt': createdAt?.toIso8601String(),
@@ -175,8 +168,8 @@ class UserModel extends Equatable {
     String? sex,
     String? gender,
     String? timezone,
-    AyanamshaType? ayanamsha,
-    HouseSystem? houseSystem,
+    String? ayanamsha,
+    String? houseSystem,
     // Removed: UTC birth time parameters - timezone conversion now handled by AstrologyFacade
     // Astrology data handled separately
     DateTime? createdAt,
@@ -219,8 +212,8 @@ class UserModel extends Equatable {
     String? phone,
     String? gender,
     String? timezone,
-    AyanamshaType ayanamsha = AyanamshaType.lahiri,
-    HouseSystem houseSystem = HouseSystem.placidus,
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) {
     final now = DateTime.now();
     return UserModel(

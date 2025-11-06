@@ -4,23 +4,21 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
 import '../../../../core/utils/ayanamsha_info.dart';
+import '../../../../core/utils/house_system_info.dart';
 import '../../../../shared/widgets/centralized_widgets.dart';
-import '../../../../shared/widgets/reusable_form_fields.dart';
-// Removed unused imports to avoid null errors
 import '../../../../shared/widgets/centralized_animations.dart' as animations;
 import '../../../../core/services/translation_service.dart';
 import '../../../../core/services/simple_location_service.dart';
 import '../../../../core/services/centralized_services.dart';
 import '../../../../core/services/matching_form_storage_service.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
 import '../providers/matching_provider.dart';
 import '../../domain/repositories/matching_repository.dart';
 import '../../../user/presentation/providers/user_provider.dart';
 import '../../../../core/services/language_service.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/services/user_service.dart' as user_service;
+import '../../../../core/models/user_model.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/utils/profile_completion_checker.dart';
 import '../../../../core/logging/logging_helper.dart';
@@ -71,8 +69,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
   Timer? _brideSearchDebounceTimer;
   String? _brideLocationError;
 
-  // Ayanamsha selection for matching calculations
-  AyanamshaType _selectedAyanamsha = AyanamshaType.lahiri;
+  // Ayanamsha and house system selection for matching calculations
+  String _selectedAyanamsha = 'lahiri';
+  String _selectedHouseSystem = 'placidus';
 
   @override
   void initState() {
@@ -188,10 +187,15 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
       final ayanamsha = await storageService.getAyanamsha();
       if (ayanamsha != null) {
         setState(() {
-          _selectedAyanamsha = AyanamshaType.values.firstWhere(
-            (e) => e.name.toLowerCase() == ayanamsha.toLowerCase(),
-            orElse: () => AyanamshaType.lahiri,
-          );
+          _selectedAyanamsha = ayanamsha.toLowerCase();
+        });
+      }
+
+      // Load house system selection
+      final houseSystem = await storageService.getHouseSystem();
+      if (houseSystem != null) {
+        setState(() {
+          _selectedHouseSystem = houseSystem.toLowerCase();
         });
       }
 
@@ -247,7 +251,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
       );
 
       // Save ayanamsha selection
-      await storageService.saveAyanamsha(_selectedAyanamsha.name);
+      await storageService.saveAyanamsha(_selectedAyanamsha);
+
+      // Save house system selection
+      await storageService.saveHouseSystem(_selectedHouseSystem);
 
       CentralizedLoggingService.instance
           .logInfo('Form data saved successfully', tag: 'MatchingScreen');
@@ -496,55 +503,36 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
 
       logger
           .logInfo('Birth data prepared for astrology calculations', tag: 'MatchingScreen', data: {
-        'groom_local': groomLocalDateTime.toIso8601String(),
-        'bride_local': brideLocalDateTime.toIso8601String(),
+        'groomLocal': groomLocalDateTime.toIso8601String(),
+        'brideLocal': brideLocalDateTime.toIso8601String(),
       });
 
-      // Fetch minimal birth chart data for both persons
-      logger.logInfo('Fetching birth chart data from astrology library', tag: 'MatchingScreen');
+      // Note: Birth chart data will be fetched internally by compatibility API
+      // No need to fetch separately - this reduces API calls from 3 to 1
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Get current user for cache optimization
+      final currentUser = ref.read(userServiceProvider);
 
-      // Get timezone from groom's location
-      final groomTimezoneId =
-          await astrologyFacade.getTimezoneFromLocation(_groomLatitude, _groomLongitude);
+      // Check if groom is the current user
+      final isGroomUser = currentUser != null &&
+          _isUserBirthData(
+            groomLocalDateTime,
+            _groomLatitude,
+            _groomLongitude,
+            currentUser,
+          );
 
-      // Get timezone from bride's location
-      final brideTimezoneId =
-          await astrologyFacade.getTimezoneFromLocation(_brideLatitude, _brideLongitude);
-
-      final groomBirthData = await astrologyFacade.getMinimalBirthData(
-        localBirthDateTime: groomLocalDateTime,
-        timezoneId: groomTimezoneId,
-        latitude: _groomLatitude,
-        longitude: _groomLongitude,
-        ayanamsha: _selectedAyanamsha,
-      );
-
-      final brideBirthData = await astrologyFacade.getMinimalBirthData(
-        localBirthDateTime: brideLocalDateTime,
-        timezoneId: brideTimezoneId,
-        latitude: _brideLatitude,
-        longitude: _brideLongitude,
-        ayanamsha: _selectedAyanamsha,
-      );
-
-      logger.logInfo('Birth chart data fetched successfully', tag: 'MatchingScreen', data: {
-        'groom_rashi': groomBirthData['rashi']?.toString() ?? 'Unknown',
-        'groom_nakshatra': groomBirthData['nakshatra']?.toString() ?? 'Unknown',
-        'bride_rashi': brideBirthData['rashi']?.toString() ?? 'Unknown',
-        'bride_nakshatra': brideBirthData['nakshatra']?.toString() ?? 'Unknown',
-      });
-
-      // Store birth data for future use (suppress unused variable warnings)
-      // ignore: unused_local_variable
-      final _groomData = groomBirthData;
-      // ignore: unused_local_variable
-      final _brideData = brideBirthData;
+      // Check if bride is the current user
+      final isBrideUser = currentUser != null &&
+          _isUserBirthData(
+            brideLocalDateTime,
+            _brideLatitude,
+            _brideLongitude,
+            currentUser,
+          );
 
       // Create PartnerData objects using local times
-      // Timezone conversion will be handled by AstrologyFacade
+      // Timezone conversion will be handled by AstrologyServiceBridge
       final groomData = PartnerData(
         name: _groomNameController.text.trim(),
         dateOfBirth: groomLocalDateTime,
@@ -552,6 +540,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
         placeOfBirth: _groomPob,
         latitude: _groomLatitude,
         longitude: _groomLongitude,
+        currentUser: isGroomUser ? currentUser : null,
       );
 
       final brideData = PartnerData(
@@ -561,6 +550,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
         placeOfBirth: _bridePob,
         latitude: _brideLatitude,
         longitude: _brideLongitude,
+        currentUser: isBrideUser ? currentUser : null,
       );
 
       // Perform matching through the use case with both persons
@@ -568,9 +558,11 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
       print(
           '🔍 DEBUG: Calling matching provider with groom: ${groomData.name}, bride: ${brideData.name}');
 
+      // Pass current user to optimize cache usage
       await ref
           .read(matchingProvider.notifier)
-          .performMatching(groomData, brideData, ayanamsha: _selectedAyanamsha);
+          .performMatching(groomData, brideData, 
+              ayanamsha: _selectedAyanamsha, houseSystem: _selectedHouseSystem);
 
       print('🔍 DEBUG: Matching provider call completed');
       logger.logInfo('Kundali matching completed successfully', tag: 'MatchingScreen');
@@ -582,25 +574,173 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
       _resultsAnimationController.forward();
     } catch (e) {
       logger.logError('Kundali matching failed', tag: 'MatchingScreen', error: e);
-      _showErrorDialog('Failed to perform matching: $e');
+      // Error is already handled by the provider - it will set errorMessage
+      // The error screen will be displayed automatically via the build method
     }
   }
 
-  /// Show error dialog
-  void _showErrorDialog(String message) {
+  /// Check if birth data matches current user
+  bool _isUserBirthData(
+    DateTime localBirthDateTime,
+    double latitude,
+    double longitude,
+    UserModel user,
+  ) {
+    // Compare birth date/time (within 1 minute tolerance)
+    final userBirthDateTime = user.localBirthDateTime;
+    final timeDiff = (localBirthDateTime.difference(userBirthDateTime)).abs();
+    if (timeDiff.inMinutes > 1) {
+      return false;
+    }
+
+    // Compare location (within 0.01 degree tolerance ~ 1km)
+    final latDiff = (latitude - user.latitude).abs();
+    final lonDiff = (longitude - user.longitude).abs();
+    if (latDiff > 0.01 || lonDiff > 0.01) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /// Build loading screen
+  Widget _buildLoadingScreen() {
+    final translationService = ref.watch(translationServiceProvider);
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              ThemeProperties.getPrimaryColor(context),
+            ),
+          ),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+          Text(
+            translationService.translateContent('calculating',
+                fallback: 'Calculating Compatibility...'),
+            style: TextStyle(
+              fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+              fontWeight: FontWeight.w600,
+              color: ThemeProperties.getPrimaryTextColor(context),
+            ),
+          ),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          Text(
+            translationService.translateContent('please_wait',
+                fallback: 'Please wait while we calculate your compatibility'),
+            style: TextStyle(
+              fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+              color: ThemeProperties.getSecondaryTextColor(context),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build error screen with retry option
+  Widget _buildErrorScreen(MatchingState matchingState) {
+    final translationService = ref.watch(translationServiceProvider);
+    return Center(
+      child: Padding(
+        padding: ResponsiveSystem.all(context, baseSpacing: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: ResponsiveSystem.iconSize(context, baseSize: 64),
+              color: ThemeProperties.getErrorColor(context),
+            ),
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+            Text(
+              translationService.translateContent('error_loading_matching',
+                  fallback: 'Unable to Load Matching Results'),
+              style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 20),
+                fontWeight: FontWeight.bold,
+                color: ThemeProperties.getPrimaryTextColor(context),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            Text(
+              matchingState.errorMessage ??
+                  translationService.translateContent('unknown_error',
+                      fallback: 'An unknown error occurred'),
+              style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                color: ThemeProperties.getSecondaryTextColor(context),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CentralizedModernButton(
+                  text: translationService.translateContent('go_back',
+                      fallback: 'Go Back'),
+                  icon: LucideIcons.arrowLeft,
+                  onPressed: () {
+                    ref.read(matchingProvider.notifier).editPartnerDetails();
+                  },
+                  width: ResponsiveSystem.screenWidth(context) * 0.35,
+                ),
+                ResponsiveSystem.sizedBox(context,
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                CentralizedModernButton(
+                  text: translationService.translateContent('retry',
+                      fallback: 'Retry'),
+                  icon: LucideIcons.refreshCw,
+                  onPressed: () {
+                    _performMatching();
+                  },
+                  width: ResponsiveSystem.screenWidth(context) * 0.35,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show error dialog with retry option
+  void _showErrorDialog(String message, {bool showRetry = true}) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
         ),
-        title: Text(
-          'Error',
-          style: TextStyle(
-            fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-            fontWeight: FontWeight.bold,
-            color: ThemeProperties.getPrimaryTextColor(context),
-          ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: ThemeProperties.getErrorColor(context),
+              size: ResponsiveSystem.iconSize(context, baseSize: 24),
+            ),
+            ResponsiveSystem.sizedBox(context,
+                width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            Expanded(
+              child: Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                  fontWeight: FontWeight.bold,
+                  color: ThemeProperties.getPrimaryTextColor(context),
+                ),
+              ),
+            ),
+          ],
         ),
         content: Text(
           message,
@@ -610,11 +750,32 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
           ),
         ),
         actions: [
-          CentralizedModernButton(
-            text: 'OK',
-            onPressed: () => Navigator.of(context).pop(),
-            width: ResponsiveSystem.screenWidth(context) * 0.2,
-          ),
+          if (showRetry) ...[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: ThemeProperties.getSecondaryTextColor(context),
+                ),
+              ),
+            ),
+            CentralizedModernButton(
+              text: 'Retry',
+              icon: LucideIcons.refreshCw,
+              onPressed: () {
+                Navigator.of(context).pop();
+                _performMatching();
+              },
+              width: ResponsiveSystem.screenWidth(context) * 0.25,
+            ),
+          ] else ...[
+            CentralizedModernButton(
+              text: 'OK',
+              onPressed: () => Navigator.of(context).pop(),
+              width: ResponsiveSystem.screenWidth(context) * 0.2,
+            ),
+          ],
         ],
       ),
     );
@@ -622,45 +783,38 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
 
   /// Build partner details section
   List<Widget> _buildPartnerDetailsSection(TranslationService translationService) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    
     return [
       CentralizedSectionTitle(
           title: translationService.translateHeader('compatibility_details',
               fallback: 'Compatibility Details')),
 
-      // Two-row layout for better aesthetics
-      Column(
-        children: [
-          // First Row: Names
-          Row(
-            children: [
-              Expanded(
-                child: _buildNameField(
+      // Responsive layout: Row on larger screens, Column on small screens
+      isSmallScreen
+          ? Column(
+              children: [
+                // Groom Name
+                _buildNameField(
                   controller: _groomNameController,
                   label: 'Groom Name',
                   icon: LucideIcons.user,
                   hintText: 'Enter groom name',
                 ),
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-              Expanded(
-                child: _buildNameField(
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Bride Name
+                _buildNameField(
                   controller: _brideNameController,
                   label: 'Bride Name',
                   icon: LucideIcons.user,
                   hintText: 'Enter bride name',
                 ),
-              ),
-            ],
-          ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-
-          // Second Row: Date of Birth
-          Row(
-            children: [
-              Expanded(
-                child: _buildDateField(
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Groom Date of Birth
+                _buildDateField(
                   label: 'Groom Date of Birth',
                   selectedDate: _groomDob,
                   onDateChanged: (date) {
@@ -669,11 +823,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
                     });
                   },
                 ),
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-              Expanded(
-                child: _buildDateField(
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Bride Date of Birth
+                _buildDateField(
                   label: 'Bride Date of Birth',
                   selectedDate: _brideDob,
                   onDateChanged: (date) {
@@ -682,17 +835,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
                     });
                   },
                 ),
-              ),
-            ],
-          ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-
-          // Third Row: Time of Birth
-          Row(
-            children: [
-              Expanded(
-                child: _buildTimeField(
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Groom Time of Birth
+                _buildTimeField(
                   label: 'Groom Time of Birth',
                   selectedTime: _groomTob,
                   onTimeChanged: (time) {
@@ -701,11 +847,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
                     });
                   },
                 ),
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-              Expanded(
-                child: _buildTimeField(
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Bride Time of Birth
+                _buildTimeField(
                   label: 'Bride Time of Birth',
                   selectedTime: _brideTob,
                   onTimeChanged: (time) {
@@ -714,27 +859,123 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
                     });
                   },
                 ),
-              ),
-            ],
-          ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Groom Place of Birth
+                _buildGroomLocationSearchField(translationService),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                // Bride Place of Birth
+                _buildBrideLocationSearchField(translationService),
+              ],
+            )
+          : Column(
+              children: [
+                // First Row: Names
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildNameField(
+                        controller: _groomNameController,
+                        label: 'Groom Name',
+                        icon: LucideIcons.user,
+                        hintText: 'Enter groom name',
+                      ),
+                    ),
+                    ResponsiveSystem.sizedBox(context,
+                        width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                    Expanded(
+                      child: _buildNameField(
+                        controller: _brideNameController,
+                        label: 'Bride Name',
+                        icon: LucideIcons.user,
+                        hintText: 'Enter bride name',
+                      ),
+                    ),
+                  ],
+                ),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
 
-          // Fourth Row: Place of Birth
-          Row(
-            children: [
-              Expanded(
-                child: _buildGroomLocationSearchField(translationService),
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-              Expanded(
-                child: _buildBrideLocationSearchField(translationService),
-              ),
-            ],
-          ),
-        ],
-      ),
+                // Second Row: Date of Birth
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildDateField(
+                        label: 'Groom Date of Birth',
+                        selectedDate: _groomDob,
+                        onDateChanged: (date) {
+                          setState(() {
+                            _groomDob = date;
+                          });
+                        },
+                      ),
+                    ),
+                    ResponsiveSystem.sizedBox(context,
+                        width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                    Expanded(
+                      child: _buildDateField(
+                        label: 'Bride Date of Birth',
+                        selectedDate: _brideDob,
+                        onDateChanged: (date) {
+                          setState(() {
+                            _brideDob = date;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+
+                // Third Row: Time of Birth
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTimeField(
+                        label: 'Groom Time of Birth',
+                        selectedTime: _groomTob,
+                        onTimeChanged: (time) {
+                          setState(() {
+                            _groomTob = time;
+                          });
+                        },
+                      ),
+                    ),
+                    ResponsiveSystem.sizedBox(context,
+                        width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                    Expanded(
+                      child: _buildTimeField(
+                        label: 'Bride Time of Birth',
+                        selectedTime: _brideTob,
+                        onTimeChanged: (time) {
+                          setState(() {
+                            _brideTob = time;
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+
+                // Fourth Row: Place of Birth
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildGroomLocationSearchField(translationService),
+                    ),
+                    ResponsiveSystem.sizedBox(context,
+                        width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                    Expanded(
+                      child: _buildBrideLocationSearchField(translationService),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     ];
   }
 
@@ -1126,15 +1367,41 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
   /// Build calculation and matching section
   List<Widget> _buildCalculationSection(
       TranslationService translationService, MatchingState matchingState) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 600;
+    
     return [
       ResponsiveSystem.sizedBox(context,
           height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
 
-      // Ayanamsha Selection for Matching
+      // Calculation System Selection (Ayanamsha and House System)
       CentralizedSectionTitle(
           title: translationService.translateHeader('calculation_system',
               fallback: 'Calculation System')),
-      _buildAyanamshaSelector(translationService),
+      ResponsiveSystem.sizedBox(context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+      // Responsive layout: Row on larger screens, Column on small screens
+      isSmallScreen
+          ? Column(
+              children: [
+                _buildCompactAyanamshaDropdown(),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                _buildCompactHouseSystemDropdown(),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: _buildCompactAyanamshaDropdown(),
+                ),
+                ResponsiveSystem.sizedBox(context,
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                Expanded(
+                  child: _buildCompactHouseSystemDropdown(),
+                ),
+              ],
+            ),
       ResponsiveSystem.sizedBox(context,
           height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
 
@@ -1170,150 +1437,132 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
     ];
   }
 
-  /// Build ayanamsha selector for matching calculations (using same style as user edit screen)
-  Widget _buildAyanamshaSelector(TranslationService translationService) {
-    return ReusableFormField(
-      label: translationService.translateContent('select_calculation_system',
-          fallback: 'Select calculation system'),
-      isRequired: true,
-      prefixIcon: LucideIcons.compass,
-      child: _buildAyanamshaSelectorField(),
-    );
-  }
+  /// Build compact ayanamsha dropdown (similar to calendar screen)
+  Widget _buildCompactAyanamshaDropdown() {
+    final primaryColor = ThemeProperties.getPrimaryColor(context);
+    final primaryTextColor = ThemeProperties.getPrimaryTextColor(context);
+    final surfaceColor = ThemeProperties.getSurfaceColor(context);
 
-  /// Build ayanamsha selector field (same as user edit screen)
-  Widget _buildAyanamshaSelectorField() {
-    return InkWell(
-      onTap: _showAyanamshaSelector,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
-          vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
-        ),
-        decoration: BoxDecoration(
-          color: ThemeProperties.getSurfaceColor(context),
-          borderRadius: BorderRadius.circular(
-            ResponsiveSystem.borderRadius(context, baseRadius: 8),
-          ),
-          border: Border.all(
-            color: ThemeProperties.getBorderColor(context),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              LucideIcons.compass,
-              color: ThemeProperties.getPrimaryColor(context),
-              size: ResponsiveSystem.iconSize(context, baseSize: 20),
-            ),
-            ResponsiveSystem.sizedBox(context,
-                width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
-            Expanded(
-              child: Text(
-                _getAyanamshaDisplayName(_selectedAyanamsha),
-                style: TextStyle(
-                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                  color: ThemeProperties.getPrimaryTextColor(context),
-                ),
-              ),
-            ),
-            Icon(
-              LucideIcons.chevronDown,
-              color: ThemeProperties.getSecondaryTextColor(context),
-              size: ResponsiveSystem.iconSize(context, baseSize: 20),
-            ),
-          ],
+    final allAyanamshaTypes = AyanamshaInfoHelper.getAllAyanamshaTypes();
+
+    return Container(
+      height: ResponsiveSystem.spacing(context, baseSpacing: 40),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 6),
+        border: Border.all(
+          color: primaryColor.withAlpha((0.2 * 255).round()),
+          width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
-    );
-  }
-
-  /// Get ayanamsha display name
-  String _getAyanamshaDisplayName(AyanamshaType ayanamsha) {
-    final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
-    return info?.name ?? ayanamsha.toString();
-  }
-
-  /// Show ayanamsha selector dialog (same as user edit screen)
-  void _showAyanamshaSelector() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Select Ayanamsha System',
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedAyanamsha,
+          isExpanded: true,
+          alignment: Alignment.centerLeft,
           style: TextStyle(
-            fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-            fontWeight: FontWeight.bold,
-            color: ThemeProperties.getPrimaryTextColor(context),
+            fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+            color: primaryTextColor,
+            fontWeight: FontWeight.w500,
           ),
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: AyanamshaType.values.length,
-            itemBuilder: (context, index) {
-              final ayanamsha = AyanamshaType.values[index];
-              final isSelected = _selectedAyanamsha == ayanamsha;
-              final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
-              
-              return ListTile(
-                leading: Icon(
-                  LucideIcons.compass,
-                  color: isSelected 
-                      ? ThemeProperties.getPrimaryColor(context)
-                      : ThemeProperties.getSecondaryTextColor(context),
+          icon: Icon(
+            LucideIcons.chevronDown,
+            size: ResponsiveSystem.iconSize(context, baseSize: 16),
+            color: primaryColor,
+          ),
+          items: allAyanamshaTypes.map((ayanamsha) {
+            final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
+            return DropdownMenuItem<String>(
+              value: ayanamsha,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveSystem.spacing(context, baseSpacing: 8),
                 ),
-                title: Text(
-                  info?.name ?? ayanamsha.toString(),
-                  style: TextStyle(
-                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    color: isSelected 
-                        ? ThemeProperties.getPrimaryColor(context)
-                        : ThemeProperties.getPrimaryTextColor(context),
-                  ),
-                ),
-                subtitle: info?.description != null ? Text(
-                  info!.description,
-                  style: TextStyle(
-                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
-                    color: ThemeProperties.getSecondaryTextColor(context),
-                  ),
-                  maxLines: 2,
+                child: Text(
+                  info?.name ?? ayanamsha,
                   overflow: TextOverflow.ellipsis,
-                ) : null,
-                trailing: isSelected 
-                    ? Icon(
-                        LucideIcons.check,
-                        color: ThemeProperties.getPrimaryColor(context),
-                        size: ResponsiveSystem.iconSize(context, baseSize: 20),
-                      )
-                    : null,
-                onTap: () {
-                  setState(() {
-                    _selectedAyanamsha = ayanamsha;
-                  });
-                  Navigator.of(context).pop();
-                },
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancel',
-              style: TextStyle(
-                color: ThemeProperties.getSecondaryTextColor(context),
+                  maxLines: 1,
+                ),
               ),
-            ),
-          ),
-        ],
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedAyanamsha = newValue;
+              });
+              // Save immediately
+              MatchingFormStorageService.instance.saveAyanamsha(newValue);
+            }
+          },
+        ),
       ),
     );
   }
+
+  /// Build compact house system dropdown (similar to calendar screen)
+  Widget _buildCompactHouseSystemDropdown() {
+    final primaryColor = ThemeProperties.getPrimaryColor(context);
+    final primaryTextColor = ThemeProperties.getPrimaryTextColor(context);
+    final surfaceColor = ThemeProperties.getSurfaceColor(context);
+
+    final allHouseSystemTypes = HouseSystemInfoHelper.getAllHouseSystemTypes();
+
+    return Container(
+      height: ResponsiveSystem.spacing(context, baseSpacing: 40),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 6),
+        border: Border.all(
+          color: primaryColor.withAlpha((0.2 * 255).round()),
+          width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+        ),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedHouseSystem,
+          isExpanded: true,
+          alignment: Alignment.centerLeft,
+          style: TextStyle(
+            fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+            color: primaryTextColor,
+            fontWeight: FontWeight.w500,
+          ),
+          icon: Icon(
+            LucideIcons.chevronDown,
+            size: ResponsiveSystem.iconSize(context, baseSize: 16),
+            color: primaryColor,
+          ),
+          items: allHouseSystemTypes.map((houseSystem) {
+            final info = HouseSystemInfoHelper.getHouseSystemInfo(houseSystem);
+            return DropdownMenuItem<String>(
+              value: houseSystem,
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                ),
+                child: Text(
+                  info?.name ?? houseSystem,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            if (newValue != null) {
+              setState(() {
+                _selectedHouseSystem = newValue;
+              });
+              // Save immediately
+              MatchingFormStorageService.instance.saveHouseSystem(newValue);
+            }
+          },
+        ),
+      ),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -1328,12 +1577,16 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
             useSacredFire: false,
           ),
         ),
-        child: matchingState.showResults
-            ? animations.CentralizedAnimatedOpacity(
-                opacity: 1.0,
-                child: _buildResultsScreen(matchingState),
-              )
-            : _buildInputScreen(context),
+        child: matchingState.isLoading
+            ? _buildLoadingScreen()
+            : matchingState.hasError
+                ? _buildErrorScreen(matchingState)
+                : matchingState.showResults
+                    ? animations.CentralizedAnimatedOpacity(
+                        opacity: 1.0,
+                        child: _buildResultsScreen(matchingState),
+                      )
+                    : _buildInputScreen(context),
       ),
     );
   }
@@ -1352,6 +1605,16 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
           snap: true,
           backgroundColor: ThemeProperties.getTransparentColor(context),
           elevation: 0,
+          toolbarHeight: ResponsiveSystem.spacing(context, baseSpacing: 60),
+          // Minimal title shown only when collapsed
+          title: Text(
+            translationService.translateHeader('kundali_matching', fallback: 'Kundali Matching'),
+            style: TextStyle(
+              fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+              fontWeight: FontWeight.bold,
+              color: ThemeProperties.getAppBarTextColor(context),
+            ),
+          ),
           leading: IconButton(
             icon: Icon(
               LucideIcons.house,
@@ -1392,16 +1655,11 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
             ),
           ],
           flexibleSpace: FlexibleSpaceBar(
-            title: Text(
-              '💕 ${translationService.translateHeader('kundali_matching', fallback: 'Kundali Matching')}',
-              style: TextStyle(
-                fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                fontWeight: FontWeight.bold,
-                color: ThemeProperties.getPrimaryTextColor(context),
-              ),
-            ),
-            background: _buildHeroSection(),
+            // Title removed - hero section contains the main title
+            // This prevents duplicate titles when expanded
+            background: _buildHeroSection(translationService),
             collapseMode: CollapseMode.parallax,
+            stretchModes: const [StretchMode.zoomBackground],
           ),
         ),
 
@@ -1427,12 +1685,21 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
       slivers: [
         // SliverAppBar for consistency
         SliverAppBar(
-          expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 120),
+          expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 60),
           floating: false,
           pinned: true,
           backgroundColor: ThemeProperties.getTransparentColor(context),
           elevation: 0,
           toolbarHeight: ResponsiveSystem.spacing(context, baseSpacing: 60),
+          // Minimal title shown only when collapsed
+          title: Text(
+            translationService.translateHeader('kundali_matching', fallback: 'Kundali Matching'),
+            style: TextStyle(
+              fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+              fontWeight: FontWeight.bold,
+              color: ThemeProperties.getAppBarTextColor(context),
+            ),
+          ),
           leading: IconButton(
             icon: Icon(
               LucideIcons.house,
@@ -1472,24 +1739,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
               ),
             ),
           ],
-          flexibleSpace: FlexibleSpaceBar(
-            title: Text(
-              '💕 ${translationService.translateHeader('kundali_matching', fallback: 'Kundali Matching')}',
-              style: TextStyle(
-                fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                fontWeight: FontWeight.bold,
-                color: ThemeProperties.getPrimaryTextColor(context),
-              ),
-            ),
-            background: _buildHeroSection(),
-            collapseMode: CollapseMode.parallax,
-          ),
-        ),
-
-        // Spacing between app bar and content
-        SliverToBoxAdapter(
-          child: ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
         ),
 
         // Hero Section
@@ -1508,91 +1757,170 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
           padding: ResponsiveSystem.all(context, baseSpacing: 16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              // Side by side groom and bride details
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Groom Details
-                  Expanded(
-                    child: Column(
+              // Responsive layout: Row on larger screens, Column on small screens
+              Builder(
+                builder: (context) {
+                  final screenWidth = MediaQuery.of(context).size.width;
+                  final isSmallScreen = screenWidth < 600;
+                  
+                  if (isSmallScreen) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Groom Details
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CentralizedSectionTitle(title: 'Groom Details'),
+                            CentralizedInfoCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CentralizedInfoRow(label: 'Name', value: _groomNameController.text),
+                                  CentralizedInfoRow(
+                                      label: 'DOB', value: DateFormat('dd-MM-yyyy').format(_groomDob)),
+                                  CentralizedInfoRow(label: 'TOB', value: _groomTob.format(context)),
+                                  CentralizedInfoRow(
+                                    label: 'Place of Birth',
+                                    value: _groomPob,
+                                  ),
+                                  CentralizedInfoRow(
+                                    label: 'Nakshatram',
+                                    value: matchingState.kootaDetails?['person1Nakshatram'] ?? 'Not available',
+                                  ),
+                                  CentralizedInfoRow(
+                                    label: 'Raasi',
+                                    value: matchingState.kootaDetails?['person1Raasi'] ?? 'Not available',
+                                  ),
+                                  CentralizedInfoRow(
+                                    label: 'Pada',
+                                    value: matchingState.kootaDetails?['person1Pada'] ?? 'Not available',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        ResponsiveSystem.sizedBox(context,
+                            height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                        // Bride Details
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            CentralizedSectionTitle(title: 'Bride Details'),
+                            CentralizedInfoCard(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CentralizedInfoRow(label: 'Name', value: _brideNameController.text),
+                                  CentralizedInfoRow(
+                                      label: 'DOB', value: DateFormat('dd-MM-yyyy').format(_brideDob)),
+                                  CentralizedInfoRow(label: 'TOB', value: _brideTob.format(context)),
+                                  CentralizedInfoRow(
+                                    label: 'Place of Birth',
+                                    value: _bridePob,
+                                  ),
+                                  CentralizedInfoRow(
+                                    label: 'Nakshatram',
+                                    value: matchingState.kootaDetails?['person2Nakshatram'] ?? 'Not available',
+                                  ),
+                                  CentralizedInfoRow(
+                                    label: 'Raasi',
+                                    value: matchingState.kootaDetails?['person2Raasi'] ?? 'Not available',
+                                  ),
+                                  CentralizedInfoRow(
+                                    label: 'Pada',
+                                    value: matchingState.kootaDetails?['person2Pada'] ?? 'Not available',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  } else {
+                    return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CentralizedSectionTitle(title: 'Groom Details'),
-                        CentralizedInfoCard(
+                        // Groom Details
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CentralizedInfoRow(label: 'Name', value: _groomNameController.text),
-                              CentralizedInfoRow(
-                                  label: 'DOB', value: DateFormat('dd-MM-yyyy').format(_groomDob)),
-                              CentralizedInfoRow(label: 'TOB', value: _groomTob.format(context)),
-                              CentralizedInfoRow(
-                                label: 'Place of Birth',
-                                value: _groomPob,
+                              CentralizedSectionTitle(title: 'Groom Details'),
+                              CentralizedInfoCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CentralizedInfoRow(label: 'Name', value: _groomNameController.text),
+                                    CentralizedInfoRow(
+                                        label: 'DOB', value: DateFormat('dd-MM-yyyy').format(_groomDob)),
+                                    CentralizedInfoRow(label: 'TOB', value: _groomTob.format(context)),
+                                    CentralizedInfoRow(
+                                      label: 'Place of Birth',
+                                      value: _groomPob,
+                                    ),
+                                    CentralizedInfoRow(
+                                      label: 'Nakshatram',
+                                      value: matchingState.kootaDetails?['person1Nakshatram'] ?? 'Not available',
+                                    ),
+                                    CentralizedInfoRow(
+                                      label: 'Raasi',
+                                      value: matchingState.kootaDetails?['person1Raasi'] ?? 'Not available',
+                                    ),
+                                    CentralizedInfoRow(
+                                      label: 'Pada',
+                                      value: matchingState.kootaDetails?['person1Pada'] ?? 'Not available',
+                                    ),
+                                  ],
+                                ),
                               ),
-                              CentralizedInfoRow(
-                                label: 'Nakshatram',
-                                value: matchingState.kootaDetails?['person1Nakshatram'] ??
-                                    'Calculated by Astrology Library',
-                              ),
-                              CentralizedInfoRow(
-                                label: 'Raasi',
-                                value: matchingState.kootaDetails?['person1Raasi'] ??
-                                    'Calculated by Astrology Library',
-                              ),
-                              CentralizedInfoRow(
-                                label: 'Pada',
-                                value: matchingState.kootaDetails?['person1Pada'] ??
-                                    'Calculated by Astrology Library',
+                            ],
+                          ),
+                        ),
+                        ResponsiveSystem.sizedBox(context,
+                            width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                        // Bride Details
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CentralizedSectionTitle(title: 'Bride Details'),
+                              CentralizedInfoCard(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    CentralizedInfoRow(label: 'Name', value: _brideNameController.text),
+                                    CentralizedInfoRow(
+                                        label: 'DOB', value: DateFormat('dd-MM-yyyy').format(_brideDob)),
+                                    CentralizedInfoRow(label: 'TOB', value: _brideTob.format(context)),
+                                    CentralizedInfoRow(
+                                      label: 'Place of Birth',
+                                      value: _bridePob,
+                                    ),
+                                    CentralizedInfoRow(
+                                      label: 'Nakshatram',
+                                      value: matchingState.kootaDetails?['person2Nakshatram'] ?? 'Not available',
+                                    ),
+                                    CentralizedInfoRow(
+                                      label: 'Raasi',
+                                      value: matchingState.kootaDetails?['person2Raasi'] ?? 'Not available',
+                                    ),
+                                    CentralizedInfoRow(
+                                      label: 'Pada',
+                                      value: matchingState.kootaDetails?['person2Pada'] ?? 'Not available',
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  ResponsiveSystem.sizedBox(context,
-                      width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                  // Bride Details
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CentralizedSectionTitle(title: 'Bride Details'),
-                        CentralizedInfoCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CentralizedInfoRow(label: 'Name', value: _brideNameController.text),
-                              CentralizedInfoRow(
-                                  label: 'DOB', value: DateFormat('dd-MM-yyyy').format(_brideDob)),
-                              CentralizedInfoRow(label: 'TOB', value: _brideTob.format(context)),
-                              CentralizedInfoRow(
-                                label: 'Place of Birth',
-                                value: _bridePob,
-                              ),
-                              CentralizedInfoRow(
-                                label: 'Nakshatram',
-                                value: matchingState.kootaDetails?['person2Nakshatram'] ??
-                                    'Calculated by Astrology Library',
-                              ),
-                              CentralizedInfoRow(
-                                label: 'Raasi',
-                                value: matchingState.kootaDetails?['person2Raasi'] ??
-                                    'Calculated by Astrology Library',
-                              ),
-                              CentralizedInfoRow(
-                                label: 'Pada',
-                                value: matchingState.kootaDetails?['person2Pada'] ??
-                                    'Calculated by Astrology Library',
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                    );
+                  }
+                },
               ),
               ResponsiveSystem.sizedBox(context,
                   height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
@@ -1600,56 +1928,75 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
               CentralizedInfoCard(
                 child: Column(
                   children: [
-                    Text(
-                      '${(matchingState.compatibilityScore ?? 0).toStringAsFixed(0)}% Compatible',
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            color: (matchingState.compatibilityScore ?? 0) >= 70
+                    // Only show results if we have valid data
+                    if (matchingState.compatibilityScore != null) ...[
+                      Text(
+                        '${matchingState.compatibilityScore!.toStringAsFixed(0)}% Compatible',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              color: matchingState.compatibilityScore! >= 70
+                                  ? ThemeProperties.getPrimaryColor(context)
+                                  : (matchingState.compatibilityScore! >= 50
+                                      ? ThemeProperties.getPrimaryColor(context)
+                                          .withAlpha((0.7 * 255).round())
+                                      : ThemeProperties.getPrimaryColor(context)
+                                          .withAlpha((0.5 * 255).round())),
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      ResponsiveSystem.sizedBox(context,
+                          height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                      Text(
+                        '${_getTotalScore(matchingState)}/36 Points',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: matchingState.compatibilityScore! >= 70
+                                  ? ThemeProperties.getPrimaryColor(context)
+                                  : (matchingState.compatibilityScore! >= 50
+                                      ? ThemeProperties.getPrimaryColor(context)
+                                          .withAlpha((0.7 * 255).round())
+                                      : ThemeProperties.getPrimaryColor(context)
+                                          .withAlpha((0.5 * 255).round())),
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      ResponsiveSystem.sizedBox(context,
+                          height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                      LinearProgressIndicator(
+                        value: matchingState.compatibilityScore! / 100,
+                        backgroundColor: (matchingState.compatibilityScore! >= 70
                                 ? ThemeProperties.getPrimaryColor(context)
-                                : ((matchingState.compatibilityScore ?? 0) >= 50
+                                : (matchingState.compatibilityScore! >= 50
                                     ? ThemeProperties.getPrimaryColor(context)
                                         .withAlpha((0.7 * 255).round())
                                     : ThemeProperties.getPrimaryColor(context)
-                                        .withAlpha((0.5 * 255).round())),
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    ResponsiveSystem.sizedBox(context,
-                        height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
-                    Text(
-                      '${_getTotalScore(matchingState)}/36 Points',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: (matchingState.compatibilityScore ?? 0) >= 70
-                                ? ThemeProperties.getPrimaryColor(context)
-                                : ((matchingState.compatibilityScore ?? 0) >= 50
-                                    ? ThemeProperties.getPrimaryColor(context)
-                                        .withAlpha((0.7 * 255).round())
-                                    : ThemeProperties.getPrimaryColor(context)
-                                        .withAlpha((0.5 * 255).round())),
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    ResponsiveSystem.sizedBox(context,
-                        height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
-                    LinearProgressIndicator(
-                      value: (matchingState.compatibilityScore ?? 0) / 100,
-                      backgroundColor: ((matchingState.compatibilityScore ?? 0) >= 70
+                                        .withAlpha((0.5 * 255).round())))
+                            .withAlpha((0.2 * 255).round()),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          matchingState.compatibilityScore! >= 70
                               ? ThemeProperties.getPrimaryColor(context)
-                              : ((matchingState.compatibilityScore ?? 0) >= 50
+                              : (matchingState.compatibilityScore! >= 50
                                   ? ThemeProperties.getPrimaryColor(context)
                                       .withAlpha((0.7 * 255).round())
                                   : ThemeProperties.getPrimaryColor(context)
-                                      .withAlpha((0.5 * 255).round())))
-                          .withAlpha((0.2 * 255).round()),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        (matchingState.compatibilityScore ?? 0) >= 70
-                            ? ThemeProperties.getPrimaryColor(context)
-                            : ((matchingState.compatibilityScore ?? 0) >= 50
-                                ? ThemeProperties.getPrimaryColor(context)
-                                    .withAlpha((0.7 * 255).round())
-                                : ThemeProperties.getPrimaryColor(context)
-                                    .withAlpha((0.5 * 255).round())),
+                                      .withAlpha((0.5 * 255).round())),
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      // Show error message if data is missing
+                      Icon(
+                        Icons.error_outline,
+                        color: ThemeProperties.getErrorColor(context),
+                        size: ResponsiveSystem.iconSize(context, baseSize: 32),
+                      ),
+                      ResponsiveSystem.sizedBox(context,
+                          height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                      Text(
+                        'Data not available',
+                        style: TextStyle(
+                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                          color: ThemeProperties.getErrorColor(context),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -2066,8 +2413,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
       final totalPointsStr = matchingState.kootaDetails!['totalPoints'];
       return int.tryParse(totalPointsStr ?? '0') ?? 0;
     }
-    // Fallback: Calculate from compatibility score
-    return ((matchingState.compatibilityScore ?? 0) * 36 / 100).round();
+    // If totalPoints is not available, return null to indicate missing data
+    // Don't calculate fallback - let the UI handle missing data appropriately
+    return 0; // Return 0 only if data is truly missing, not as a fallback calculation
   }
 
   Widget _buildCalculationApproachInfo() {
@@ -2267,10 +2615,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
     }
   }
 
-  Widget _buildHeroSection() {
+  Widget _buildHeroSection(TranslationService translationService) {
     final primaryGradient = ThemeProperties.getPrimaryGradient(context);
+    
     return Container(
-      height: ResponsiveSystem.cardHeight(context, baseHeight: 200),
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
@@ -2278,50 +2626,51 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
           bottomRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
         ),
       ),
-      child: Stack(
-        children: [
-          // Background Pattern
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.1,
-              // Background Pattern - Removed missing asset
-              // child: Container(
-              //   decoration: const BoxDecoration(
-              //     image: DecorationImage(
-              //       image: AssetImage('assets/images/om_symbol.png'),
-              //       fit: BoxFit.contain,
-              //       repeat: ImageRepeat.repeat,
-              //     ),
-              //   ),
-              // ),
+      child: Container(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + ResponsiveSystem.spacing(context, baseSpacing: 60),
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 20),
+          left: ResponsiveSystem.spacing(context, baseSpacing: 20),
+          right: ResponsiveSystem.spacing(context, baseSpacing: 20),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.heart,
+              size: ResponsiveSystem.iconSize(context, baseSize: 40),
+              color: ThemeProperties.getPrimaryTextColor(context),
             ),
-          ),
-
-          // Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  LucideIcons.heart,
-                  size: ResponsiveSystem.iconSize(context, baseSize: 48),
-                  color: ThemeProperties.getPrimaryTextColor(context),
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
-                Text(
-                  'Find your perfect match with',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                        color: ThemeProperties.getPrimaryTextColor(context)
-                            .withAlpha((0.9 * 255).round()),
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            // Main title
+            Text(
+              '💕 ${translationService.translateHeader('kundali_matching', fallback: 'Kundali Matching')}',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 20),
+                fontWeight: FontWeight.bold,
+                color: ThemeProperties.getPrimaryTextColor(context),
+              ),
             ),
-          ),
-        ],
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            // Subtitle
+            Text(
+              'Find your perfect partner',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                color: ThemeProperties.getPrimaryTextColor(context).withValues(alpha: 0.9),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2329,8 +2678,8 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
   Widget _buildResultsHeroSection() {
     final primaryGradient = ThemeProperties.getPrimaryGradient(context);
     final matchingState = ref.watch(matchingProvider);
+    
     return Container(
-      height: ResponsiveSystem.cardHeight(context, baseHeight: 200),
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
@@ -2338,58 +2687,49 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
           bottomRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
         ),
       ),
-      child: Stack(
-        children: [
-          // Background Pattern
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.1,
-              // Background Pattern - Removed missing asset
-              // child: Container(
-              //   decoration: const BoxDecoration(
-              //     image: DecorationImage(
-              //       image: AssetImage('assets/images/om_symbol.png'),
-              //       fit: BoxFit.contain,
-              //       repeat: ImageRepeat.repeat,
-              //     ),
-              //   ),
-              // ),
+      child: Container(
+        padding: EdgeInsets.only(
+          top: ResponsiveSystem.spacing(context, baseSpacing: 32),
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 24),
+          left: ResponsiveSystem.spacing(context, baseSpacing: 20),
+          right: ResponsiveSystem.spacing(context, baseSpacing: 20),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.star,
+              size: ResponsiveSystem.iconSize(context, baseSize: 48),
+              color: ThemeProperties.getPrimaryTextColor(context),
             ),
-          ),
-
-          // Content
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  LucideIcons.star,
-                  size: ResponsiveSystem.iconSize(context, baseSize: 48),
-                  color: ThemeProperties.getPrimaryTextColor(context),
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                Text(
-                  'Matching Results',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: ThemeProperties.getPrimaryTextColor(context),
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
-                Text(
-                  '${(matchingState.compatibilityScore ?? 0).toStringAsFixed(0)}% Compatible',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: ThemeProperties.getPrimaryTextColor(context)
-                            .withAlpha((0.9 * 255).round()),
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+            Text(
+              'Matching Results',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 24),
+                color: ThemeProperties.getPrimaryTextColor(context),
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        ],
+            ResponsiveSystem.sizedBox(context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            Text(
+              '${(matchingState.compatibilityScore ?? 0).toStringAsFixed(0)}% Compatible',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                color: ThemeProperties.getPrimaryTextColor(context).withValues(alpha: 0.9),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2430,6 +2770,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen> with TickerProv
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;
@@ -2913,3 +3256,4 @@ class _CustomTimePickerDialogState extends State<_CustomTimePickerDialog> {
     );
   }
 }
+

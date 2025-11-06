@@ -6,8 +6,7 @@ library;
 
 import '../../core/utils/house_system_info.dart';
 import '../../core/utils/ayanamsha_info.dart';
-import '../../astrology/core/enums/astrology_enums.dart';
-import 'enhanced_dropdown_widgets.dart';
+import 'dropdown_widgets.dart';
 
 /// Adapter for HouseSystemInfo to implement DropdownItemInfo
 class HouseSystemInfoAdapter implements DropdownItemInfo {
@@ -50,14 +49,16 @@ class AyanamshaInfoAdapter implements DropdownItemInfo {
 /// Utility class for creating info adapters
 class DropdownInfoAdapters {
   /// Get house system info adapter
-  static HouseSystemInfoAdapter getHouseSystemInfo(HouseSystem system) {
+  static HouseSystemInfoAdapter? getHouseSystemInfo(String system) {
     final info = HouseSystemInfoHelper.getHouseSystemInfo(system);
-    return HouseSystemInfoAdapter(info!);
+    if (info == null) return null;
+    return HouseSystemInfoAdapter(info);
   }
 
   /// Get ayanamsa info adapter
-  static AyanamshaInfoAdapter getAyanamshaInfo(AyanamshaType type) {
+  static AyanamshaInfoAdapter? getAyanamshaInfo(String type) {
     final info = AyanamshaInfoHelper.getAyanamshaInfo(type);
-    return AyanamshaInfoAdapter(info!);
+    if (info == null) return null;
+    return AyanamshaInfoAdapter(info);
   }
 }

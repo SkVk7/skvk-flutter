@@ -9,7 +9,6 @@ import '../../../../core/models/user_model.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/utils/ayanamsha_info.dart';
 import '../../../../core/utils/house_system_info.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
 import '../../../../shared/widgets/reusable_form_fields.dart';
 
 /// User Edit Screen - Enhanced Version with Proper UI/UX
@@ -29,8 +28,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
   DateTime _dob = DateTime.now().subtract(const Duration(days: 25 * 365));
   TimeOfDay _tob = TimeOfDay.now();
   String _sex = 'Male';
-  AyanamshaType _ayanamsha = AyanamshaType.lahiri;
-  HouseSystem _houseSystem = HouseSystem.placidus;
+  String _ayanamsha = 'lahiri';
+  String _houseSystem = 'placidus';
 
   // Location search state
   List<Map<String, dynamic>> _locationSuggestions = [];
@@ -515,9 +514,9 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: AyanamshaType.values.length,
+            itemCount: AyanamshaInfoHelper.getAllAyanamshaTypes().length,
             itemBuilder: (context, index) {
-              final ayanamsha = AyanamshaType.values[index];
+              final ayanamsha = AyanamshaInfoHelper.getAllAyanamshaTypes()[index];
               final isSelected = _ayanamsha == ayanamsha;
               final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
               
@@ -529,7 +528,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                       : ThemeProperties.getSecondaryTextColor(context),
                 ),
                 title: Text(
-                  info?.name ?? ayanamsha.toString(),
+                  info?.name ?? ayanamsha,
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -598,9 +597,9 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: HouseSystem.values.length,
+            itemCount: HouseSystemInfoHelper.getAllHouseSystemTypes().length,
             itemBuilder: (context, index) {
-              final houseSystem = HouseSystem.values[index];
+              final houseSystem = HouseSystemInfoHelper.getAllHouseSystemTypes()[index];
               final isSelected = _houseSystem == houseSystem;
               final info = HouseSystemInfoHelper.getHouseSystemInfo(houseSystem);
               
@@ -665,15 +664,15 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
   }
 
   /// Get ayanamsha display name
-  String _getAyanamshaDisplayName(AyanamshaType ayanamsha) {
+  String _getAyanamshaDisplayName(String ayanamsha) {
     final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
-    return info?.name ?? ayanamsha.toString();
+    return info?.name ?? ayanamsha;
   }
 
   /// Get house system display name
-  String _getHouseSystemDisplayName(HouseSystem houseSystem) {
+  String _getHouseSystemDisplayName(String houseSystem) {
     final info = HouseSystemInfoHelper.getHouseSystemInfo(houseSystem);
-    return info?.name ?? houseSystem.toString();
+    return info?.name ?? houseSystem;
   }
 
   /// Save profile

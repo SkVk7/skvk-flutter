@@ -7,7 +7,7 @@ library;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
-import '../../astrology/cache/astrology_cache_manager.dart';
+import 'cache_service.dart';
 import '../logging/logging_helper.dart';
 import '../utils/either.dart';
 import '../errors/failures.dart';
@@ -16,7 +16,7 @@ import '../errors/failures.dart';
 class UserStorageService {
   static UserStorageService? _instance;
   SharedPreferences? _prefs;
-  final AstrologyCacheManager _cacheManager = AstrologyCacheManager.instance;
+  final CacheService _cacheService = CacheService.instance;
 
   // Storage keys
   static const String _userDataKey = 'user_profile_data';
@@ -35,7 +35,6 @@ class UserStorageService {
   Future<void> initialize() async {
     try {
       _prefs = await SharedPreferences.getInstance();
-      await _cacheManager.initialize();
       LoggingHelper.logInfo('User Storage Service initialized');
     } catch (e) {
       LoggingHelper.logError('Failed to initialize user storage service',
@@ -60,11 +59,11 @@ class UserStorageService {
       final userJson = json.encode(user.toJson());
       await _prefs!.setString(_userDataKey, userJson);
 
-      // Cache user data in astrology cache manager (user data with 1 year TTL)
-      await _cacheManager.setCachedData(
+      // Cache user data (user data with 1 year TTL)
+      _cacheService.set(
         _userCacheKey,
         user.toJson(),
-        isUserData: true,
+        duration: const Duration(days: 365),
       );
 
       LoggingHelper.logInfo('User data saved successfully');
@@ -82,8 +81,8 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      // First try to get from astrology cache (fastest)
-      final cachedData = await _cacheManager.getCachedData<Map<String, dynamic>>(_userCacheKey);
+      // First try to get from cache (fastest)
+      final cachedData = _cacheService.get(_userCacheKey);
       if (cachedData != null) {
         final user = UserModel.fromJson(cachedData);
         LoggingHelper.logDebug('User data retrieved from cache');
@@ -97,10 +96,10 @@ class UserStorageService {
         final user = UserModel.fromJson(userMap);
 
         // Cache it for future use
-        await _cacheManager.setCachedData(
+        _cacheService.set(
           _userCacheKey,
-          userMap,
-          isUserData: true,
+          userMap as Map<String, dynamic>,
+          duration: const Duration(days: 365),
         );
 
         LoggingHelper.logDebug('User data retrieved from storage and cached');
@@ -139,10 +138,10 @@ class UserStorageService {
       await _prefs!.setString(_userDataKey, userJson);
 
       // Update cache
-      await _cacheManager.setCachedData(
+      _cacheService.set(
         _userCacheKey,
         updatedUser.toJson(),
-        isUserData: true,
+        duration: const Duration(days: 365),
       );
 
       LoggingHelper.logInfo('User data updated successfully');
@@ -180,7 +179,7 @@ class UserStorageService {
       await _prefs!.remove(_userDataKey);
 
       // Remove from cache
-      await _cacheManager.clearCacheEntry(_userCacheKey);
+      _cacheService.remove(_userCacheKey);
 
       LoggingHelper.logInfo('User data deleted successfully');
       return ResultHelper.success(null);
@@ -201,7 +200,7 @@ class UserStorageService {
       await _prefs!.remove(_userDataKey);
 
       // Clear cache
-      await _cacheManager.clearCacheEntry(_userCacheKey);
+      _cacheService.remove(_userCacheKey);
 
       LoggingHelper.logInfo('All user data cleared successfully');
       return ResultHelper.success(null);
@@ -234,7 +233,7 @@ class UserStorageService {
         'placeOfBirth': user.placeOfBirth,
         'latitude': user.latitude,
         'longitude': user.longitude,
-        'ayanamsha': user.ayanamsha.name,
+        'ayanamsha': user.ayanamsha,
       };
 
       return ResultHelper.success(astrologyData);
@@ -252,7 +251,8 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      final cacheStats = _cacheManager.getCacheStats();
+      // Cache stats not available in simple cache service
+      final cacheStats = <String, dynamic>{};
       final hasUserData = await userExists();
 
       return {

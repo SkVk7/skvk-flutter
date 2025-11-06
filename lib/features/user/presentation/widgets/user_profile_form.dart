@@ -8,12 +8,10 @@ import '../../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/models/user_model.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
-import '../../../../astrology/core/constants/astrology_constants.dart';
 import '../../../../shared/widgets/centralized_widgets.dart';
-import '../../../../shared/widgets/enhanced_dropdown_widgets.dart';
+import '../../../../shared/widgets/dropdown_widgets.dart';
 import '../../../../shared/widgets/dropdown_info_adapters.dart';
-
+import '../../../../core/utils/ayanamsha_info.dart';
 import '../../../../core/theme/theme_provider.dart';
 
 /// Form field types for validation
@@ -47,7 +45,7 @@ class UserProfileFormData {
   final String placeOfBirth;
   final double latitude;
   final double longitude;
-  final AyanamshaType ayanamsha;
+  final String ayanamsha;
 
   const UserProfileFormData({
     required this.name,
@@ -66,7 +64,7 @@ class UserProfileFormData {
     String? placeOfBirth,
     double? latitude,
     double? longitude,
-    AyanamshaType? ayanamsha,
+    String? ayanamsha,
   }) {
     return UserProfileFormData(
       name: name ?? this.name,
@@ -438,7 +436,7 @@ class _FormFieldWrapper extends ConsumerWidget {
 
 /// Ayanamsha selector widget
 class _AyanamshaSelector extends ConsumerWidget {
-  final AyanamshaType selectedAyanamsha;
+  final String selectedAyanamsha;
   final VoidCallback? onTap;
 
   const _AyanamshaSelector({
@@ -472,25 +470,30 @@ class _AyanamshaSelector extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AyanamshaConstants.displayNames[selectedAyanamsha] ?? selectedAyanamsha.name,
+                    AyanamshaInfoHelper.getDisplayName(selectedAyanamsha),
                     style: TextStyle(
                       fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                       fontWeight: FontWeight.w500,
                       color: primaryTextColor,
                     ),
                   ),
-                  if (AyanamshaConstants.regionalInfo[selectedAyanamsha] != null)
-                    Padding(
-                      padding:
-                          EdgeInsets.only(top: ResponsiveSystem.spacing(context, baseSpacing: 4)),
-                      child: Text(
-                        AyanamshaConstants.regionalInfo[selectedAyanamsha]!,
-                        style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
-                          color: secondaryTextColor,
+                  Builder(
+                    builder: (context) {
+                      final description = AyanamshaInfoHelper.getDescription(selectedAyanamsha);
+                      if (description.isEmpty) return const SizedBox.shrink();
+                      return Padding(
+                        padding:
+                            EdgeInsets.only(top: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                        child: Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                            color: secondaryTextColor,
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -506,8 +509,8 @@ class _AyanamshaSelector extends ConsumerWidget {
 
 /// Ayanamsha selection dialog
 class _AyanamshaSelectionDialog extends ConsumerWidget {
-  final AyanamshaType selectedAyanamsha;
-  final Function(AyanamshaType) onAyanamshaSelected;
+  final String selectedAyanamsha;
+  final Function(String) onAyanamshaSelected;
 
   const _AyanamshaSelectionDialog({
     required this.selectedAyanamsha,
@@ -537,9 +540,9 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
         width: double.maxFinite,
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: AyanamshaType.values.length,
+          itemCount: AyanamshaInfoHelper.getAllAyanamshaTypes().length,
           itemBuilder: (context, index) {
-            final ayanamsha = AyanamshaType.values[index];
+            final ayanamsha = AyanamshaInfoHelper.getAllAyanamshaTypes()[index];
             final isSelected = ayanamsha == selectedAyanamsha;
 
             return Card(
@@ -555,16 +558,39 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
                         width: ResponsiveSystem.borderWidth(context, baseWidth: 2))
                     : BorderSide.none,
               ),
-              child: EnhancedListTile<AyanamshaType>(
-                value: ayanamsha,
-                info: DropdownInfoAdapters.getAyanamshaInfo(ayanamsha),
-                isSelected: isSelected,
-                primaryColor: primaryColor,
-                primaryTextColor: primaryTextColor,
-                secondaryTextColor: secondaryTextColor,
-                onTap: () {
-                  onAyanamshaSelected(ayanamsha);
-                  Navigator.of(context).pop();
+              child: Builder(
+                builder: (context) {
+                  final info = DropdownInfoAdapters.getAyanamshaInfo(ayanamsha);
+                  if (info == null) {
+                    // Fallback if info is null - create a simple adapter
+                    final ayanamshaInfo = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
+                    if (ayanamshaInfo != null) {
+                      return DropdownListTile<String>(
+                        value: ayanamsha,
+                        info: AyanamshaInfoAdapter(ayanamshaInfo),
+                        isSelected: isSelected,
+                        primaryColor: primaryColor,
+                        primaryTextColor: primaryTextColor,
+                        secondaryTextColor: secondaryTextColor,
+                        onTap: () {
+                          onAyanamshaSelected(ayanamsha);
+                        },
+                      );
+                    }
+                  }
+                  final finalInfo = info ?? AyanamshaInfoAdapter(AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha)!);
+                  return DropdownListTile<String>(
+                    value: ayanamsha,
+                    info: finalInfo,
+                    isSelected: isSelected,
+                    primaryColor: primaryColor,
+                    primaryTextColor: primaryTextColor,
+                    secondaryTextColor: secondaryTextColor,
+                    onTap: () {
+                      onAyanamshaSelected(ayanamsha);
+                      Navigator.of(context).pop();
+                    },
+                  );
                 },
               ),
             );

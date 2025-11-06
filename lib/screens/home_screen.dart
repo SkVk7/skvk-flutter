@@ -11,7 +11,7 @@ import '../core/navigation/animated_navigation.dart';
 import '../core/logging/logging_helper.dart';
 import '../core/theme/theme_provider.dart';
 import '../core/services/language_service.dart';
-import '../features/calendar/presentation/screens/hindu_calendar_screen.dart';
+import '../features/calendar/presentation/screens/calendar_screen.dart';
 import '../features/predictions/presentation/screens/predictions_screen.dart';
 import '../features/matching/presentation/screens/matching_screen.dart';
 import '../features/user/presentation/screens/user_edit_screen.dart';
@@ -400,7 +400,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
   void _navigateToCalendar(BuildContext context) {
     AnimatedNavigation.pushSlide(
       context,
-      const HinduCalendarScreen(),
+      const CalendarScreen(),
       direction: SlideDirection.rightToLeft,
       duration: const Duration(milliseconds: 400),
     );
@@ -436,6 +436,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObse
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;

@@ -17,6 +17,7 @@ class MatchingFormStorageService {
   static const String _groomDataKey = 'matching_groom_data';
   static const String _brideDataKey = 'matching_bride_data';
   static const String _ayanamshaKey = 'matching_ayanamsha';
+  static const String _houseSystemKey = 'matching_house_system';
 
   // Private constructor for singleton
   MatchingFormStorageService._();
@@ -153,6 +154,30 @@ class MatchingFormStorageService {
     }
   }
 
+  /// Save house system selection
+  Future<void> saveHouseSystem(String houseSystem) async {
+    try {
+      await _ensureInitialized();
+      await _prefs!.setString(_houseSystemKey, houseSystem);
+      LoggingHelper.logInfo('House system saved successfully');
+    } catch (e) {
+      LoggingHelper.logError('Failed to save house system',
+          source: 'MatchingFormStorageService', error: e);
+    }
+  }
+
+  /// Get house system selection
+  Future<String?> getHouseSystem() async {
+    try {
+      await _ensureInitialized();
+      return _prefs!.getString(_houseSystemKey);
+    } catch (e) {
+      LoggingHelper.logError('Failed to get house system',
+          source: 'MatchingFormStorageService', error: e);
+      return null;
+    }
+  }
+
   /// Clear all matching form data
   Future<void> clearAllData() async {
     try {
@@ -160,6 +185,7 @@ class MatchingFormStorageService {
       await _prefs!.remove(_groomDataKey);
       await _prefs!.remove(_brideDataKey);
       await _prefs!.remove(_ayanamshaKey);
+      await _prefs!.remove(_houseSystemKey);
       LoggingHelper.logInfo('All matching form data cleared');
     } catch (e) {
       LoggingHelper.logError('Failed to clear matching form data',

@@ -31,7 +31,7 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
   // State variables
   int _pradakshanaCount = 0;
   bool _isButtonDisabled = false;
-  Duration _cooldownDuration = const Duration(seconds: 30);
+  Duration _cooldownDuration = const Duration(seconds: 0);
   Timer? _cooldownTimer;
   DateTime? _lastTriggerTime;
   Duration _remainingCooldown = Duration.zero;
@@ -125,7 +125,7 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
       final savedCount = prefs.getInt(_countKey) ?? 0;
       
       // Load cooldown duration
-      final savedCooldownSeconds = prefs.getInt(_cooldownKey) ?? 30;
+      final savedCooldownSeconds = prefs.getInt(_cooldownKey) ?? 0;
       
       // Load last trigger time
       final savedLastTriggerTime = prefs.getString(_lastTriggerKey);
@@ -253,6 +253,9 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;

@@ -23,9 +23,7 @@ import '../../../../core/services/translation_service.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/services/language_service.dart';
 import '../../../../core/logging/logging_helper.dart';
-import '../../../../astrology/core/entities/astrology_entities.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
+import '../../../../core/services/astrology_service_bridge.dart';
 import '../widgets/profile_header_widget.dart';
 import '../widgets/profile_info_card.dart';
 import '../screens/user_edit_screen.dart';
@@ -224,39 +222,35 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         AppLogger.debug(
             'Attempting fallback: calling astrology library directly...', 'UserProfile');
         try {
-          final astrologyFacade = AstrologyFacade.instance;
+          final bridge = AstrologyServiceBridge.instance;
 
           // Get timezone from user's location
-          final timezoneId = await astrologyFacade.getTimezoneFromLocation(
+          final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
               _currentUser!.latitude, _currentUser!.longitude);
 
-          final fixedBirthData = await astrologyFacade.getFixedBirthData(
+          final fixedBirthData = await bridge.getBirthData(
             localBirthDateTime: _currentUser!.localBirthDateTime,
             timezoneId: timezoneId,
             latitude: _currentUser!.latitude,
             longitude: _currentUser!.longitude,
-            isUserData: true,
             ayanamsha: _currentUser!.ayanamsha,
           );
 
+          final rashiMap = fixedBirthData['rashi'] as Map<String, dynamic>?;
+          final nakshatraMap = fixedBirthData['nakshatra'] as Map<String, dynamic>?;
+          final padaMap = fixedBirthData['pada'] as Map<String, dynamic>?;
+          final birthChartMap = fixedBirthData['birthChart'] as Map<String, dynamic>?;
+          final dashaMap = fixedBirthData['dasha'] as Map<String, dynamic>?;
+          final houseLords = birthChartMap?['houseLords'] as Map<String, dynamic>?;
+
           final fallbackData = {
-            'moon_rashi': fixedBirthData.rashi,
-            'moon_nakshatra': fixedBirthData.nakshatra,
-            'moon_pada': fixedBirthData.pada,
-            'ascendant': fixedBirthData.birthChart.houseLords[House.first]?.name ?? 'Unknown',
-            'birth_chart': {
-              'house_lords': fixedBirthData.birthChart.houseLords,
-              'planet_houses': fixedBirthData.birthChart.planetHouses,
-              'planet_rashis': fixedBirthData.birthChart.planetRashis,
-              'planet_nakshatras': fixedBirthData.birthChart.planetNakshatras,
-            },
-            'dasha': {
-              'current_lord': fixedBirthData.dasha.currentLord.name,
-              'start_date': fixedBirthData.dasha.startDate.toIso8601String(),
-              'end_date': fixedBirthData.dasha.endDate.toIso8601String(),
-              'progress': fixedBirthData.dasha.progress,
-            },
-            'calculated_at': fixedBirthData.calculatedAt.toIso8601String(),
+            'moonRashi': rashiMap,
+            'moonNakshatra': nakshatraMap,
+            'moonPada': padaMap,
+            'ascendant': houseLords?['House 1'] ?? 'Unknown',
+            'birthChart': birthChartMap ?? {},
+            'dasha': dashaMap ?? {},
+            'calculatedAt': fixedBirthData['calculatedAt'] as String? ?? DateTime.now().toIso8601String(),
           };
 
           AppLogger.debug('Fallback data created successfully', 'UserProfile');
@@ -688,15 +682,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                                   : null,
                                               children: [
                                                 _buildAstrologyInfoRow('Moon Sign (Rashi)',
-                                                    _getAstrologyValue('moon_rashi'),
+                                                    _getAstrologyValue('moonRashi'),
                                                     rashiNumber:
-                                                        _getAstrologyRashiNumber('moon_rashi')),
+                                                        _getAstrologyRashiNumber('moonRashi')),
                                                 _buildAstrologyInfoRow('Birth Star (Nakshatra)',
-                                                    _getAstrologyValue('moon_nakshatra'),
+                                                    _getAstrologyValue('moonNakshatra'),
                                                     nakshatraNumber: _getAstrologyNakshatraNumber(
-                                                        'moon_nakshatra')),
+                                                        'moonNakshatra')),
                                                 _buildAstrologyInfoRow('Star Quarter (Pada)',
-                                                    _getAstrologyValue('moon_pada')),
+                                                    _getAstrologyValue('moonPada')),
                                                 _buildAstrologyInfoRow('Rising Sign (Ascendant)',
                                                     _getAstrologyValue('ascendant'),
                                                     rashiNumber:
@@ -810,14 +804,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 
   String _convertToUserFriendlyText(String key, dynamic value) {
-    // Handle different data types from the astrology library
-    if (value is RashiData) {
-      return value
-          .englishName; // Return just the English name, symbol will be added by AstrologyInfoRow
-    } else if (value is NakshatraData) {
-      return value.englishName; // Return the English name instead of Sanskrit
-    } else if (value is PadaData) {
-      return value.name; // Return the pada name (already in English)
+    // Handle different data types from the API
+    if (value is Map<String, dynamic>) {
+      // Handle Map data from API
+      if (value.containsKey('englishName')) {
+        return value['englishName'] as String? ?? 'Unknown';
+      } else if (value.containsKey('name')) {
+        return value['name'] as String? ?? 'Unknown';
+      } else if (value.containsKey('number')) {
+        return '${value['number']}';
+      }
+      return 'Unknown';
     } else if (value is String) {
       // Handle string values - check if it contains symbol concatenation
       if (key.toLowerCase().contains('nakshatra') && value.contains(' ')) {
@@ -833,18 +830,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     } else if (value is int) {
       // Handle numeric values for backward compatibility
       switch (key.toLowerCase()) {
-        case 'moon_rashi':
+        case 'moonrashi':
         case 'rashi':
-        case 'moon_sign':
+        case 'moonsign':
           // Use direct property access from birth data if available
           return 'Rashi $value'; // Simplified display
-        case 'moon_nakshatra':
+        case 'moonnakshatra':
         case 'nakshatra':
-        case 'birth_star':
+        case 'birthstar':
           return 'Nakshatra $value'; // Simplified display
-        case 'moon_pada':
+        case 'moonpada':
         case 'pada':
-        case 'star_quarter':
+        case 'starquarter':
           return 'Pada $value'; // Simplified display
         case 'ascendant':
         case 'rising_sign':
@@ -862,8 +859,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     if (_astrologyData == null) return null;
 
     dynamic value = _astrologyData![key];
-    if (value is RashiData) {
-      return value.number;
+    if (value is Map<String, dynamic>) {
+      return value['number'] as int?;
     } else if (value is int) {
       return value;
     }
@@ -874,8 +871,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     if (_astrologyData == null) return null;
 
     dynamic value = _astrologyData![key];
-    if (value is NakshatraData) {
-      return value.number;
+    if (value is Map<String, dynamic>) {
+      return value['number'] as int?;
     } else if (value is int) {
       return value;
     }
@@ -1023,6 +1020,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;

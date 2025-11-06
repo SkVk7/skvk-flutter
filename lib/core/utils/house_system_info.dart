@@ -4,11 +4,9 @@
 /// and their regional/traditional usage for user selection
 library;
 
-import '../../astrology/core/enums/astrology_enums.dart';
-
 /// Information about house systems
 class HouseSystemInfo {
-  final HouseSystem system;
+  final String system;
   final String name;
   final String description;
   final List<String> regions;
@@ -31,9 +29,32 @@ class HouseSystemInfo {
 
 /// Helper class for house system information
 class HouseSystemInfoHelper {
+  static const List<String> _houseSystemTypes = [
+    'placidus',
+    'whole',
+    'equal',
+    'koch',
+    'porphyry',
+    'regiomontanus',
+    'campanus',
+    'alcabitius',
+    'topocentric',
+    'krusinski',
+    'vehlow',
+    'axial',
+    'horizontal',
+    'polichPage',
+    'morinus',
+    'carter',
+    'equalMidheaven',
+    'wholeSign',
+    'sripati',
+    'sriLanka',
+  ];
+
   static const List<HouseSystemInfo> _houseSystemInfo = [
     HouseSystemInfo(
-      system: HouseSystem.placidus,
+      system: 'placidus',
       name: 'Placidus Houses',
       description: 'Most widely used house system in Western astrology, based on time divisions',
       regions: ['Western Countries', 'USA', 'Europe', 'Australia', 'Modern India'],
@@ -43,7 +64,7 @@ class HouseSystemInfoHelper {
       isRecommended: true,
     ),
     HouseSystemInfo(
-      system: HouseSystem.whole,
+      system: 'whole',
       name: 'Whole Sign Houses',
       description: 'Traditional Vedic approach where each sign occupies an entire house',
       regions: ['India', 'Traditional Centers', 'Ancient Astrology'],
@@ -53,7 +74,7 @@ class HouseSystemInfoHelper {
       isRecommended: true,
     ),
     HouseSystemInfo(
-      system: HouseSystem.equal,
+      system: 'equal',
       name: 'Equal Houses',
       description: 'Simple system where all houses are exactly 30 degrees wide',
       regions: ['India', 'Traditional Centers', 'Simple Systems'],
@@ -62,7 +83,7 @@ class HouseSystemInfoHelper {
       calculationMethod: 'Each house = exactly 30 degrees from ascendant',
     ),
     HouseSystemInfo(
-      system: HouseSystem.koch,
+      system: 'koch',
       name: 'Koch Houses',
       description: 'Time-based house system developed by Walter Koch, popular in Germany',
       regions: ['Germany', 'Central Europe', 'German-speaking Countries'],
@@ -71,7 +92,7 @@ class HouseSystemInfoHelper {
       calculationMethod: 'Time-based divisions with specific mathematical formula',
     ),
     HouseSystemInfo(
-      system: HouseSystem.porphyry,
+      system: 'porphyry',
       name: 'Porphyry Houses',
       description: 'Ancient house system named after Porphyry, divides quadrants equally',
       regions: ['Ancient Centers', 'Traditional Astrology', 'Historical'],
@@ -80,7 +101,7 @@ class HouseSystemInfoHelper {
       calculationMethod: 'Equal division of quadrants between angles',
     ),
     HouseSystemInfo(
-      system: HouseSystem.regiomontanus,
+      system: 'regiomontanus',
       name: 'Regiomontanus Houses',
       description: 'Spherical house system developed by Regiomontanus in the 15th century',
       regions: ['Europe', 'Historical', 'Traditional Western'],
@@ -89,7 +110,7 @@ class HouseSystemInfoHelper {
       calculationMethod: 'Spherical projection onto the ecliptic',
     ),
     HouseSystemInfo(
-      system: HouseSystem.campanus,
+      system: 'campanus',
       name: 'Campanus Houses',
       description: 'House system developed by Campanus of Novara, based on prime vertical',
       regions: ['Europe', 'Historical', 'Traditional Western'],
@@ -98,69 +119,128 @@ class HouseSystemInfoHelper {
       calculationMethod: 'Prime vertical projection system',
     ),
     HouseSystemInfo(
-      system: HouseSystem.alcabitius,
+      system: 'alcabitius',
       name: 'Alcabitius Houses',
-      description: 'Ancient house system developed by Al-Qabisi (Alcabitius)',
-      regions: ['Middle East', 'Islamic World', 'Historical'],
-      traditions: ['Islamic Astrology', 'Medieval Arabic', 'Traditional'],
-      usage: 'Used in traditional Islamic and Arabic astrology',
-      calculationMethod: 'Equal division of semi-arcs',
+      description: 'Medieval house system developed by Al-Qabisi, popular in Arabic astrology',
+      regions: ['Middle East', 'Medieval Europe', 'Historical'],
+      traditions: ['Medieval Astrology', 'Arabic Astrology', 'Traditional Western'],
+      usage: 'Used in medieval Arabic and European astrology',
+      calculationMethod: 'Prime vertical-based system with specific formula',
     ),
     HouseSystemInfo(
-      system: HouseSystem.topocentric,
+      system: 'topocentric',
       name: 'Topocentric Houses',
-      description: 'Modern house system developed by Wendel Polich and Anthony Nelson Page',
-      regions: ['Modern Centers', 'Research', 'Contemporary Astrology'],
-      traditions: ['Modern Western', 'Research-based', 'Contemporary'],
-      usage: 'Used in modern astrological research and contemporary practice',
-      calculationMethod: 'Topocentric projection system',
+      description: 'House system based on topocentric coordinates, developed by Wendel Polich',
+      regions: ['International', 'Modern Western'],
+      traditions: ['Modern Western', 'Topocentric Astrology'],
+      usage: 'Used in modern topocentric astrology',
+      calculationMethod: 'Topocentric coordinate-based system',
     ),
     HouseSystemInfo(
-      system: HouseSystem.krusinski,
+      system: 'krusinski',
       name: 'Krusinski Houses',
       description: 'House system developed by Polish astrologer Krusinski',
-      regions: ['Poland', 'Eastern Europe', 'Specialized'],
-      traditions: ['Polish Astrology', 'Eastern European', 'Specialized'],
-      usage: 'Used in Polish and some Eastern European astrological traditions',
-      calculationMethod: 'Specialized mathematical projection',
+      regions: ['Poland', 'Central Europe'],
+      traditions: ['Modern Western', 'Polish Astrology'],
+      usage: 'Used in Polish astrological circles',
+      calculationMethod: 'Specific mathematical formula',
     ),
     HouseSystemInfo(
-      system: HouseSystem.axial,
+      system: 'vehlow',
+      name: 'Vehlow Houses',
+      description: 'House system developed by German astrologer Vehlow',
+      regions: ['Germany', 'Central Europe'],
+      traditions: ['German Astrology', 'Modern Western'],
+      usage: 'Used in German astrological circles',
+      calculationMethod: 'Specific mathematical formula',
+    ),
+    HouseSystemInfo(
+      system: 'axial',
       name: 'Axial Rotation Houses',
-      description: 'House system based on axial rotation principles',
-      regions: ['Research', 'Experimental', 'Modern'],
-      traditions: ['Modern Research', 'Experimental', 'Contemporary'],
-      usage: 'Used in experimental and research-based astrology',
-      calculationMethod: 'Axial rotation-based calculations',
+      description: 'House system based on axial rotation',
+      regions: ['International', 'Modern Western'],
+      traditions: ['Modern Western', 'Experimental'],
+      usage: 'Used in experimental modern astrology',
+      calculationMethod: 'Axial rotation-based system',
     ),
     HouseSystemInfo(
-      system: HouseSystem.horizontal,
+      system: 'horizontal',
       name: 'Horizontal Houses',
-      description: 'House system based on horizontal coordinate system',
-      regions: ['Research', 'Specialized', 'Modern'],
-      traditions: ['Modern Research', 'Specialized', 'Contemporary'],
-      usage: 'Used in specialized astrological research',
-      calculationMethod: 'Horizontal coordinate system projection',
+      description: 'House system based on horizontal plane',
+      regions: ['International', 'Modern Western'],
+      traditions: ['Modern Western', 'Experimental'],
+      usage: 'Used in experimental modern astrology',
+      calculationMethod: 'Horizontal plane-based system',
     ),
     HouseSystemInfo(
-      system: HouseSystem.polich,
-      name: 'Polich/Page Houses',
-      description: 'Modern house system developed by Wendel Polich and Anthony Nelson Page',
-      regions: ['Modern Centers', 'Research', 'Contemporary'],
-      traditions: ['Modern Western', 'Research-based', 'Contemporary'],
-      usage: 'Used in modern astrological research and contemporary practice',
-      calculationMethod: 'Modern mathematical projection system',
+      system: 'polichPage',
+      name: 'Polich-Page Houses',
+      description: 'House system developed by Polich and Page',
+      regions: ['International', 'Modern Western'],
+      traditions: ['Modern Western', 'Experimental'],
+      usage: 'Used in experimental modern astrology',
+      calculationMethod: 'Specific mathematical formula',
     ),
     HouseSystemInfo(
-      system: HouseSystem.morinus,
+      system: 'morinus',
       name: 'Morinus Houses',
-      description: 'House system developed by Jean-Baptiste Morin (Morinus)',
-      regions: ['France', 'Europe', 'Historical'],
-      traditions: ['French Astrology', 'Historical', 'Traditional Western'],
-      usage: 'Used in traditional French astrology and historical practice',
-      calculationMethod: 'Historical French calculation method',
+      description: 'House system developed by Jean-Baptiste Morin',
+      regions: ['France', 'Historical'],
+      traditions: ['Historical', 'Traditional Western'],
+      usage: 'Used in historical French astrology',
+      calculationMethod: 'Specific mathematical formula',
+    ),
+    HouseSystemInfo(
+      system: 'carter',
+      name: 'Carter Houses',
+      description: 'House system developed by Charles Carter',
+      regions: ['UK', 'International'],
+      traditions: ['Modern Western', 'British Astrology'],
+      usage: 'Used in British astrological circles',
+      calculationMethod: 'Specific mathematical formula',
+    ),
+    HouseSystemInfo(
+      system: 'equalMidheaven',
+      name: 'Equal Midheaven Houses',
+      description: 'House system where houses are equal with midheaven as reference',
+      regions: ['International', 'Modern Western'],
+      traditions: ['Modern Western', 'Experimental'],
+      usage: 'Used in experimental modern astrology',
+      calculationMethod: 'Equal houses from midheaven',
+    ),
+    HouseSystemInfo(
+      system: 'wholeSign',
+      name: 'Whole Sign Houses',
+      description: 'Traditional whole sign house system',
+      regions: ['India', 'Traditional Centers'],
+      traditions: ['Traditional Vedic', 'Hellenistic'],
+      usage: 'Used in traditional Vedic and Hellenistic astrology',
+      calculationMethod: 'Each sign = one complete house',
+    ),
+    HouseSystemInfo(
+      system: 'sripati',
+      name: 'Sripati Houses',
+      description: 'Traditional Indian house system named after Sripati',
+      regions: ['India', 'Traditional Centers'],
+      traditions: ['Traditional Vedic', 'Sripati School'],
+      usage: 'Used in traditional Indian astrology',
+      calculationMethod: 'Traditional Indian calculation method',
+    ),
+    HouseSystemInfo(
+      system: 'sriLanka',
+      name: 'Sri Lanka Houses',
+      description: 'House system used in Sri Lankan astrology',
+      regions: ['Sri Lanka', 'South Asia'],
+      traditions: ['Sri Lankan Astrology', 'Regional Vedic'],
+      usage: 'Used in Sri Lankan astrological traditions',
+      calculationMethod: 'Sri Lankan calculation method',
     ),
   ];
+
+  /// Get all house system types
+  static List<String> getAllHouseSystemTypes() {
+    return _houseSystemTypes;
+  }
 
   /// Get all house system information
   static List<HouseSystemInfo> getAllHouseSystemInfo() {
@@ -168,15 +248,15 @@ class HouseSystemInfoHelper {
   }
 
   /// Get house system info by type
-  static HouseSystemInfo? getHouseSystemInfo(HouseSystem system) {
+  static HouseSystemInfo? getHouseSystemInfo(String system) {
     try {
-      return _houseSystemInfo.firstWhere((info) => info.system == system);
+      return _houseSystemInfo.firstWhere((info) => info.system == system.toLowerCase());
     } catch (e) {
       return null;
     }
   }
 
-  /// Get recommended house systems
+  /// Get recommended house system types
   static List<HouseSystemInfo> getRecommendedHouseSystems() {
     return _houseSystemInfo.where((info) => info.isRecommended).toList();
   }
@@ -197,43 +277,37 @@ class HouseSystemInfoHelper {
   }
 
   /// Get display name for house system
-  static String getDisplayName(HouseSystem system) {
+  static String getDisplayName(String system) {
     final info = getHouseSystemInfo(system);
-    return info?.name ?? system.name;
+    return info?.name ?? system;
   }
 
   /// Get description for house system
-  static String getDescription(HouseSystem system) {
+  static String getDescription(String system) {
     final info = getHouseSystemInfo(system);
     return info?.description ?? 'No description available';
   }
 
   /// Get regions for house system
-  static List<String> getRegions(HouseSystem system) {
+  static List<String> getRegions(String system) {
     final info = getHouseSystemInfo(system);
     return info?.regions ?? [];
   }
 
   /// Get traditions for house system
-  static List<String> getTraditions(HouseSystem system) {
+  static List<String> getTraditions(String system) {
     final info = getHouseSystemInfo(system);
     return info?.traditions ?? [];
   }
 
   /// Get usage information for house system
-  static String getUsage(HouseSystem system) {
+  static String getUsage(String system) {
     final info = getHouseSystemInfo(system);
     return info?.usage ?? 'No usage information available';
   }
 
-  /// Get calculation method for house system
-  static String getCalculationMethod(HouseSystem system) {
-    final info = getHouseSystemInfo(system);
-    return info?.calculationMethod ?? 'No calculation method information available';
-  }
-
   /// Check if house system is recommended
-  static bool isRecommended(HouseSystem system) {
+  static bool isRecommended(String system) {
     final info = getHouseSystemInfo(system);
     return info?.isRecommended ?? false;
   }

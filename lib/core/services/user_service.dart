@@ -11,17 +11,16 @@ import '../utils/either.dart';
 import '../utils/app_logger.dart';
 import '../errors/failures.dart';
 import '../logging/logging_helper.dart';
-import '../../astrology/astrology_library.dart';
-import '../../astrology/core/facades/astrology_facade.dart';
-import '../../astrology/cache/astrology_cache_manager.dart';
-import '../../astrology/core/enums/astrology_enums.dart';
-import '../../astrology/core/factories/data_factory.dart';
+import 'astrology_service_bridge.dart';
+import 'cache_service.dart';
 import 'user_storage_service.dart';
+import 'daily_prediction_scheduler.dart';
+import 'daily_prediction_notification_service.dart';
 
 /// User service that manages user data and integrates with astrology calculations
 class UserService extends Notifier<UserModel?> {
   final UserStorageService _storageService = UserStorageService.instance;
-  final AstrologyCacheManager _cacheManager = AstrologyCacheManager.instance;
+  final CacheService _cacheService = CacheService.instance;
 
   bool _isInitialized = false;
 
@@ -36,9 +35,8 @@ class UserService extends Notifier<UserModel?> {
     if (_isInitialized) return;
 
     try {
-      // Initialize storage service and cache manager
+      // Initialize storage service
       await _storageService.initialize();
-      await _cacheManager.initialize();
 
       // Load user from storage
       await _loadUserFromStorage();
@@ -90,6 +88,15 @@ class UserService extends Notifier<UserModel?> {
       // Compute and cache complete astrology data using centralized library
       await _precomputeCompleteAstrologyData(user);
 
+      // Trigger daily prediction notification after user is saved
+      try {
+        final scheduler = DailyPredictionScheduler.instance;
+        await scheduler.fetchAndNotifyDailyPrediction();
+      } catch (e) {
+        // Don't fail user save if notification fails
+        LoggingHelper.logWarning('Failed to trigger daily prediction notification: $e');
+      }
+
       LoggingHelper.logInfo('User saved successfully');
       return ResultHelper.success(null);
     } catch (e) {
@@ -137,6 +144,15 @@ class UserService extends Notifier<UserModel?> {
 
       // Pre-compute complete astrology data for user (full birth chart)
       await _precomputeCompleteAstrologyData(user);
+
+      // Trigger daily prediction notification after user is updated
+      try {
+        final scheduler = DailyPredictionScheduler.instance;
+        await scheduler.fetchAndNotifyDailyPrediction();
+      } catch (e) {
+        // Don't fail user update if notification fails
+        LoggingHelper.logWarning('Failed to trigger daily prediction notification: $e');
+      }
 
       LoggingHelper.logInfo('User updated successfully');
       return ResultHelper.success(null);
@@ -205,6 +221,16 @@ class UserService extends Notifier<UserModel?> {
       // Clear state
       state = null;
 
+      // Cancel any scheduled daily prediction notifications
+      try {
+        final notificationService = DailyPredictionNotificationService.instance;
+        await notificationService.cancelNotification(1001); // Daily prediction notification ID
+        await notificationService.cancelNotification(1002); // Create profile notification ID
+      } catch (e) {
+        // Don't fail user delete if notification cancel fails
+        LoggingHelper.logWarning('Failed to cancel notifications: $e');
+      }
+
       LoggingHelper.logInfo('User deleted successfully');
       return ResultHelper.success(null);
     } catch (e) {
@@ -232,7 +258,7 @@ class UserService extends Notifier<UserModel?> {
     if (state == null) return null;
 
     try {
-      // Use local birth time - timezone conversion handled by AstrologyFacade
+      // Use local birth time - timezone conversion handled by AstrologyServiceBridge
       final birthDateTime = state!.localBirthDateTime;
 
       // Return only essential user data for astrology calculations
@@ -246,7 +272,7 @@ class UserService extends Notifier<UserModel?> {
         'placeOfBirth': state!.placeOfBirth,
         'latitude': state!.latitude,
         'longitude': state!.longitude,
-        'ayanamsha': state!.ayanamsha.name,
+        'ayanamsha': state!.ayanamsha,
       };
     } catch (e) {
       LoggingHelper.logError('Failed to get user astrology data', source: 'UserService', error: e);
@@ -266,7 +292,7 @@ class UserService extends Notifier<UserModel?> {
     try {
       LoggingHelper.logInfo('Getting formatted astrology data for user: ${state!.name}');
 
-      // Use local birth time - timezone conversion handled by AstrologyFacade
+      // Use local birth time - timezone conversion handled by AstrologyServiceBridge
       final birthDateTime = state!.localBirthDateTime;
 
       LoggingHelper.logInfo('Birth DateTime: $birthDateTime');
@@ -277,48 +303,43 @@ class UserService extends Notifier<UserModel?> {
       // Use intelligent caching for optimal performance
       LoggingHelper.logInfo('Using cached astrology data for optimal performance...');
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Use AstrologyServiceBridge for timezone handling and API calls
+      final bridge = AstrologyServiceBridge.instance;
 
       // Get timezone from user's location
-      final timezoneId =
-          await astrologyFacade.getTimezoneFromLocation(state!.latitude, state!.longitude);
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
+          state!.latitude, state!.longitude);
 
-      // Get computed birth data from astrology library (uses cache)
+      // Get computed birth data from API (uses cache)
       final startTime = DateTime.now();
-      final fixedBirthData = await astrologyFacade.getFixedBirthData(
+      final birthData = await bridge.getBirthData(
         localBirthDateTime: birthDateTime,
         timezoneId: timezoneId,
         latitude: state!.latitude,
         longitude: state!.longitude,
-        isUserData: true,
         ayanamsha: state!.ayanamsha,
       );
       final endTime = DateTime.now();
       final duration = endTime.difference(startTime);
 
-      LoggingHelper.logInfo('Astrology library call completed in: ${duration.inMilliseconds}ms');
+      LoggingHelper.logInfo('Astrology API call completed in: ${duration.inMilliseconds}ms');
 
-      // Convert FixedBirthData to the expected format for the UI
+      // Extract data from API response (using camelCase)
+      final rashiMap = birthData['rashi'] as Map<String, dynamic>?;
+      final nakshatraMap = birthData['nakshatra'] as Map<String, dynamic>?;
+      final padaMap = birthData['pada'] as Map<String, dynamic>?;
+      final birthChartMap = birthData['birthChart'] as Map<String, dynamic>?;
+      final dashaMap = birthData['dasha'] as Map<String, dynamic>?;
+
+      // Convert API response to the expected format for the UI (using camelCase)
       final result = {
-        'moon_rashi': fixedBirthData.rashi, // Pass the full RashiData object
-        'moon_nakshatra': fixedBirthData.nakshatra, // Pass the full NakshatraData object
-        'moon_pada': fixedBirthData.pada, // Pass the full PadaData object
-        'ascendant': fixedBirthData.birthChart.planetRashis[Planet.sun] ??
-            RashiDataFactory.create(1), // Use Sun's rashi as ascendant fallback
-        'birth_chart': {
-          'house_lords': fixedBirthData.birthChart.houseLords,
-          'planet_houses': fixedBirthData.birthChart.planetHouses,
-          'planet_rashis': fixedBirthData.birthChart.planetRashis,
-          'planet_nakshatras': fixedBirthData.birthChart.planetNakshatras,
-        },
-        'dasha': {
-          'current_lord': fixedBirthData.dasha.currentLord.name,
-          'start_date': fixedBirthData.dasha.startDate.toIso8601String(),
-          'end_date': fixedBirthData.dasha.endDate.toIso8601String(),
-          'progress': fixedBirthData.dasha.progress,
-        },
-        'calculated_at': fixedBirthData.calculatedAt.toIso8601String(),
+        'moonRashi': rashiMap,
+        'moonNakshatra': nakshatraMap,
+        'moonPada': padaMap,
+        'ascendant': birthChartMap?['planetaryPositions']?['Sun']?['rashi'] ?? rashiMap?['name'],
+        'birthChart': birthChartMap ?? {},
+        'dasha': dashaMap ?? {},
+        'calculatedAt': birthData['calculatedAt'] ?? DateTime.now().toIso8601String(),
       };
 
       LoggingHelper.logInfo('Formatted astrology data created successfully');
@@ -348,27 +369,28 @@ class UserService extends Notifier<UserModel?> {
         );
       }
 
-      // Use local birth time - timezone conversion handled by AstrologyFacade
+      // Use local birth time - timezone conversion handled by AstrologyServiceBridge
       final birthDateTime = state!.localBirthDateTime;
 
-      // Clear and refresh data in centralized astrology cache
-      await AstrologyLibrary.clearCacheEntry(
-          'user_${birthDateTime.millisecondsSinceEpoch}_${state!.latitude}_${state!.longitude}');
+      // Clear cache entry
+      final cacheKey = 'birth_data_${birthDateTime.toIso8601String()}_'
+          '${state!.latitude}_${state!.longitude}_true_${state!.ayanamsha}_placidus';
+      _cacheService.remove(cacheKey);
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Use AstrologyServiceBridge for timezone handling and API calls
+      final bridge = AstrologyServiceBridge.instance;
 
       // Get timezone from user's location
-      final timezoneId =
-          await astrologyFacade.getTimezoneFromLocation(state!.latitude, state!.longitude);
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
+          state!.latitude, state!.longitude);
 
       // Trigger fresh calculation
-      await astrologyFacade.getFixedBirthData(
+      await bridge.getBirthData(
         localBirthDateTime: birthDateTime,
         timezoneId: timezoneId,
         latitude: state!.latitude,
         longitude: state!.longitude,
-        isUserData: true,
+        ayanamsha: state!.ayanamsha,
       );
 
       LoggingHelper.logInfo('Astrology data refreshed in centralized cache');
@@ -421,20 +443,19 @@ class UserService extends Notifier<UserModel?> {
         user.timeOfBirth.minute,
       );
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Use AstrologyServiceBridge for timezone handling and API calls
+      final bridge = AstrologyServiceBridge.instance;
 
       // Get timezone from user's location
-      final timezoneId =
-          await astrologyFacade.getTimezoneFromLocation(user.latitude, user.longitude);
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
+          user.latitude, user.longitude);
 
-      // Pre-compute and cache complete birth chart in centralized astrology library
-      await astrologyFacade.getFixedBirthData(
+      // Pre-compute and cache complete birth chart via API
+      await bridge.getBirthData(
         localBirthDateTime: birthDateTime,
         timezoneId: timezoneId,
         latitude: user.latitude,
         longitude: user.longitude,
-        isUserData: true, // Complete birth chart for user
         ayanamsha: user.ayanamsha,
       );
 
@@ -460,7 +481,7 @@ class UserService extends Notifier<UserModel?> {
       // Clear user-specific cache entries
       final cacheKey =
           'user_${birthDateTime.millisecondsSinceEpoch}_${user.latitude}_${user.longitude}';
-      await _cacheManager.clearCacheEntry(cacheKey);
+      _cacheService.remove(cacheKey);
 
       LoggingHelper.logInfo('Astrology cache invalidated for user data changes');
     } catch (e) {

@@ -3,8 +3,6 @@ library;
 import '../../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
 
 class CalendarDayView extends StatefulWidget {
   final DateTime selectedDate;
@@ -38,41 +36,20 @@ class _CalendarDayViewState extends State<CalendarDayView> {
         _errorMessage = null;
       });
 
-      // Use AstrologyFacade for timezone handling and month panchang
-      final facade = AstrologyFacade.instance;
+      // TODO: Fetch calendar data from API when available
 
-      // TODO: Accept coordinates via widget; currently default to Delhi to avoid breaking API
-      const double latitude = 28.6139;
-      const double longitude = 77.2090;
-      final tz = await facade.getTimezoneFromLocation(latitude, longitude);
-
-      // Fetch month panchang and pick the selected day (names and rise/set provided by facade)
-      final monthView = await facade.getMonthPanchang(
-        year: widget.selectedDate.year,
-        month: widget.selectedDate.month,
-        region: RegionalCalendar.universal,
-        latitude: latitude,
-        longitude: longitude,
-        timezoneId: tz,
-      );
-
-      final day = monthView.days.firstWhere(
-        (d) => d.date.year == widget.selectedDate.year &&
-            d.date.month == widget.selectedDate.month &&
-            d.date.day == widget.selectedDate.day,
-        orElse: () => monthView.days.first,
-      );
-
+      // TODO: Fetch month panchang from API - currently using placeholder
+      // This will be implemented when calendar API is available
       setState(() {
         _calendarData = {
-          'tithi': day.tithiName,
-          'paksha': day.pakshaName,
-          'nakshatra': day.nakshatraName,
-          'yoga': day.yogaName,
-          'karana': day.karanaName,
-          'festival': (day.festivals.isNotEmpty ? day.festivals.first : 'No festival'),
-          'sunrise': day.sunriseTime,
-          'sunset': day.sunsetTime,
+          'tithi': 'Not available',
+          'paksha': 'Not available',
+          'nakshatra': 'Not available',
+          'yoga': 'Not available',
+          'karana': 'Not available',
+          'festival': 'No festival',
+          'sunrise': 'Not available',
+          'sunset': 'Not available',
         };
         _isLoading = false;
       });

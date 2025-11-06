@@ -243,18 +243,11 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
     required Color primaryTextColor,
     required Color surfaceColor,
   }) {
-    // Popular languages for Hindu audience
+    // Supported languages (English, Hindi, Telugu only for now)
     final popularLanguages = [
       SupportedLanguage.english,
       SupportedLanguage.hindi,
       SupportedLanguage.telugu,
-      SupportedLanguage.tamil,
-      SupportedLanguage.kannada,
-      SupportedLanguage.malayalam,
-      SupportedLanguage.bengali,
-      SupportedLanguage.gujarati,
-      SupportedLanguage.marathi,
-      SupportedLanguage.punjabi,
     ];
 
     return Wrap(

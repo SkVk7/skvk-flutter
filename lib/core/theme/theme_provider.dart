@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'hindu_theme.dart';
+import 'traditional_theme.dart';
 
 enum AppThemeMode {
   light,
@@ -187,32 +187,32 @@ final themePropertiesProvider = Provider<Map<String, dynamic>>((ref) {
   return themeState.when(
     data: (state) => {
       // Colors
-      'backgroundColor': state.isDarkMode ? HinduTheme.backgroundDark : HinduTheme.backgroundLight,
-      'surfaceColor': state.isDarkMode ? HinduTheme.surfaceDark : HinduTheme.surfaceLight,
+      'backgroundColor': state.isDarkMode ? TraditionalTheme.backgroundDark : TraditionalTheme.backgroundLight,
+      'surfaceColor': state.isDarkMode ? TraditionalTheme.surfaceDark : TraditionalTheme.surfaceLight,
       'surfaceVariantColor':
-          state.isDarkMode ? HinduTheme.surfaceVariantDark : HinduTheme.surfaceVariantLight,
-      'cardColor': state.isDarkMode ? HinduTheme.surfaceDark : HinduTheme.surfaceLight,
-      'primaryTextColor': state.isDarkMode ? HinduTheme.textDark : HinduTheme.textLight,
+          state.isDarkMode ? TraditionalTheme.surfaceVariantDark : TraditionalTheme.surfaceVariantLight,
+      'cardColor': state.isDarkMode ? TraditionalTheme.surfaceDark : TraditionalTheme.surfaceLight,
+      'primaryTextColor': state.isDarkMode ? TraditionalTheme.textDark : TraditionalTheme.textLight,
       'secondaryTextColor':
-          state.isDarkMode ? HinduTheme.textSecondaryDark : HinduTheme.textSecondaryLight,
+          state.isDarkMode ? TraditionalTheme.textSecondaryDark : TraditionalTheme.textSecondaryLight,
       'tertiaryTextColor':
-          state.isDarkMode ? HinduTheme.textTertiaryDark : HinduTheme.textTertiaryLight,
+          state.isDarkMode ? TraditionalTheme.textTertiaryDark : TraditionalTheme.textTertiaryLight,
       'hintTextColor':
-          state.isDarkMode ? HinduTheme.textTertiaryDark : HinduTheme.textTertiaryLight,
-      'borderColor': state.isDarkMode ? HinduTheme.borderDark : HinduTheme.borderLight,
-      'dividerColor': state.isDarkMode ? HinduTheme.dividerDark : HinduTheme.dividerLight,
+          state.isDarkMode ? TraditionalTheme.textTertiaryDark : TraditionalTheme.textTertiaryLight,
+      'borderColor': state.isDarkMode ? TraditionalTheme.borderDark : TraditionalTheme.borderLight,
+      'dividerColor': state.isDarkMode ? TraditionalTheme.dividerDark : TraditionalTheme.dividerLight,
       'shadowColor': state.isDarkMode ? Colors.black54 : Colors.black12,
-      'primaryColor': state.isDarkMode ? HinduTheme.accentSaffronDark : HinduTheme.primarySaffron,
-      'secondaryColor': state.isDarkMode ? HinduTheme.accentGoldDark : HinduTheme.primaryGold,
-      'errorColor': state.isDarkMode ? HinduTheme.accentRedDark : HinduTheme.primaryRed,
+      'primaryColor': state.isDarkMode ? TraditionalTheme.accentSaffronDark : TraditionalTheme.primarySaffron,
+      'secondaryColor': state.isDarkMode ? TraditionalTheme.accentGoldDark : TraditionalTheme.primaryGold,
+      'errorColor': state.isDarkMode ? TraditionalTheme.accentRedDark : TraditionalTheme.primaryRed,
 
       // Gradients
       'primaryGradient':
-          state.isDarkMode ? HinduTheme.primaryGradientDark : HinduTheme.primaryGradient,
+          state.isDarkMode ? TraditionalTheme.primaryGradientDark : TraditionalTheme.primaryGradient,
       'secondaryGradient':
-          state.isDarkMode ? HinduTheme.secondaryGradientDark : HinduTheme.secondaryGradient,
+          state.isDarkMode ? TraditionalTheme.secondaryGradientDark : TraditionalTheme.secondaryGradient,
       'accentGradient':
-          state.isDarkMode ? HinduTheme.accentGradientDark : HinduTheme.accentGradient,
+          state.isDarkMode ? TraditionalTheme.accentGradientDark : TraditionalTheme.accentGradient,
 
       // Theme mode
       'isDarkMode': state.isDarkMode,
@@ -223,28 +223,28 @@ final themePropertiesProvider = Provider<Map<String, dynamic>>((ref) {
       final isSystemDark =
           WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
       return {
-        'backgroundColor': isSystemDark ? HinduTheme.backgroundDark : HinduTheme.backgroundLight,
-        'surfaceColor': isSystemDark ? HinduTheme.surfaceDark : HinduTheme.surfaceLight,
+        'backgroundColor': isSystemDark ? TraditionalTheme.backgroundDark : TraditionalTheme.backgroundLight,
+        'surfaceColor': isSystemDark ? TraditionalTheme.surfaceDark : TraditionalTheme.surfaceLight,
         'surfaceVariantColor':
-            isSystemDark ? HinduTheme.surfaceVariantDark : HinduTheme.surfaceVariantLight,
-        'cardColor': isSystemDark ? HinduTheme.surfaceDark : HinduTheme.surfaceLight,
-        'primaryTextColor': isSystemDark ? HinduTheme.textDark : HinduTheme.textLight,
+            isSystemDark ? TraditionalTheme.surfaceVariantDark : TraditionalTheme.surfaceVariantLight,
+        'cardColor': isSystemDark ? TraditionalTheme.surfaceDark : TraditionalTheme.surfaceLight,
+        'primaryTextColor': isSystemDark ? TraditionalTheme.textDark : TraditionalTheme.textLight,
         'secondaryTextColor':
-            isSystemDark ? HinduTheme.textSecondaryDark : HinduTheme.textSecondaryLight,
+            isSystemDark ? TraditionalTheme.textSecondaryDark : TraditionalTheme.textSecondaryLight,
         'tertiaryTextColor':
-            isSystemDark ? HinduTheme.textTertiaryDark : HinduTheme.textTertiaryLight,
-        'hintTextColor': isSystemDark ? HinduTheme.textTertiaryDark : HinduTheme.textTertiaryLight,
-        'borderColor': isSystemDark ? HinduTheme.borderDark : HinduTheme.borderLight,
-        'dividerColor': isSystemDark ? HinduTheme.dividerDark : HinduTheme.dividerLight,
+            isSystemDark ? TraditionalTheme.textTertiaryDark : TraditionalTheme.textTertiaryLight,
+        'hintTextColor': isSystemDark ? TraditionalTheme.textTertiaryDark : TraditionalTheme.textTertiaryLight,
+        'borderColor': isSystemDark ? TraditionalTheme.borderDark : TraditionalTheme.borderLight,
+        'dividerColor': isSystemDark ? TraditionalTheme.dividerDark : TraditionalTheme.dividerLight,
         'shadowColor': isSystemDark ? Colors.black54 : Colors.black12,
-        'primaryColor': isSystemDark ? HinduTheme.accentSaffronDark : HinduTheme.primarySaffron,
-        'secondaryColor': isSystemDark ? HinduTheme.accentGoldDark : HinduTheme.primaryGold,
-        'errorColor': isSystemDark ? HinduTheme.accentRedDark : HinduTheme.primaryRed,
+        'primaryColor': isSystemDark ? TraditionalTheme.accentSaffronDark : TraditionalTheme.primarySaffron,
+        'secondaryColor': isSystemDark ? TraditionalTheme.accentGoldDark : TraditionalTheme.primaryGold,
+        'errorColor': isSystemDark ? TraditionalTheme.accentRedDark : TraditionalTheme.primaryRed,
         'primaryGradient':
-            isSystemDark ? HinduTheme.primaryGradientDark : HinduTheme.primaryGradient,
+            isSystemDark ? TraditionalTheme.primaryGradientDark : TraditionalTheme.primaryGradient,
         'secondaryGradient':
-            isSystemDark ? HinduTheme.secondaryGradientDark : HinduTheme.secondaryGradient,
-        'accentGradient': isSystemDark ? HinduTheme.accentGradientDark : HinduTheme.accentGradient,
+            isSystemDark ? TraditionalTheme.secondaryGradientDark : TraditionalTheme.secondaryGradient,
+        'accentGradient': isSystemDark ? TraditionalTheme.accentGradientDark : TraditionalTheme.accentGradient,
         'isDarkMode': isSystemDark,
         'themeMode': AppThemeMode.system,
       };
@@ -254,28 +254,28 @@ final themePropertiesProvider = Provider<Map<String, dynamic>>((ref) {
       final isSystemDark =
           WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
       return {
-        'backgroundColor': isSystemDark ? HinduTheme.backgroundDark : HinduTheme.backgroundLight,
-        'surfaceColor': isSystemDark ? HinduTheme.surfaceDark : HinduTheme.surfaceLight,
+        'backgroundColor': isSystemDark ? TraditionalTheme.backgroundDark : TraditionalTheme.backgroundLight,
+        'surfaceColor': isSystemDark ? TraditionalTheme.surfaceDark : TraditionalTheme.surfaceLight,
         'surfaceVariantColor':
-            isSystemDark ? HinduTheme.surfaceVariantDark : HinduTheme.surfaceVariantLight,
-        'cardColor': isSystemDark ? HinduTheme.surfaceDark : HinduTheme.surfaceLight,
-        'primaryTextColor': isSystemDark ? HinduTheme.textDark : HinduTheme.textLight,
+            isSystemDark ? TraditionalTheme.surfaceVariantDark : TraditionalTheme.surfaceVariantLight,
+        'cardColor': isSystemDark ? TraditionalTheme.surfaceDark : TraditionalTheme.surfaceLight,
+        'primaryTextColor': isSystemDark ? TraditionalTheme.textDark : TraditionalTheme.textLight,
         'secondaryTextColor':
-            isSystemDark ? HinduTheme.textSecondaryDark : HinduTheme.textSecondaryLight,
+            isSystemDark ? TraditionalTheme.textSecondaryDark : TraditionalTheme.textSecondaryLight,
         'tertiaryTextColor':
-            isSystemDark ? HinduTheme.textTertiaryDark : HinduTheme.textTertiaryLight,
-        'hintTextColor': isSystemDark ? HinduTheme.textTertiaryDark : HinduTheme.textTertiaryLight,
-        'borderColor': isSystemDark ? HinduTheme.borderDark : HinduTheme.borderLight,
-        'dividerColor': isSystemDark ? HinduTheme.dividerDark : HinduTheme.dividerLight,
+            isSystemDark ? TraditionalTheme.textTertiaryDark : TraditionalTheme.textTertiaryLight,
+        'hintTextColor': isSystemDark ? TraditionalTheme.textTertiaryDark : TraditionalTheme.textTertiaryLight,
+        'borderColor': isSystemDark ? TraditionalTheme.borderDark : TraditionalTheme.borderLight,
+        'dividerColor': isSystemDark ? TraditionalTheme.dividerDark : TraditionalTheme.dividerLight,
         'shadowColor': isSystemDark ? Colors.black54 : Colors.black12,
-        'primaryColor': isSystemDark ? HinduTheme.accentSaffronDark : HinduTheme.primarySaffron,
-        'secondaryColor': isSystemDark ? HinduTheme.accentGoldDark : HinduTheme.primaryGold,
-        'errorColor': isSystemDark ? HinduTheme.accentRedDark : HinduTheme.primaryRed,
+        'primaryColor': isSystemDark ? TraditionalTheme.accentSaffronDark : TraditionalTheme.primarySaffron,
+        'secondaryColor': isSystemDark ? TraditionalTheme.accentGoldDark : TraditionalTheme.primaryGold,
+        'errorColor': isSystemDark ? TraditionalTheme.accentRedDark : TraditionalTheme.primaryRed,
         'primaryGradient':
-            isSystemDark ? HinduTheme.primaryGradientDark : HinduTheme.primaryGradient,
+            isSystemDark ? TraditionalTheme.primaryGradientDark : TraditionalTheme.primaryGradient,
         'secondaryGradient':
-            isSystemDark ? HinduTheme.secondaryGradientDark : HinduTheme.secondaryGradient,
-        'accentGradient': isSystemDark ? HinduTheme.accentGradientDark : HinduTheme.accentGradient,
+            isSystemDark ? TraditionalTheme.secondaryGradientDark : TraditionalTheme.secondaryGradient,
+        'accentGradient': isSystemDark ? TraditionalTheme.accentGradientDark : TraditionalTheme.accentGradient,
         'isDarkMode': isSystemDark,
         'themeMode': AppThemeMode.system,
       };

@@ -1738,6 +1738,27 @@ class CentralizedLanguageDropdown extends StatelessWidget {
             ],
           ),
         ),
+        PopupMenuItem<String>(
+          value: 'te',
+          child: Row(
+            children: [
+              Icon(
+                Icons.public,
+                color: ThemeProperties.getPrimaryColor(context),
+                size: ResponsiveSystem.iconSize(context, baseSize: 20),
+              ),
+              ResponsiveSystem.sizedBox(context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+              Text(
+                'తెలుగు',
+                style: TextStyle(
+                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                  color: ThemeProperties.getPrimaryTextColor(context),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }

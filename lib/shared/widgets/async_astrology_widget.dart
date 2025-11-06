@@ -5,16 +5,14 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../astrology/astrology_library.dart';
-import '../../astrology/core/facades/astrology_facade.dart';
-import '../../astrology/core/entities/astrology_entities.dart';
 import '../../core/models/user_model.dart';
 import '../../core/design_system/design_system.dart';
+import '../../core/services/astrology_service_bridge.dart';
 
 /// Async astrology widget with progress indicators
 class AsyncAstrologyWidget extends StatefulWidget {
   final UserModel user;
-  final Widget Function(FixedBirthData birthData) builder;
+  final Widget Function(Map<String, dynamic> birthData) builder;
   final Widget Function()? loadingBuilder;
   final Widget Function(String error)? errorBuilder;
   final bool showProgressIndicator;
@@ -35,7 +33,7 @@ class AsyncAstrologyWidget extends StatefulWidget {
 }
 
 class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
-  Future<FixedBirthData>? _calculationFuture;
+  Future<Map<String, dynamic>>? _calculationFuture;
   bool _isLoading = false;
   String? _error;
 
@@ -62,23 +60,22 @@ class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
     _calculationFuture = _calculateAstrologyData();
   }
 
-  Future<FixedBirthData> _calculateAstrologyData() async {
+  Future<Map<String, dynamic>> _calculateAstrologyData() async {
     try {
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Use AstrologyServiceBridge for timezone handling and API calls
+      final bridge = AstrologyServiceBridge.instance;
 
       // Get timezone from user's location
-      final timezoneId = await astrologyFacade.getTimezoneFromLocation(
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
           widget.user.latitude, widget.user.longitude);
 
-      // Use AstrologyFacade for birth data (handles timezone conversion)
-      final birthData = await astrologyFacade.getFixedBirthData(
+      // Get birth data from API (handles timezone conversion automatically)
+      final birthData = await bridge.getBirthData(
         localBirthDateTime: widget.user.localBirthDateTime,
         timezoneId: timezoneId,
         latitude: widget.user.latitude,
         longitude: widget.user.longitude,
         ayanamsha: widget.user.ayanamsha,
-        isUserData: true,
       );
 
       if (mounted) {
@@ -101,7 +98,7 @@ class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<FixedBirthData>(
+    return FutureBuilder<Map<String, dynamic>>(
       future: _calculationFuture,
       builder: (context, snapshot) {
         // Loading state
@@ -200,33 +197,31 @@ class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
 
 /// Async astrology calculation with progress callback
 class AsyncAstrologyCalculation {
-  static Future<FixedBirthData> calculateWithProgress({
+  static Future<Map<String, dynamic>> calculateWithProgress({
     required UserModel user,
     required Function(double progress) onProgress,
     required Function(String message) onStatusUpdate,
   }) async {
     try {
-      onStatusUpdate('Initializing astrology library...');
-      onProgress(0.1);
-
-      await AstrologyLibrary.initialize();
+      onStatusUpdate('Fetching birth data from API...');
       onProgress(0.2);
-      onStatusUpdate('Calculating birth data...');
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Use AstrologyServiceBridge for timezone handling and API calls
+      final bridge = AstrologyServiceBridge.instance;
 
       // Get timezone from user's location
-      final timezoneId =
-          await astrologyFacade.getTimezoneFromLocation(user.latitude, user.longitude);
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
+          user.latitude, user.longitude);
 
-      final birthData = await astrologyFacade.getFixedBirthData(
+      onProgress(0.5);
+      onStatusUpdate('Calculating birth data...');
+
+      final birthData = await bridge.getBirthData(
         localBirthDateTime: user.localBirthDateTime,
         timezoneId: timezoneId,
         latitude: user.latitude,
         longitude: user.longitude,
         ayanamsha: user.ayanamsha,
-        isUserData: true,
       );
 
       onProgress(1.0);

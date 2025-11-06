@@ -47,7 +47,7 @@ class AppConfig {
     enableLogging: true,
     enableCrashReporting: false,
     enableAnalytics: false,
-    apiBaseUrl: 'https://dev-api.astrology.com',
+    apiBaseUrl: 'http://localhost:8080',
     apiKey: 'dev-api-key-12345',
     connectTimeout: 30000,
     receiveTimeout: 30000,

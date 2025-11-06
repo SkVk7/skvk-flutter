@@ -8,7 +8,6 @@ import '../../domain/repositories/matching_repository.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../domain/usecases/perform_matching_usecase.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
 
 /// Matching state
 class MatchingState {
@@ -65,14 +64,15 @@ class MatchingNotifier extends Notifier<MatchingState> {
 
   /// Perform matching with both persons' data
   Future<void> performMatching(PartnerData person1Data, PartnerData person2Data,
-      {AyanamshaType? ayanamsha}) async {
+      {String? ayanamsha, String? houseSystem}) async {
     print(
         '🔍 DEBUG: MatchingNotifier.performMatching called with ${person1Data.name} and ${person2Data.name}');
     state = state.copyWith(isLoading: true, errorMessage: null, successMessage: null);
 
     try {
       print('🔍 DEBUG: Calling _performMatchingUseCase');
-      final result = await _performMatchingUseCase(person1Data, person2Data, ayanamsha: ayanamsha);
+      final result = await _performMatchingUseCase(person1Data, person2Data, 
+          ayanamsha: ayanamsha, houseSystem: houseSystem);
       print('🔍 DEBUG: Use case result: ${result.isSuccess}');
 
       if (result.isSuccess) {

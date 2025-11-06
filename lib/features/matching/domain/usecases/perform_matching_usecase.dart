@@ -6,7 +6,6 @@ library;
 import '../repositories/matching_repository.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
 
 /// Use case for performing kundali matching
 class PerformMatchingUseCase {
@@ -17,7 +16,7 @@ class PerformMatchingUseCase {
 
   /// Execute the matching use case with both persons' data
   Future<Result<MatchingResult>> call(PartnerData person1Data, PartnerData person2Data,
-      {AyanamshaType? ayanamsha}) async {
+      {String? ayanamsha, String? houseSystem}) async {
     print(
         '🔍 DEBUG: PerformMatchingUseCase called with ${person1Data.name} and ${person2Data.name}');
 
@@ -39,7 +38,7 @@ class PerformMatchingUseCase {
     print('🔍 DEBUG: Validation passed, calling repository');
     // Perform matching with both persons' data
     return await _matchingRepository.performMatching(person1Data, person2Data,
-        ayanamsha: ayanamsha);
+        ayanamsha: ayanamsha, houseSystem: houseSystem);
   }
 
   /// Validate partner data

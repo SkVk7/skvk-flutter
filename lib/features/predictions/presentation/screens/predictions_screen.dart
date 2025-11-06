@@ -197,6 +197,9 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
       case 'hi':
         language = SupportedLanguage.hindi;
         break;
+      case 'te':
+        language = SupportedLanguage.telugu;
+        break;
       default:
         language = SupportedLanguage.english;
     }
