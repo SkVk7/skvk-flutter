@@ -646,25 +646,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
     if (value == null) return [];
     if (value is List<Map<String, dynamic>>) return value;
     if (value is List) {
-      return value
-          .where((item) => item is Map<String, dynamic>)
-          .cast<Map<String, dynamic>>()
-          .toList();
+      return value.whereType<Map<String, dynamic>>().toList();
     }
     return [];
-  }
-
-  /// Parse DateTime from various formats (String, DateTime, etc.)
-  DateTime? _parseDateTime(dynamic value) {
-    if (value == null) return null;
-    if (value is DateTime) return value;
-    if (value is String) {
-      try {
-        return DateTime.parse(value);
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
   }
 }

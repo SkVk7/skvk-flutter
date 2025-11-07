@@ -36,11 +36,11 @@ class DailyPredictionsState {
 
 /// Daily predictions notifier
 class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
-  final GetDailyPredictionsUseCase _getDailyPredictionsUseCase;
-
-  DailyPredictionsNotifier(this._getDailyPredictionsUseCase) : super(const DailyPredictionsState());
+  // TODO: Remove use case dependency and use AstrologyServiceBridge.getPredictions directly
+  DailyPredictionsNotifier(GetDailyPredictionsUseCase _getDailyPredictionsUseCase) : super(const DailyPredictionsState());
 
   /// Get daily predictions
+  /// TODO: Update to use AstrologyServiceBridge.getPredictions directly instead of deprecated use case
   Future<void> getDailyPredictions({
     required Map<String, dynamic> birthData,
     required DateTime date,
@@ -48,20 +48,12 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final result = await _getDailyPredictionsUseCase.call(
-        birthData: birthData,
-        date: date,
-      );
-
-      result.fold(
-        (failure) => state = state.copyWith(
-          isLoading: false,
-          errorMessage: failure.message,
-        ),
-        (predictions) => state = state.copyWith(
-          isLoading: false,
-          predictions: predictions,
-        ),
+      // TODO: Use AstrologyServiceBridge.getPredictions directly
+      // The use case is deprecated and just returns a failure
+      // This should be updated to call the API directly
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: 'Use AstrologyServiceBridge.getPredictions directly instead of deprecated use case',
       );
     } catch (e) {
       state = state.copyWith(

@@ -36,8 +36,10 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
   }
 
   Future<void> _loadFestivals() async {
-    final festivals = await _getFestivalsForDate(widget.selectedDate);
-    final upcoming = await _getUpcomingFestivals();
+    // TODO: Fetch festivals from API when available
+    // For now, use empty lists as festivals should come from API
+    final festivals = <Map<String, dynamic>>[];
+    final upcoming = <Map<String, dynamic>>[];
 
     setState(() {
       _festivals = festivals;
@@ -226,17 +228,5 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
       default:
         return LucideIcons.calendarHeart;
     }
-  }
-
-  @Deprecated('Use API data instead')
-  Future<List<Map<String, dynamic>>> _getFestivalsForDate(DateTime date) async {
-    // TODO: Fetch festivals from API when available
-    return [];
-  }
-
-  @Deprecated('Use API data instead')
-  Future<List<Map<String, dynamic>>> _getUpcomingFestivals() async {
-    // TODO: Fetch upcoming festivals from API when available
-    return [];
   }
 }

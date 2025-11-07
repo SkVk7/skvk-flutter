@@ -781,10 +781,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     if (value == null) return [];
     if (value is List<Map<String, dynamic>>) return value;
     if (value is List) {
-      return value
-          .where((item) => item is Map<String, dynamic>)
-          .cast<Map<String, dynamic>>()
-          .toList();
+      return value.whereType<Map<String, dynamic>>().toList();
     }
     return [];
   }

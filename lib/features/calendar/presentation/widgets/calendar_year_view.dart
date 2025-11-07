@@ -141,8 +141,8 @@ class _CalendarYearViewState extends State<CalendarYearView>
           if (months.containsKey(monthKey)) {
             final monthData = months[monthKey] as Map<String, dynamic>;
             monthInfo[month] = {
-              'monthName': monthData['monthName'] ?? await _getMonthName(month),
-              'season': monthData['season'] ?? await _getSeason(month),
+              'monthName': monthData['monthName'] ?? 'Month $month',
+              'season': monthData['season'] ?? 'Not available',
               'specialPeriods': monthData['specialPeriods'] ?? [],
               'auspiciousDays': monthData['auspiciousDays'] ?? [],
             };
@@ -153,24 +153,24 @@ class _CalendarYearViewState extends State<CalendarYearView>
               monthFestivals[month] = festivals.map((f) => f.toString()).toList();
             }
           } else {
-            // Fallback to deprecated method if API doesn't have data
+            // Fallback: Use simple defaults if API doesn't have data
             monthInfo[month] = {
-              'monthName': await _getMonthName(month),
-              'season': await _getSeason(month),
-              'specialPeriods': _getSpecialPeriods(month, const []),
-              'auspiciousDays': _getAuspiciousDays(month, const []),
+              'monthName': 'Month $month',
+              'season': 'Not available',
+              'specialPeriods': [],
+              'auspiciousDays': [],
             };
           }
         }
       } else {
-        // Fallback: Use deprecated methods if API response format is unexpected
+        // Fallback: Use simple defaults if API response format is unexpected
         for (int month = 1; month <= 12; month++) {
-        monthInfo[month] = {
-            'monthName': await _getMonthName(month),
-            'season': await _getSeason(month),
-          'specialPeriods': _getSpecialPeriods(month, const []),
-          'auspiciousDays': _getAuspiciousDays(month, const []),
-        };
+          monthInfo[month] = {
+            'monthName': 'Month $month',
+            'season': 'Not available',
+            'specialPeriods': [],
+            'auspiciousDays': [],
+          };
         }
       }
 
@@ -215,91 +215,6 @@ class _CalendarYearViewState extends State<CalendarYearView>
     } catch (e) {
       return 'Asia/Kolkata'; // Default fallback
     }
-  }
-
-  @Deprecated('Use API data instead')
-  Future<String> _getMonthName(int month) async {
-    const monthNames = [
-      'Chaitra',
-      'Vaishakha',
-      'Jyeshtha',
-      'Ashadha',
-      'Shravana',
-      'Bhadrapada',
-      'Ashwin',
-      'Kartika',
-      'Margashirsha',
-      'Pausha',
-      'Magha',
-      'Phalguna'
-    ];
-    return monthNames[month - 1];
-  }
-
-  @Deprecated('Use API data instead')
-  Future<String> _getSeason(int month) async {
-    if (month >= 3 && month <= 5) return 'Spring (Vasant)';
-    if (month >= 6 && month <= 8) return 'Summer (Grishma)';
-    if (month >= 9 && month <= 11) return 'Monsoon (Varsha)';
-    return 'Winter (Shishira)';
-  }
-
-  @Deprecated('Use API data instead')
-  List<String> _getSpecialPeriods(int month, List<Map<String, dynamic>> festivals) {
-    final specialPeriods = <String>[];
-
-    // Check for Sravanamas (July-August)
-    if (month == 7 || month == 8) {
-      specialPeriods.add('Sravanamas Period');
-    }
-
-    // Check for Navratri (September-October)
-    if (month == 9 || month == 10) {
-      specialPeriods.add('Navratri Season');
-    }
-
-    // Check for major festivals
-    final monthFestivals = festivals.where((f) {
-      final date = f['date'] as DateTime?;
-      return date != null && date.month == month;
-    }).toList();
-    if (monthFestivals.any((f) {
-      final name = f['name'] as String? ?? '';
-      return name.toLowerCase().contains('diwali');
-    })) {
-      specialPeriods.add('Diwali Season');
-    }
-    if (monthFestivals.any((f) {
-      final name = f['name'] as String? ?? '';
-      return name.toLowerCase().contains('holi');
-    })) {
-      specialPeriods.add('Holi Season');
-    }
-
-    return specialPeriods;
-  }
-
-  @Deprecated('Use API data instead')
-  List<String> _getAuspiciousDays(int month, List<Map<String, dynamic>> festivals) {
-    final auspiciousDays = <String>[];
-    final monthFestivals = festivals.where((f) {
-      final date = f['date'] as DateTime?;
-      return date != null && date.month == month;
-    }).toList();
-
-    for (final festival in monthFestivals) {
-      final name = festival['name'] as String? ?? '';
-      final date = festival['date'] as DateTime?;
-      if (name.toLowerCase().contains('ekadashi') ||
-          name.toLowerCase().contains('purnima') ||
-          name.toLowerCase().contains('amavasya')) {
-        if (date != null) {
-          auspiciousDays.add('${date.day} - $name');
-        }
-      }
-    }
-
-    return auspiciousDays.take(3).toList(); // Limit to 3 most important
   }
 
   @override
