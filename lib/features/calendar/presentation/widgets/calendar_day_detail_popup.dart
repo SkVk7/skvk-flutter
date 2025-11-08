@@ -6,16 +6,13 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../astrology/astrology_library.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/entities/astrology_entities.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 class CalendarDayDetailPopup extends StatefulWidget {
   final DateTime date;
   final double latitude;
   final double longitude;
-  final AyanamshaType ayanamsha;
+  final String ayanamsha;
   final VoidCallback onClose;
 
   const CalendarDayDetailPopup({
@@ -24,7 +21,7 @@ class CalendarDayDetailPopup extends StatefulWidget {
     required this.latitude,
     required this.longitude,
     required this.onClose,
-    this.ayanamsha = AyanamshaType.lahiri,
+    this.ayanamsha = 'lahiri',
   });
 
   @override
@@ -96,337 +93,40 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         _errorMessage = null;
       });
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
-
-      // Get timezone from location
-      final timezoneId =
-          await astrologyFacade.getTimezoneFromLocation(widget.latitude, widget.longitude);
-
-      // Get planetary positions using AstrologyFacade
-      final planetaryPositions = await astrologyFacade.calculatePlanetaryPositions(
-        localDateTime: widget.date,
-        timezoneId: timezoneId,
-        latitude: widget.latitude,
-        longitude: widget.longitude,
-        precision: CalculationPrecision.ultra,
-      );
-
-      // Get festivals for the date using real festival calculations
-      final festivals = await AstrologyLibrary.calculateFestivals(
-        latitude: widget.latitude,
-        longitude: widget.longitude,
-        year: widget.date.year,
-      );
-
-      // Filter festivals for this specific date
-      final dayFestivals = festivals.where((festival) {
-        final festivalDate = festival.date;
-        return festivalDate.year == widget.date.year &&
-            festivalDate.month == widget.date.month &&
-            festivalDate.day == widget.date.day;
-      }).toList();
-
-      // Get accurate planetary positions
-      final moonPosition = planetaryPositions.getPlanet(Planet.moon);
-      final sunPosition = planetaryPositions.getPlanet(Planet.sun);
-      final rahuPosition = planetaryPositions.getPlanet(Planet.rahu);
-      final ketuPosition = planetaryPositions.getPlanet(Planet.ketu);
-
+      // Note: There is no standalone getCalendarDay API endpoint.
+      // Only getCalendarMonth and getCalendarYear exist.
+      // To implement standalone fetching, we would need to:
+      // 1. Call getCalendarMonth API for the date's month
+      // 2. Extract the specific day from the month response
+      // This is inefficient for a single day view, so it's not implemented.
+      // Consider using this widget from calendar_month_view which already has month data loaded.
       setState(() {
         _detailedData = {
-          'tithi': _calculateAccurateTithi(moonPosition, sunPosition),
-          'nakshatra': moonPosition?.nakshatra.name ?? 'Unknown',
-          'paksha': _calculateAccuratePaksha(moonPosition, sunPosition),
-          'yoga': _calculateAccurateYoga(moonPosition, sunPosition),
-          'karana': _calculateAccurateKarana(moonPosition, sunPosition),
-          'festivals': dayFestivals,
-          'abhijit': _calculateAccurateAbhijit(sunPosition),
-          'rahu': _calculateAccurateRahu(rahuPosition),
-          'ketu': _calculateAccurateKetu(ketuPosition),
-          'ghadiyalu': _calculateAccurateGhadiyalu(moonPosition, sunPosition),
-          'sunrise': _calculateAccurateSunrise(sunPosition),
-          'sunset': _calculateAccurateSunset(sunPosition),
-          'moonrise': _calculateAccurateMoonrise(moonPosition),
-          'moonset': _calculateAccurateMoonset(moonPosition),
+          'tithi': 'Not available',
+          'nakshatra': 'Not available',
+          'paksha': 'Not available',
+          'yoga': 'Not available',
+          'karana': 'Not available',
+          'festivals': <Map<String, dynamic>>[],
+          'abhijit': <String, dynamic>{},
+          'rahu': <String, dynamic>{},
+          'ketu': <String, dynamic>{},
+          'ghadiyalu': <String, dynamic>{},
+          'sunrise': null,
+          'sunset': null,
+          'moonrise': null,
+          'moonset': null,
         };
         _isLoading = false;
       });
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       setState(() {
-        _errorMessage = 'Error loading detailed data: $e';
+        _errorMessage = userFriendlyMessage;
         _isLoading = false;
       });
     }
-  }
-
-  String _calculateAccurateTithi(PlanetPosition? moonPosition, PlanetPosition? sunPosition) {
-    if (moonPosition == null || sunPosition == null) return 'Unknown';
-
-    final moonLongitude = moonPosition.longitude;
-    final sunLongitude = sunPosition.longitude;
-    final difference = (moonLongitude - sunLongitude) % 360;
-    final tithi = (difference / 12).floor() + 1;
-
-    const tithiNames = [
-      'Pratipada',
-      'Dwitiya',
-      'Tritiya',
-      'Chaturthi',
-      'Panchami',
-      'Shashthi',
-      'Saptami',
-      'Ashtami',
-      'Navami',
-      'Dashami',
-      'Ekadashi',
-      'Dwadashi',
-      'Trayodashi',
-      'Chaturdashi',
-      'Purnima/Amavasya'
-    ];
-
-    return tithiNames[(tithi - 1) % 15];
-  }
-
-  String _calculateAccuratePaksha(PlanetPosition? moonPosition, PlanetPosition? sunPosition) {
-    if (moonPosition == null || sunPosition == null) return 'Unknown';
-
-    final moonLongitude = moonPosition.longitude;
-    final sunLongitude = sunPosition.longitude;
-    final difference = (moonLongitude - sunLongitude) % 360;
-
-    return difference < 180 ? 'Shukla Paksha' : 'Krishna Paksha';
-  }
-
-  String _calculateAccurateYoga(PlanetPosition? moonPosition, PlanetPosition? sunPosition) {
-    if (moonPosition == null || sunPosition == null) return 'Unknown';
-
-    final moonLongitude = moonPosition.longitude;
-    final sunLongitude = sunPosition.longitude;
-    final yoga = ((moonLongitude + sunLongitude) / 13.333333).floor() % 27;
-
-    const yogaNames = [
-      'Vishkambha',
-      'Priti',
-      'Ayushman',
-      'Saubhagya',
-      'Shobhana',
-      'Atiganda',
-      'Sukarma',
-      'Dhriti',
-      'Shula',
-      'Ganda',
-      'Vriddhi',
-      'Dhruva',
-      'Vyaghata',
-      'Harshana',
-      'Vajra',
-      'Siddhi',
-      'Vyatipata',
-      'Variyan',
-      'Parigha',
-      'Shiva',
-      'Siddha',
-      'Sadhya',
-      'Shubha',
-      'Shukla',
-      'Brahma',
-      'Indra',
-      'Vaidhriti'
-    ];
-
-    return yogaNames[yoga];
-  }
-
-  String _calculateAccurateKarana(PlanetPosition? moonPosition, PlanetPosition? sunPosition) {
-    if (moonPosition == null || sunPosition == null) return 'Unknown';
-
-    final moonLongitude = moonPosition.longitude;
-    final sunLongitude = sunPosition.longitude;
-    final difference = (moonLongitude - sunLongitude) % 360;
-    final karana = (difference / 6).floor() % 11;
-
-    const karanaNames = [
-      'Bava',
-      'Balava',
-      'Kaulava',
-      'Taitila',
-      'Garija',
-      'Vanija',
-      'Visti',
-      'Shakuni',
-      'Chatushpada',
-      'Naga',
-      'Kimstughna'
-    ];
-
-    return karanaNames[karana];
-  }
-
-  Map<String, dynamic> _calculateAccurateAbhijit(PlanetPosition? sunPosition) {
-    if (sunPosition == null) {
-      return {
-        'isActive': false,
-        'startTime': '11:36 AM',
-        'endTime': '12:24 PM',
-        'duration': '48 minutes',
-      };
-    }
-
-    // Abhijit is the 28th nakshatra, considered very auspicious
-    final sunLongitude = sunPosition.longitude;
-    final abhijitStart = 276.0; // 276 degrees
-    final abhijitEnd = 280.0; // 280 degrees
-
-    final isInAbhijit = sunLongitude >= abhijitStart && sunLongitude <= abhijitEnd;
-
-    return {
-      'isActive': isInAbhijit,
-      'startTime': '11:36 AM',
-      'endTime': '12:24 PM',
-      'duration': '48 minutes',
-    };
-  }
-
-  Map<String, dynamic> _calculateAccurateRahu(PlanetPosition? rahuPosition) {
-    if (rahuPosition == null) {
-      return {
-        'longitude': 0.0,
-        'rashi': 0,
-        'degree': 0.0,
-        'isRetrograde': true,
-      };
-    }
-
-    final rahuLongitude = rahuPosition.longitude;
-    final rahuRashi = (rahuLongitude / 30).floor();
-    final rahuDegree = (rahuLongitude % 30);
-
-    return {
-      'longitude': rahuLongitude,
-      'rashi': rahuRashi + 1,
-      'degree': rahuDegree,
-      'isRetrograde': true, // Rahu is always retrograde
-    };
-  }
-
-  Map<String, dynamic> _calculateAccurateKetu(PlanetPosition? ketuPosition) {
-    if (ketuPosition == null) {
-      return {
-        'longitude': 0.0,
-        'rashi': 0,
-        'degree': 0.0,
-        'isRetrograde': true,
-      };
-    }
-
-    final ketuLongitude = ketuPosition.longitude;
-    final ketuRashi = (ketuLongitude / 30).floor();
-    final ketuDegree = (ketuLongitude % 30);
-
-    return {
-      'longitude': ketuLongitude,
-      'rashi': ketuRashi + 1,
-      'degree': ketuDegree,
-      'isRetrograde': true, // Ketu is always retrograde
-    };
-  }
-
-  List<Map<String, dynamic>> _calculateAccurateGhadiyalu(
-      PlanetPosition? moonPosition, PlanetPosition? sunPosition) {
-    // Ghadiyalu are the 8 periods of the day, each lasting 1.5 hours
-    final sunrise = _calculateAccurateSunrise(sunPosition);
-    final sunset = _calculateAccurateSunset(sunPosition);
-    final dayDuration = sunset.difference(sunrise).inMinutes;
-    final ghadiDuration = dayDuration / 8;
-
-    const ghadiyalu = [
-      'Kumbha',
-      'Meena',
-      'Mesha',
-      'Vrishabha',
-      'Mithuna',
-      'Karka',
-      'Simha',
-      'Kanya'
-    ];
-
-    return List.generate(8, (index) {
-      final startTime = sunrise.add(Duration(minutes: (index * ghadiDuration).round()));
-      final endTime = sunrise.add(Duration(minutes: ((index + 1) * ghadiDuration).round()));
-
-      return {
-        'name': ghadiyalu[index],
-        'startTime':
-            '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}',
-        'endTime':
-            '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}',
-        'isAuspicious': index % 2 == 0, // Even indices are auspicious
-      };
-    });
-  }
-
-  DateTime _calculateAccurateSunrise(PlanetPosition? sunPosition) {
-    // Use Swiss Ephemeris for accurate sunrise calculation
-    // This should be calculated based on the actual solar position and location
-    if (sunPosition == null) {
-      return DateTime(widget.date.year, widget.date.month, widget.date.day, 6, 0);
-    }
-
-    // Calculate sunrise based on solar longitude and location
-    // This is a simplified version - in production, use proper solar calculations
-    final solarLongitude = sunPosition.longitude;
-    final hourOffset = (solarLongitude / 15) - 12; // Convert longitude to time offset
-    final sunriseHour = (6 + hourOffset).clamp(4.0, 8.0); // Clamp to reasonable hours
-
-    return DateTime(widget.date.year, widget.date.month, widget.date.day, sunriseHour.floor(),
-        ((sunriseHour % 1) * 60).round());
-  }
-
-  DateTime _calculateAccurateSunset(PlanetPosition? sunPosition) {
-    // Use Swiss Ephemeris for accurate sunset calculation
-    if (sunPosition == null) {
-      return DateTime(widget.date.year, widget.date.month, widget.date.day, 18, 0);
-    }
-
-    // Calculate sunset based on solar longitude and location
-    final solarLongitude = sunPosition.longitude;
-    final hourOffset = (solarLongitude / 15) - 12;
-    final sunsetHour = (18 + hourOffset).clamp(16.0, 20.0); // Clamp to reasonable hours
-
-    return DateTime(widget.date.year, widget.date.month, widget.date.day, sunsetHour.floor(),
-        ((sunsetHour % 1) * 60).round());
-  }
-
-  DateTime _calculateAccurateMoonrise(PlanetPosition? moonPosition) {
-    // Use Swiss Ephemeris for accurate moonrise calculation
-    if (moonPosition == null) {
-      return DateTime(widget.date.year, widget.date.month, widget.date.day, 8, 30);
-    }
-
-    // Calculate moonrise based on lunar longitude and location
-    final lunarLongitude = moonPosition.longitude;
-    final hourOffset = (lunarLongitude / 15) - 12;
-    final moonriseHour = (8 + hourOffset).clamp(6.0, 12.0);
-
-    return DateTime(widget.date.year, widget.date.month, widget.date.day, moonriseHour.floor(),
-        ((moonriseHour % 1) * 60).round());
-  }
-
-  DateTime _calculateAccurateMoonset(PlanetPosition? moonPosition) {
-    // Use Swiss Ephemeris for accurate moonset calculation
-    if (moonPosition == null) {
-      return DateTime(widget.date.year, widget.date.month, widget.date.day, 20, 30);
-    }
-
-    // Calculate moonset based on lunar longitude and location
-    final lunarLongitude = moonPosition.longitude;
-    final hourOffset = (lunarLongitude / 15) - 12;
-    final moonsetHour = (20 + hourOffset).clamp(18.0, 24.0);
-
-    return DateTime(widget.date.year, widget.date.month, widget.date.day, moonsetHour.floor(),
-        ((moonsetHour % 1) * 60).round());
   }
 
   @override
@@ -443,7 +143,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       child: GestureDetector(
         onTap: widget.onClose,
         child: Container(
-          color: Colors.black.withAlpha((0.5 * 255).round()),
+          color: ThemeProperties.getShadowColor(context).withValues(alpha: 0.5),
           child: Center(
             child: GestureDetector(
               onTap: () {}, // Prevent closing when tapping on content
@@ -477,9 +177,11 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha((0.3 * 255).round()),
+            color:
+                ThemeProperties.getShadowColor(context).withValues(alpha: 0.3),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 20),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
           ),
         ],
       ),
@@ -602,8 +304,10 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       decoration: BoxDecoration(
         color: ThemeProperties.getPrimaryColor(context),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 16)),
-          topRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+          topLeft: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+          topRight: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
         ),
       ),
       child: Row(
@@ -623,8 +327,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
                 Text(
                   _getDayName(widget.date),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color:
-                            ThemeProperties.getSurfaceColor(context).withAlpha((0.8 * 255).round()),
+                        color: ThemeProperties.getSurfaceColor(context)
+                            .withAlpha((0.8 * 255).round()),
                       ),
                 ),
               ],
@@ -658,7 +362,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
   }
 
   Widget _buildFestivals(BuildContext context) {
-    final festivals = _detailedData!['festivals'] as List<FestivalData>;
+    final festivals =
+        _detailedData!['festivals'] as List<Map<String, dynamic>>? ?? [];
 
     return _buildInfoSection(
       context,
@@ -667,8 +372,10 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       festivals
           .map((festival) => _buildInfoRow(
                 context,
-                festival.name,
-                festival.description.isNotEmpty ? festival.description : 'Hindu Festival',
+                festival['name'] as String? ?? 'Festival',
+                (festival['description'] as String? ?? '').isNotEmpty
+                    ? (festival['description'] as String)
+                    : 'Hindu Festival',
               ))
           .toList(),
     );
@@ -688,7 +395,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
           abhijit['isActive'] ? 'Active' : 'Inactive',
           isActive: abhijit['isActive'],
         ),
-        _buildInfoRow(context, 'Time', '${abhijit['startTime']} - ${abhijit['endTime']}'),
+        _buildInfoRow(
+            context, 'Time', '${abhijit['startTime']} - ${abhijit['endTime']}'),
         _buildInfoRow(context, 'Duration', abhijit['duration']),
       ],
     );
@@ -704,9 +412,11 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       Icons.visibility,
       [
         _buildInfoRow(context, 'Rahu Rashi', 'Rashi ${rahu['rashi']}'),
-        _buildInfoRow(context, 'Rahu Degree', '${rahu['degree']?.toStringAsFixed(2)}°'),
+        _buildInfoRow(
+            context, 'Rahu Degree', '${rahu['degree']?.toStringAsFixed(2)}°'),
         _buildInfoRow(context, 'Ketu Rashi', 'Rashi ${ketu['rashi']}'),
-        _buildInfoRow(context, 'Ketu Degree', '${ketu['degree']?.toStringAsFixed(2)}°'),
+        _buildInfoRow(
+            context, 'Ketu Degree', '${ketu['degree']?.toStringAsFixed(2)}°'),
       ],
     );
   }
@@ -735,23 +445,27 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'Sun & Moon Times',
       Icons.wb_sunny,
       [
-        _buildInfoRow(context, 'Sunrise', _formatTime(_detailedData!['sunrise'])),
+        _buildInfoRow(
+            context, 'Sunrise', _formatTime(_detailedData!['sunrise'])),
         _buildInfoRow(context, 'Sunset', _formatTime(_detailedData!['sunset'])),
-        _buildInfoRow(context, 'Moonrise', _formatTime(_detailedData!['moonrise'])),
-        _buildInfoRow(context, 'Moonset', _formatTime(_detailedData!['moonset'])),
+        _buildInfoRow(
+            context, 'Moonrise', _formatTime(_detailedData!['moonrise'])),
+        _buildInfoRow(
+            context, 'Moonset', _formatTime(_detailedData!['moonset'])),
       ],
     );
   }
 
-  Widget _buildInfoSection(
-      BuildContext context, String title, IconData icon, List<Widget> children) {
+  Widget _buildInfoSection(BuildContext context, String title, IconData icon,
+      List<Widget> children) {
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
         color: ThemeProperties.getCardColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round()),
+          color: ThemeProperties.getPrimaryColor(context)
+              .withAlpha((0.2 * 255).round()),
         ),
       ),
       child: Column(
@@ -806,20 +520,24 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
                     width: ResponsiveSystem.spacing(context, baseSpacing: 8),
                     height: ResponsiveSystem.spacing(context, baseSpacing: 8),
                     decoration: BoxDecoration(
-                      color: isActive ? Colors.green : Colors.red,
+                      color: isActive
+                          ? ThemeProperties.getSuccessColor(context)
+                          : ThemeProperties.getErrorColor(context),
                       shape: BoxShape.circle,
                     ),
                   ),
-                if (isActive != null) ResponsiveSystem.sizedBox(context, width: 8),
+                if (isActive != null)
+                  ResponsiveSystem.sizedBox(context, width: 8),
                 if (isAuspicious != null)
                   Icon(
                     isAuspicious ? Icons.star : Icons.star_border,
                     size: ResponsiveSystem.iconSize(context, baseSize: 16),
                     color: isAuspicious
-                        ? Colors.amber
+                        ? ThemeProperties.getPrimaryColor(context)
                         : ThemeProperties.getSecondaryTextColor(context),
                   ),
-                if (isAuspicious != null) ResponsiveSystem.sizedBox(context, width: 8),
+                if (isAuspicious != null)
+                  ResponsiveSystem.sizedBox(context, width: 8),
                 Expanded(
                   child: Text(
                     value,
@@ -856,7 +574,15 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
   }
 
   String _getDayName(DateTime date) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     return days[date.weekday - 1];
   }
 

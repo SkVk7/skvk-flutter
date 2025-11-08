@@ -30,7 +30,8 @@ class AstrologySymbolWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveSymbolSize = symbolSize ?? ResponsiveSystem.iconSize(context, baseSize: 20);
+    final effectiveSymbolSize =
+        symbolSize ?? ResponsiveSystem.iconSize(context, baseSize: 20);
 
     String? displaySymbol;
     if (showSymbol) {

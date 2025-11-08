@@ -11,21 +11,19 @@ import '../../../../core/utils/app_logger.dart';
 import '../../../../core/design_system/design_system.dart';
 import '../../../../core/constants/app_constants.dart';
 
-import '../../../../core/utils/profile_completion_checker.dart';
-import '../../../../core/services/user_service.dart';
-import '../../../../core/models/user_model.dart';
+import '../../../../core/utils/validation/profile_completion_checker.dart';
+import '../../../../core/services/user/user_service.dart';
+import '../../../../core/models/user/user_model.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../features/user/domain/entities/user_entity.dart' as entity;
 
-import '../../../../shared/widgets/centralized_widgets.dart';
-import '../../../../core/services/translation_service.dart';
-import '../../../../core/theme/theme_provider.dart';
-import '../../../../core/services/language_service.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
+import '../../../../core/services/language/translation_service.dart';
+import '../../../../core/design_system/theme/theme_provider.dart';
+import '../../../../core/services/language/language_service.dart';
 import '../../../../core/logging/logging_helper.dart';
-import '../../../../astrology/core/entities/astrology_entities.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
 import '../widgets/profile_header_widget.dart';
 import '../widgets/profile_info_card.dart';
 import '../screens/user_edit_screen.dart';
@@ -88,14 +86,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       // Check the provider state directly
       final userFromState = ref.read(userServiceProvider);
       AppLogger.debug(
-          'User from provider state: ${userFromState != null ? 'FOUND' : 'NULL'}', 'UserProfile');
+          'User from provider state: ${userFromState != null ? 'FOUND' : 'NULL'}',
+          'UserProfile');
 
       if (userFromState != null) {
         AppLogger.debug(
             'User details: ${userFromState.name}, DOB: ${userFromState.dateOfBirth}, TOB: ${userFromState.timeOfBirth}',
             'UserProfile');
         AppLogger.debug(
-            'Location: ${userFromState.latitude}, ${userFromState.longitude}', 'UserProfile');
+            'Location: ${userFromState.latitude}, ${userFromState.longitude}',
+            'UserProfile');
         AppLogger.debug(
             'User name length: ${userFromState.name.length}, isEmpty: ${userFromState.name.isEmpty}',
             'UserProfile');
@@ -113,7 +113,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         },
       );
 
-      final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : userFromState;
+      final user = ResultHelper.isSuccess(result)
+          ? ResultHelper.getValue(result)
+          : userFromState;
 
       AppLogger.debug(
           'User loading result: ${ResultHelper.isSuccess(result) ? 'SUCCESS' : 'FAILURE'}',
@@ -122,9 +124,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         AppLogger.debug(
             'Final user details: ${user.name}, DOB: ${user.dateOfBirth}, TOB: ${user.timeOfBirth}',
             'UserProfile');
-        AppLogger.debug('Location: ${user.latitude}, ${user.longitude}', 'UserProfile');
         AppLogger.debug(
-            'User name length: ${user.name.length}, isEmpty: ${user.name.isEmpty}', 'UserProfile');
+            'Location: ${user.latitude}, ${user.longitude}', 'UserProfile');
+        AppLogger.debug(
+            'User name length: ${user.name.length}, isEmpty: ${user.name.isEmpty}',
+            'UserProfile');
       } else {
         AppLogger.debug('No user data received', 'UserProfile');
       }
@@ -138,11 +142,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
         // Load astrology data if user exists
         if (user != null) {
-          AppLogger.debug('User loaded, starting astrology data load...', 'UserProfile');
+          AppLogger.debug(
+              'User loaded, starting astrology data load...', 'UserProfile');
           _loadAstrologyData();
           _startAstrologyRefreshTimer();
         } else {
-          AppLogger.debug('No user found, skipping astrology data load', 'UserProfile');
+          AppLogger.debug(
+              'No user found, skipping astrology data load', 'UserProfile');
         }
       }
     } catch (e) {
@@ -150,7 +156,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       try {
         final userService = ref.read(userServiceProvider.notifier);
         final result = await userService.getCurrentUser();
-        final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+        final user = ResultHelper.isSuccess(result)
+            ? ResultHelper.getValue(result)
+            : null;
 
         if (mounted) {
           setState(() {
@@ -180,7 +188,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       if (mounted) {
         setState(() {
           _isLoadingAstrology = true;
-          _astrologyData = null; // Clear any cached data to force fresh calculation
+          _astrologyData =
+              null; // Clear any cached data to force fresh calculation
         });
       }
 
@@ -196,18 +205,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
       // Use the optimized user service method that handles caching
       final userService = ref.read(userServiceProvider.notifier);
-      AppLogger.debug('Loading astrology data for user: ${_currentUser!.name}', 'UserProfile');
-      AppLogger.debug('Birth details: ${_currentUser!.dateOfBirth} ${_currentUser!.timeOfBirth}',
+      AppLogger.debug('Loading astrology data for user: ${_currentUser!.name}',
           'UserProfile');
       AppLogger.debug(
-          'Location: ${_currentUser!.latitude}, ${_currentUser!.longitude}', 'UserProfile');
+          'Birth details: ${_currentUser!.dateOfBirth} ${_currentUser!.timeOfBirth}',
+          'UserProfile');
+      AppLogger.debug(
+          'Location: ${_currentUser!.latitude}, ${_currentUser!.longitude}',
+          'UserProfile');
 
       // Check if user service has the user data
       final userServiceState = ref.read(userServiceProvider);
-      AppLogger.debug('User service state: ${userServiceState != null ? 'HAS_USER' : 'NO_USER'}',
+      AppLogger.debug(
+          'User service state: ${userServiceState != null ? 'HAS_USER' : 'NO_USER'}',
           'UserProfile');
       if (userServiceState != null) {
-        AppLogger.debug('User service user: ${userServiceState.name}', 'UserProfile');
+        AppLogger.debug(
+            'User service user: ${userServiceState.name}', 'UserProfile');
       }
 
       final startTime = DateTime.now();
@@ -215,48 +229,52 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       final endTime = DateTime.now();
       final duration = endTime.difference(startTime);
 
-      AppLogger.debug('Astrology data loaded in: ${duration.inMilliseconds}ms', 'UserProfile');
+      AppLogger.debug('Astrology data loaded in: ${duration.inMilliseconds}ms',
+          'UserProfile');
       AppLogger.debug(
-          'Data received: ${astrologyData != null ? 'SUCCESS' : 'NULL'}', 'UserProfile');
+          'Data received: ${astrologyData != null ? 'SUCCESS' : 'NULL'}',
+          'UserProfile');
       if (astrologyData != null) {
-        AppLogger.debug('Data keys: ${astrologyData.keys.toList()}', 'UserProfile');
+        AppLogger.debug(
+            'Data keys: ${astrologyData.keys.toList()}', 'UserProfile');
       } else {
         AppLogger.debug(
-            'Attempting fallback: calling astrology library directly...', 'UserProfile');
+            'Attempting fallback: calling astrology library directly...',
+            'UserProfile');
         try {
-          final astrologyFacade = AstrologyFacade.instance;
+          final bridge = AstrologyServiceBridge.instance;
 
           // Get timezone from user's location
-          final timezoneId = await astrologyFacade.getTimezoneFromLocation(
+          final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
               _currentUser!.latitude, _currentUser!.longitude);
 
-          final fixedBirthData = await astrologyFacade.getFixedBirthData(
+          final fixedBirthData = await bridge.getBirthData(
             localBirthDateTime: _currentUser!.localBirthDateTime,
             timezoneId: timezoneId,
             latitude: _currentUser!.latitude,
             longitude: _currentUser!.longitude,
-            isUserData: true,
             ayanamsha: _currentUser!.ayanamsha,
           );
 
+          final rashiMap = fixedBirthData['rashi'] as Map<String, dynamic>?;
+          final nakshatraMap =
+              fixedBirthData['nakshatra'] as Map<String, dynamic>?;
+          final padaMap = fixedBirthData['pada'] as Map<String, dynamic>?;
+          final birthChartMap =
+              fixedBirthData['birthChart'] as Map<String, dynamic>?;
+          final dashaMap = fixedBirthData['dasha'] as Map<String, dynamic>?;
+          final houseLords =
+              birthChartMap?['houseLords'] as Map<String, dynamic>?;
+
           final fallbackData = {
-            'moon_rashi': fixedBirthData.rashi,
-            'moon_nakshatra': fixedBirthData.nakshatra,
-            'moon_pada': fixedBirthData.pada,
-            'ascendant': fixedBirthData.birthChart.houseLords[House.first]?.name ?? 'Unknown',
-            'birth_chart': {
-              'house_lords': fixedBirthData.birthChart.houseLords,
-              'planet_houses': fixedBirthData.birthChart.planetHouses,
-              'planet_rashis': fixedBirthData.birthChart.planetRashis,
-              'planet_nakshatras': fixedBirthData.birthChart.planetNakshatras,
-            },
-            'dasha': {
-              'current_lord': fixedBirthData.dasha.currentLord.name,
-              'start_date': fixedBirthData.dasha.startDate.toIso8601String(),
-              'end_date': fixedBirthData.dasha.endDate.toIso8601String(),
-              'progress': fixedBirthData.dasha.progress,
-            },
-            'calculated_at': fixedBirthData.calculatedAt.toIso8601String(),
+            'moonRashi': rashiMap,
+            'moonNakshatra': nakshatraMap,
+            'moonPada': padaMap,
+            'ascendant': houseLords?['House 1'] ?? 'Unknown',
+            'birthChart': birthChartMap ?? {},
+            'dasha': dashaMap ?? {},
+            'calculatedAt': fixedBirthData['calculatedAt'] as String? ??
+                DateTime.now().toIso8601String(),
           };
 
           AppLogger.debug('Fallback data created successfully', 'UserProfile');
@@ -268,8 +286,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           }
           return;
         } catch (fallbackError) {
-          AppLogger.error('Fallback also failed: $fallbackError', fallbackError, StackTrace.current,
-              'UserProfile');
+          AppLogger.error('Fallback also failed: $fallbackError', fallbackError,
+              StackTrace.current, 'UserProfile');
         }
       }
 
@@ -280,7 +298,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         });
       }
     } catch (e) {
-      AppLogger.error('Error loading astrology data: $e', e, StackTrace.current, 'UserProfile');
+      AppLogger.error('Error loading astrology data: $e', e, StackTrace.current,
+          'UserProfile');
       if (mounted) {
         setState(() {
           _astrologyData = null;
@@ -292,8 +311,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
   void _startAstrologyRefreshTimer() {
     _astrologyRefreshTimer?.cancel();
-    _astrologyRefreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_astrologyData == null && _currentUser != null && !_isLoadingAstrology) {
+    _astrologyRefreshTimer =
+        Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_astrologyData == null &&
+          _currentUser != null &&
+          !_isLoadingAstrology) {
         _loadAstrologyData();
       } else if (_astrologyData != null) {
         // Stop timer once data is loaded
@@ -336,15 +358,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CircularProgressIndicator(
-                        strokeWidth: ResponsiveSystem.spacing(context, baseSpacing: 3),
+                        strokeWidth:
+                            ResponsiveSystem.spacing(context, baseSpacing: 3),
                       ),
                       ResponsiveSystem.sizedBox(context,
-                          height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                          height: ResponsiveSystem.spacing(context,
+                              baseSpacing: 16)),
                       Text(
                         translationService.translateContent('loading_profile',
                             fallback: 'Loading profile...'),
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 16),
                           color: ThemeProperties.getPrimaryTextColor(context),
                         ),
                       ),
@@ -359,22 +384,28 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           Icon(
                             Icons.error_outline,
                             color: ThemeProperties.getPrimaryTextColor(context),
-                            size: ResponsiveSystem.iconSize(context, baseSize: 64),
+                            size: ResponsiveSystem.iconSize(context,
+                                baseSize: 64),
                           ),
                           ResponsiveSystem.sizedBox(context,
-                              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                              height: ResponsiveSystem.spacing(context,
+                                  baseSpacing: 16)),
                           Text(
                             _errorMessage!,
                             style: TextStyle(
-                              fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                              color: ThemeProperties.getPrimaryTextColor(context),
+                              fontSize: ResponsiveSystem.fontSize(context,
+                                  baseSize: 16),
+                              color:
+                                  ThemeProperties.getPrimaryTextColor(context),
                             ),
                             textAlign: TextAlign.center,
                           ),
                           ResponsiveSystem.sizedBox(context,
-                              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                              height: ResponsiveSystem.spacing(context,
+                                  baseSpacing: 16)),
                           CentralizedModernButton(
-                            text: translationService.translateContent('retry', fallback: 'Retry'),
+                            text: translationService.translateContent('retry',
+                                fallback: 'Retry'),
                             onPressed: _loadUserData,
                             width: ResponsiveSystem.screenWidth(context) * 0.3,
                           ),
@@ -382,7 +413,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                       ),
                     )
                   : _currentUser == null ||
-                          !ProfileCompletionChecker.isProfileComplete(_currentUser)
+                          !ProfileCompletionChecker.isProfileComplete(
+                              _currentUser)
                       ? Stack(
                           children: [
                             Center(
@@ -391,60 +423,90 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                 children: [
                                   Icon(
                                     Icons.person_add,
-                                    color: ThemeProperties.getPrimaryTextColor(context),
-                                    size: ResponsiveSystem.iconSize(context, baseSize: 64),
+                                    color: ThemeProperties.getPrimaryTextColor(
+                                        context),
+                                    size: ResponsiveSystem.iconSize(context,
+                                        baseSize: 64),
                                   ),
                                   ResponsiveSystem.sizedBox(context,
-                                      height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                                      height: ResponsiveSystem.spacing(context,
+                                          baseSpacing: 16)),
                                   Text(
                                     _currentUser == null
-                                        ? translationService.translateContent('no_profile_found',
+                                        ? translationService.translateContent(
+                                            'no_profile_found',
                                             fallback: 'No Profile Found')
                                         : translationService.translateContent(
                                             'complete_your_profile',
                                             fallback: 'Complete Your Profile'),
                                     style: TextStyle(
-                                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 20),
+                                      fontSize: ResponsiveSystem.fontSize(
+                                          context,
+                                          baseSize: 20),
                                       fontWeight: FontWeight.bold,
-                                      color: ThemeProperties.getPrimaryTextColor(context),
+                                      color:
+                                          ThemeProperties.getPrimaryTextColor(
+                                              context),
                                     ),
                                   ),
                                   ResponsiveSystem.sizedBox(context,
-                                      height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                                      height: ResponsiveSystem.spacing(context,
+                                          baseSpacing: 8)),
                                   Text(
                                     'Create your profile to get started',
                                     style: TextStyle(
-                                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                                      color: ThemeProperties.getSecondaryTextColor(context),
+                                      fontSize: ResponsiveSystem.fontSize(
+                                          context,
+                                          baseSize: 16),
+                                      color:
+                                          ThemeProperties.getSecondaryTextColor(
+                                              context),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
                                   ResponsiveSystem.sizedBox(context,
-                                      height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+                                      height: ResponsiveSystem.spacing(context,
+                                          baseSpacing: 24)),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       CentralizedModernButton(
-                                        text: translationService.translateContent('retry',
-                                            fallback: 'Retry'),
+                                        text: translationService
+                                            .translateContent('retry',
+                                                fallback: 'Retry'),
                                         onPressed: () => _loadUserData(),
                                         icon: Icons.refresh,
-                                        width: ResponsiveSystem.screenWidth(context) * 0.25,
-                                        backgroundColor: ThemeProperties.getPrimaryColor(context)
-                                            .withAlpha((0.1 * 255).round()),
-                                        textColor: ThemeProperties.getPrimaryColor(context),
+                                        width: ResponsiveSystem.screenWidth(
+                                                context) *
+                                            0.25,
+                                        backgroundColor:
+                                            ThemeProperties.getPrimaryColor(
+                                                    context)
+                                                .withAlpha((0.1 * 255).round()),
+                                        textColor:
+                                            ThemeProperties.getPrimaryColor(
+                                                context),
                                       ),
                                       ResponsiveSystem.sizedBox(context,
-                                          width:
-                                              ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                                          width: ResponsiveSystem.spacing(
+                                              context,
+                                              baseSpacing: 12)),
                                       CentralizedModernButton(
-                                        text: translationService.translateContent('create_profile',
-                                            fallback: 'Create Profile'),
-                                        onPressed: () => _editProfile(context, null),
+                                        text: translationService
+                                            .translateContent('create_profile',
+                                                fallback: 'Create Profile'),
+                                        onPressed: () =>
+                                            _editProfile(context, null),
                                         icon: Icons.person_add,
-                                        width: ResponsiveSystem.screenWidth(context) * 0.35,
-                                        backgroundColor: ThemeProperties.getSurfaceColor(context),
-                                        textColor: ThemeProperties.getPrimaryColor(context),
+                                        width: ResponsiveSystem.screenWidth(
+                                                context) *
+                                            0.35,
+                                        backgroundColor:
+                                            ThemeProperties.getSurfaceColor(
+                                                context),
+                                        textColor:
+                                            ThemeProperties.getPrimaryColor(
+                                                context),
                                       ),
                                     ],
                                   ),
@@ -453,13 +515,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             ),
                             // Back button positioned at top-left
                             Positioned(
-                              top: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                              left: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                              top: ResponsiveSystem.spacing(context,
+                                  baseSpacing: 16),
+                              left: ResponsiveSystem.spacing(context,
+                                  baseSpacing: 16),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.arrow_back,
-                                  color: ThemeProperties.getPrimaryTextColor(context),
-                                  size: ResponsiveSystem.iconSize(context, baseSize: 28),
+                                  color: ThemeProperties.getPrimaryTextColor(
+                                      context),
+                                  size: ResponsiveSystem.iconSize(context,
+                                      baseSize: 28),
                                 ),
                                 onPressed: () {
                                   Navigator.pushNamedAndRemoveUntil(
@@ -470,8 +536,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                 },
                                 tooltip: 'Back to Home',
                                 style: IconButton.styleFrom(
-                                  backgroundColor: ThemeProperties.getSurfaceColor(context)
-                                      .withAlpha((0.8 * 255).round()),
+                                  backgroundColor:
+                                      ThemeProperties.getSurfaceColor(context)
+                                          .withAlpha((0.8 * 255).round()),
                                   shape: const CircleBorder(),
                                 ),
                               ),
@@ -488,19 +555,26 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                   slivers: [
                                     // App Bar
                                     SliverAppBar(
-                                      expandedHeight:
-                                          ResponsiveSystem.spacing(context, baseSpacing: 120),
+                                      expandedHeight: ResponsiveSystem.spacing(
+                                          context,
+                                          baseSpacing: 120),
                                       floating: false,
                                       pinned: true,
-                                      backgroundColor: ThemeProperties.getTransparentColor(context),
+                                      backgroundColor:
+                                          ThemeProperties.getTransparentColor(
+                                              context),
                                       elevation: 0,
-                                      toolbarHeight:
-                                          ResponsiveSystem.spacing(context, baseSpacing: 60),
+                                      toolbarHeight: ResponsiveSystem.spacing(
+                                          context,
+                                          baseSpacing: 60),
                                       leading: IconButton(
                                         icon: Icon(
                                           Icons.arrow_back,
-                                          color: ThemeProperties.getPrimaryTextColor(context),
-                                          size: ResponsiveSystem.iconSize(context, baseSize: 28),
+                                          color: ThemeProperties
+                                              .getPrimaryTextColor(context),
+                                          size: ResponsiveSystem.iconSize(
+                                              context,
+                                              baseSize: 28),
                                         ),
                                         onPressed: () {
                                           Navigator.pushNamedAndRemoveUntil(
@@ -515,14 +589,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                         title: Text(
                                           'Profile',
                                           style: TextStyle(
-                                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                                            fontSize: ResponsiveSystem.fontSize(
+                                                context,
+                                                baseSize: 18),
                                             fontWeight: FontWeight.bold,
-                                            color: ThemeProperties.getPrimaryTextColor(context),
+                                            color: ThemeProperties
+                                                .getPrimaryTextColor(context),
                                           ),
                                         ),
                                         background: Container(
                                           decoration: BoxDecoration(
-                                            gradient: ThemeProperties.getPrimaryGradient(context),
+                                            gradient: ThemeProperties
+                                                .getPrimaryGradient(context),
                                           ),
                                         ),
                                         collapseMode: CollapseMode.parallax,
@@ -531,22 +609,26 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                         // Language Dropdown Widget
                                         CentralizedLanguageDropdown(
                                           onLanguageChanged: (value) {
-                                            LoggingHelper.logInfo('Language changed to: $value');
+                                            LoggingHelper.logInfo(
+                                                'Language changed to: $value');
                                             _handleLanguageChange(ref, value);
                                           },
                                         ),
                                         // Theme Dropdown Widget
                                         CentralizedThemeDropdown(
                                           onThemeChanged: (value) {
-                                            LoggingHelper.logInfo('Theme changed to: $value');
+                                            LoggingHelper.logInfo(
+                                                'Theme changed to: $value');
                                             _handleThemeChange(ref, value);
                                           },
                                         ),
                                         IconButton(
                                           icon: Icon(
                                             Icons.share,
-                                            color: ThemeProperties.getPrimaryTextColor(context),
-                                            size: ResponsiveSystem.iconSize(context,
+                                            color: ThemeProperties
+                                                .getPrimaryTextColor(context),
+                                            size: ResponsiveSystem.iconSize(
+                                                context,
                                                 baseSize:
                                                     24), // Consistent with other app bar icons
                                           ),
@@ -560,31 +642,42 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                                       return entity.UserEntity(
                                                         id: user.id,
                                                         username: user.name,
-                                                        dateOfBirth: user.dateOfBirth,
-                                                        timeOfBirth: entity.TimeOfBirth(
-                                                          hour: user.timeOfBirth.hour,
-                                                          minute: user.timeOfBirth.minute,
+                                                        dateOfBirth:
+                                                            user.dateOfBirth,
+                                                        timeOfBirth:
+                                                            entity.TimeOfBirth(
+                                                          hour: user
+                                                              .timeOfBirth.hour,
+                                                          minute: user
+                                                              .timeOfBirth
+                                                              .minute,
                                                         ),
-                                                        placeOfBirth: user.placeOfBirth,
+                                                        placeOfBirth:
+                                                            user.placeOfBirth,
                                                         latitude: user.latitude,
-                                                        longitude: user.longitude,
+                                                        longitude:
+                                                            user.longitude,
                                                         sex: user.sex,
                                                         // ayanamsha removed as it's not in UserEntity
-                                                        createdAt: DateTime.now(),
-                                                        updatedAt: DateTime.now(),
+                                                        createdAt:
+                                                            DateTime.now(),
+                                                        updatedAt:
+                                                            DateTime.now(),
                                                       );
                                                     }()
                                                   : null,
                                               translationService),
-                                          tooltip: translationService.translateContent(
-                                              'share_profile',
-                                              fallback: 'Share Profile'),
+                                          tooltip: translationService
+                                              .translateContent('share_profile',
+                                                  fallback: 'Share Profile'),
                                         ),
                                         IconButton(
                                           icon: Icon(
                                             Icons.edit,
-                                            color: ThemeProperties.getPrimaryTextColor(context),
-                                            size: ResponsiveSystem.iconSize(context,
+                                            color: ThemeProperties
+                                                .getPrimaryTextColor(context),
+                                            size: ResponsiveSystem.iconSize(
+                                                context,
                                                 baseSize:
                                                     24), // Consistent with other app bar icons
                                           ),
@@ -598,24 +691,33 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                                       return entity.UserEntity(
                                                         id: user.id,
                                                         username: user.name,
-                                                        dateOfBirth: user.dateOfBirth,
-                                                        timeOfBirth: entity.TimeOfBirth(
-                                                          hour: user.timeOfBirth.hour,
-                                                          minute: user.timeOfBirth.minute,
+                                                        dateOfBirth:
+                                                            user.dateOfBirth,
+                                                        timeOfBirth:
+                                                            entity.TimeOfBirth(
+                                                          hour: user
+                                                              .timeOfBirth.hour,
+                                                          minute: user
+                                                              .timeOfBirth
+                                                              .minute,
                                                         ),
-                                                        placeOfBirth: user.placeOfBirth,
+                                                        placeOfBirth:
+                                                            user.placeOfBirth,
                                                         latitude: user.latitude,
-                                                        longitude: user.longitude,
+                                                        longitude:
+                                                            user.longitude,
                                                         sex: user.sex,
                                                         // ayanamsha removed as it's not in UserEntity
-                                                        createdAt: DateTime.now(),
-                                                        updatedAt: DateTime.now(),
+                                                        createdAt:
+                                                            DateTime.now(),
+                                                        updatedAt:
+                                                            DateTime.now(),
                                                       );
                                                     }()
                                                   : null),
-                                          tooltip: translationService.translateContent(
-                                              'edit_profile',
-                                              fallback: 'Edit Profile'),
+                                          tooltip: translationService
+                                              .translateContent('edit_profile',
+                                                  fallback: 'Edit Profile'),
                                         ),
                                       ],
                                     ),
@@ -625,32 +727,44 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                       child: Padding(
                                         padding: ResponsiveSystem.only(
                                           context,
-                                          top: ResponsiveSystem.spacing(context, baseSpacing: 20),
-                                          left: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                                          right: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                                          bottom:
-                                              ResponsiveSystem.spacing(context, baseSpacing: 16),
+                                          top: ResponsiveSystem.spacing(context,
+                                              baseSpacing: 20),
+                                          left: ResponsiveSystem.spacing(
+                                              context,
+                                              baseSpacing: 16),
+                                          right: ResponsiveSystem.spacing(
+                                              context,
+                                              baseSpacing: 16),
+                                          bottom: ResponsiveSystem.spacing(
+                                              context,
+                                              baseSpacing: 16),
                                         ),
                                         child: Column(
                                           children: [
                                             // Profile Header
                                             ProfileHeaderWidget(
                                               user: user,
-                                              onProfilePictureChanged: (imagePath) =>
-                                                  _handleProfilePictureChanged(
-                                                      imagePath, translationService),
+                                              onProfilePictureChanged:
+                                                  (imagePath) =>
+                                                      _handleProfilePictureChanged(
+                                                          imagePath,
+                                                          translationService),
                                             ),
 
                                             ResponsiveSystem.sizedBox(context,
-                                                height: ResponsiveSystem.spacing(context,
-                                                    baseSpacing: 24)),
+                                                height:
+                                                    ResponsiveSystem.spacing(
+                                                        context,
+                                                        baseSpacing: 24)),
 
                                             // Profile Statistics - Removed widget
                                             // ProfileStatisticsWidget(user: user),
 
                                             ResponsiveSystem.sizedBox(context,
-                                                height: ResponsiveSystem.spacing(context,
-                                                    baseSpacing: 24)),
+                                                height:
+                                                    ResponsiveSystem.spacing(
+                                                        context,
+                                                        baseSpacing: 24)),
 
                                             // Personal Information
                                             ProfileInfoCard(
@@ -659,25 +773,38 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                               children: [
                                                 _buildInfoRow(
                                                     'Name',
-                                                    (user?.name.isNotEmpty == true)
+                                                    (user?.name.isNotEmpty ==
+                                                            true)
                                                         ? user!.name
-                                                        : ((user?.username?.isNotEmpty == true)
+                                                        : ((user?.username
+                                                                    ?.isNotEmpty ==
+                                                                true)
                                                             ? user!.username!
                                                             : 'Not provided')),
-                                                _buildInfoRow('Date of Birth',
-                                                    _formatDate(user?.dateOfBirth)),
-                                                _buildInfoRow('Time of Birth',
-                                                    _formatTime(user?.timeOfBirth)),
-                                                _buildInfoRow('Place of Birth',
-                                                    user?.placeOfBirth ?? 'Not provided'),
                                                 _buildInfoRow(
-                                                    'Gender', user?.sex ?? 'Not specified'),
+                                                    'Date of Birth',
+                                                    _formatDate(
+                                                        user?.dateOfBirth)),
+                                                _buildInfoRow(
+                                                    'Time of Birth',
+                                                    _formatTime(
+                                                        user?.timeOfBirth)),
+                                                _buildInfoRow(
+                                                    'Place of Birth',
+                                                    user?.placeOfBirth ??
+                                                        'Not provided'),
+                                                _buildInfoRow(
+                                                    'Gender',
+                                                    user?.sex ??
+                                                        'Not specified'),
                                               ],
                                             ),
 
                                             ResponsiveSystem.sizedBox(context,
-                                                height: ResponsiveSystem.spacing(context,
-                                                    baseSpacing: 16)),
+                                                height:
+                                                    ResponsiveSystem.spacing(
+                                                        context,
+                                                        baseSpacing: 16)),
 
                                             // Astrological Information
                                             ProfileInfoCard(
@@ -687,40 +814,56 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                                   ? () => _loadAstrologyData()
                                                   : null,
                                               children: [
-                                                _buildAstrologyInfoRow('Moon Sign (Rashi)',
-                                                    _getAstrologyValue('moon_rashi'),
+                                                _buildAstrologyInfoRow(
+                                                    'Moon Sign (Rashi)',
+                                                    _getAstrologyValue(
+                                                        'moonRashi'),
                                                     rashiNumber:
-                                                        _getAstrologyRashiNumber('moon_rashi')),
-                                                _buildAstrologyInfoRow('Birth Star (Nakshatra)',
-                                                    _getAstrologyValue('moon_nakshatra'),
-                                                    nakshatraNumber: _getAstrologyNakshatraNumber(
-                                                        'moon_nakshatra')),
-                                                _buildAstrologyInfoRow('Star Quarter (Pada)',
-                                                    _getAstrologyValue('moon_pada')),
-                                                _buildAstrologyInfoRow('Rising Sign (Ascendant)',
-                                                    _getAstrologyValue('ascendant'),
+                                                        _getAstrologyRashiNumber(
+                                                            'moonRashi')),
+                                                _buildAstrologyInfoRow(
+                                                    'Birth Star (Nakshatra)',
+                                                    _getAstrologyValue(
+                                                        'moonNakshatra'),
+                                                    nakshatraNumber:
+                                                        _getAstrologyNakshatraNumber(
+                                                            'moonNakshatra')),
+                                                _buildAstrologyInfoRow(
+                                                    'Star Quarter (Pada)',
+                                                    _getAstrologyValue(
+                                                        'moonPada')),
+                                                _buildAstrologyInfoRow(
+                                                    'Rising Sign (Ascendant)',
+                                                    _getAstrologyValue(
+                                                        'ascendant'),
                                                     rashiNumber:
-                                                        _getAstrologyRashiNumber('ascendant')),
+                                                        _getAstrologyRashiNumber(
+                                                            'ascendant')),
                                               ],
                                             ),
 
                                             ResponsiveSystem.sizedBox(context,
-                                                height: ResponsiveSystem.spacing(context,
-                                                    baseSpacing: 24)),
+                                                height:
+                                                    ResponsiveSystem.spacing(
+                                                        context,
+                                                        baseSpacing: 24)),
 
                                             // App Information
                                             ProfileInfoCard(
                                               title: 'Application Information',
                                               icon: Icons.info,
                                               children: [
+                                                _buildInfoRow('App Version',
+                                                    AppConstants.appVersion),
                                                 _buildInfoRow(
-                                                    'App Version', AppConstants.appVersion),
-                                                _buildInfoRow('Profile Status', 'Active'),
-                                                _buildInfoRow('Data Source', 'Local Storage'),
+                                                    'Profile Status', 'Active'),
+                                                _buildInfoRow('Data Source',
+                                                    'Local Storage'),
                                               ],
                                             ),
 
-                                            ResponsiveSystem.sizedBox(context, height: 32),
+                                            ResponsiveSystem.sizedBox(context,
+                                                height: 32),
                                           ],
                                         ),
                                       ),
@@ -810,14 +953,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   }
 
   String _convertToUserFriendlyText(String key, dynamic value) {
-    // Handle different data types from the astrology library
-    if (value is RashiData) {
-      return value
-          .englishName; // Return just the English name, symbol will be added by AstrologyInfoRow
-    } else if (value is NakshatraData) {
-      return value.englishName; // Return the English name instead of Sanskrit
-    } else if (value is PadaData) {
-      return value.name; // Return the pada name (already in English)
+    // Handle different data types from the API
+    if (value is Map<String, dynamic>) {
+      // Handle Map data from API
+      if (value.containsKey('englishName')) {
+        return value['englishName'] as String? ?? 'Unknown';
+      } else if (value.containsKey('name')) {
+        return value['name'] as String? ?? 'Unknown';
+      } else if (value.containsKey('number')) {
+        return '${value['number']}';
+      }
+      return 'Unknown';
     } else if (value is String) {
       // Handle string values - check if it contains symbol concatenation
       if (key.toLowerCase().contains('nakshatra') && value.contains(' ')) {
@@ -833,18 +979,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     } else if (value is int) {
       // Handle numeric values for backward compatibility
       switch (key.toLowerCase()) {
-        case 'moon_rashi':
+        case 'moonrashi':
         case 'rashi':
-        case 'moon_sign':
+        case 'moonsign':
           // Use direct property access from birth data if available
           return 'Rashi $value'; // Simplified display
-        case 'moon_nakshatra':
+        case 'moonnakshatra':
         case 'nakshatra':
-        case 'birth_star':
+        case 'birthstar':
           return 'Nakshatra $value'; // Simplified display
-        case 'moon_pada':
+        case 'moonpada':
         case 'pada':
-        case 'star_quarter':
+        case 'starquarter':
           return 'Pada $value'; // Simplified display
         case 'ascendant':
         case 'rising_sign':
@@ -862,8 +1008,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     if (_astrologyData == null) return null;
 
     dynamic value = _astrologyData![key];
-    if (value is RashiData) {
-      return value.number;
+    if (value is Map<String, dynamic>) {
+      return value['number'] as int?;
     } else if (value is int) {
       return value;
     }
@@ -874,8 +1020,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     if (_astrologyData == null) return null;
 
     dynamic value = _astrologyData![key];
-    if (value is NakshatraData) {
-      return value.number;
+    if (value is Map<String, dynamic>) {
+      return value['number'] as int?;
     } else if (value is int) {
       return value;
     }
@@ -930,8 +1076,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text(imagePath != null ? 'Profile picture updated!' : 'Profile picture removed!'),
+            content: Text(imagePath != null
+                ? 'Profile picture updated!'
+                : 'Profile picture removed!'),
             backgroundColor: ThemeProperties.getPrimaryColor(context),
           ),
         );
@@ -940,7 +1087,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(translationService.translateContent('error_updating_profile_picture',
+            content: Text(translationService.translateContent(
+                'error_updating_profile_picture',
                 fallback: 'Error updating profile picture: $e')),
             backgroundColor: ThemeProperties.getErrorColor(context),
           ),
@@ -992,12 +1140,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
-  void _shareProfile(
-      BuildContext context, entity.UserEntity? user, TranslationService translationService) {
+  void _shareProfile(BuildContext context, entity.UserEntity? user,
+      TranslationService translationService) {
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(translationService.translateContent('no_profile_to_share',
+          content: Text(translationService.translateContent(
+              'no_profile_to_share',
               fallback: 'No profile to share')),
           backgroundColor: ThemeProperties.getPrimaryColor(context),
         ),
@@ -1007,7 +1156,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(translationService.translateContent('profile_sharing_coming_soon',
+        content: Text(translationService.translateContent(
+            'profile_sharing_coming_soon',
             fallback: 'Profile sharing feature coming soon')),
         backgroundColor: ThemeProperties.getPrimaryColor(context),
       ),
@@ -1023,6 +1173,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;

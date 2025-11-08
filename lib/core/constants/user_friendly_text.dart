@@ -8,7 +8,8 @@ class UserFriendlyText {
   // App Titles and Headers
   static const String appTitle = 'Your Life Guide';
   static const String welcomeMessage = 'Welcome to Your Life Guide';
-  static const String appSubtitle = 'Discover what the stars have in store for you';
+  static const String appSubtitle =
+      'Discover what the stars have in store for you';
 
   // Feature Names (User-Friendly)
   static const String horoscope = 'My Birth Chart';
@@ -114,9 +115,12 @@ class UserFriendlyText {
   static const Map<String, String> descriptions = {
     'horoscope_description':
         'Your personal birth chart showing the positions of planets at the time of your birth',
-    'predictions_description': 'Daily insights and guidance based on current planetary movements',
-    'calendar_description': 'Traditional Hindu calendar with auspicious dates and festivals',
-    'matching_description': 'Check compatibility between two people for marriage or relationships',
+    'predictions_description':
+        'Daily insights and guidance based on current planetary movements',
+    'calendar_description':
+        'Traditional Hindu calendar with auspicious dates and festivals',
+    'matching_description':
+        'Check compatibility between two people for marriage or relationships',
     'profile_description': 'Manage your personal information and birth details',
   };
 
@@ -131,17 +135,20 @@ class UserFriendlyText {
   // Error Messages
   static const Map<String, String> errorMessages = {
     'network_error': 'Unable to connect. Please check your internet connection',
-    'calculation_error': 'Something went wrong with the calculation. Please try again',
+    'calculation_error':
+        'Something went wrong with the calculation. Please try again',
     'validation_error': 'Please check your information and try again',
     'unknown_error': 'Oops! Something unexpected happened. Please try again',
   };
 
   // Help Text
   static const Map<String, String> helpText = {
-    'birth_time_help': 'Enter the exact time you were born for accurate results',
+    'birth_time_help':
+        'Enter the exact time you were born for accurate results',
     'birth_place_help': 'Select the city where you were born',
     'name_help': 'Enter your full name as it appears on official documents',
-    'matching_help': 'Enter birth details of both people to check compatibility',
+    'matching_help':
+        'Enter birth details of both people to check compatibility',
   };
 
   /// Get user-friendly term for technical astrological term
@@ -151,7 +158,8 @@ class UserFriendlyText {
 
   /// Get user-friendly description for feature
   static String getFeatureDescription(String feature) {
-    return descriptions['${feature}_description'] ?? 'Feature description not available';
+    return descriptions['${feature}_description'] ??
+        'Feature description not available';
   }
 
   /// Get user-friendly success message

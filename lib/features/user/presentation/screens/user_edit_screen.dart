@@ -3,14 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import 'dart:async';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../core/services/simple_location_service.dart';
-import '../../../../core/services/user_service.dart';
-import '../../../../core/models/user_model.dart';
+import '../../../../core/services/location/simple_location_service.dart';
+import '../../../../core/services/user/user_service.dart';
+import '../../../../core/models/user/user_model.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../core/utils/ayanamsha_info.dart';
-import '../../../../core/utils/house_system_info.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
-import '../../../../shared/widgets/reusable_form_fields.dart';
+import '../../../../core/utils/astrology/ayanamsha_info.dart';
+import '../../../../core/utils/astrology/house_system_info.dart';
+import '../../../../shared/widgets/forms/reusable_form_fields.dart';
 
 /// User Edit Screen - Enhanced Version with Proper UI/UX
 class UserEditScreen extends ConsumerStatefulWidget {
@@ -29,8 +28,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
   DateTime _dob = DateTime.now().subtract(const Duration(days: 25 * 365));
   TimeOfDay _tob = TimeOfDay.now();
   String _sex = 'Male';
-  AyanamshaType _ayanamsha = AyanamshaType.lahiri;
-  HouseSystem _houseSystem = HouseSystem.placidus;
+  String _ayanamsha = 'lahiri';
+  String _houseSystem = 'placidus';
 
   // Location search state
   List<Map<String, dynamic>> _locationSuggestions = [];
@@ -60,7 +59,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -85,30 +84,32 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
-        child: Column(
-          children: [
-            // Name Field
+            padding: EdgeInsets.all(
+                ResponsiveSystem.spacing(context, baseSpacing: 16)),
+            child: Column(
+              children: [
+                // Name Field
                 ReusableFormField(
                   label: 'Full Name',
                   isRequired: true,
                   prefixIcon: LucideIcons.user,
                   child: ReusableTextInput(
                     controller: _nameController,
-                      hintText: 'Enter your full name',
+                    hintText: 'Enter your full name',
                     prefixIcon: LucideIcons.user,
                   ),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                
+
                 // Date of Birth Field
                 ReusableFormField(
                   label: 'Date of Birth',
                   isRequired: true,
                   prefixIcon: LucideIcons.calendar,
-                  helperText: 'Your birth date for accurate astrological calculations',
+                  helperText:
+                      'Your birth date for accurate astrological calculations',
                   child: ReusableDatePicker(
                     selectedDate: _dob,
                     onDateChanged: (date) {
@@ -120,10 +121,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     firstDate: DateTime(1900),
                   ),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                
+
                 // Time of Birth Field
                 ReusableFormField(
                   label: 'Time of Birth',
@@ -139,10 +140,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     },
                   ),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                
+
                 // Place of Birth Field with Search
                 ReusableFormField(
                   label: 'Place of Birth',
@@ -151,10 +152,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   helperText: 'Type to search for your birth location',
                   child: _buildLocationSearchField(),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                
+
                 // Gender Field
                 ReusableFormField(
                   label: 'Gender',
@@ -172,10 +173,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     hintText: 'Select gender',
                   ),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                
+
                 // Ayanamsha System Field
                 ReusableFormField(
                   label: 'Ayanamsha System',
@@ -184,10 +185,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   helperText: 'Choose the ayanamsha system for calculations',
                   child: _buildAyanamshaSelector(),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                
+
                 // House System Field
                 ReusableFormField(
                   label: 'House System',
@@ -196,10 +197,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   helperText: 'Select the house system for chart calculations',
                   child: _buildHouseSystemSelector(),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 32)),
-                
+
                 // Save Button
                 SizedBox(
                   width: double.infinity,
@@ -207,32 +208,34 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     onPressed: _saveProfile,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ThemeProperties.getPrimaryColor(context),
-                      foregroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: EdgeInsets.symmetric(
-                        vertical: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                        vertical:
+                            ResponsiveSystem.spacing(context, baseSpacing: 16),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          ResponsiveSystem.borderRadius(context, baseRadius: 12),
-                        ),
+                        borderRadius: ResponsiveSystem.circular(context,
+                            baseRadius: 12),
                       ),
-                      elevation: ResponsiveSystem.elevation(context, baseElevation: 4),
+                      elevation:
+                          ResponsiveSystem.elevation(context, baseElevation: 4),
                     ),
                     child: Text(
                       'Save Profile',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 16),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
                 ),
-                
+
                 ResponsiveSystem.sizedBox(context,
                     height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                ],
-              ),
+              ],
             ),
+          ),
         ),
       ),
     );
@@ -241,7 +244,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
   /// Build location search field with suggestions
   Widget _buildLocationSearchField() {
     return Column(
-                        children: [
+      children: [
         TextField(
           controller: _pobController,
           onChanged: _onLocationSearchChanged,
@@ -267,24 +270,20 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     color: ThemeProperties.getSecondaryTextColor(context),
                   ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(
-                ResponsiveSystem.borderRadius(context, baseRadius: 8),
-              ),
+              borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
             ),
             filled: true,
             fillColor: ThemeProperties.getSurfaceColor(context),
           ),
         ),
         if (_showLocationSuggestions && _locationSuggestions.isNotEmpty)
-            Container(
+          Container(
             margin: EdgeInsets.only(
               top: ResponsiveSystem.spacing(context, baseSpacing: 8),
             ),
-              decoration: BoxDecoration(
+            decoration: BoxDecoration(
               color: ThemeProperties.getSurfaceColor(context),
-              borderRadius: BorderRadius.circular(
-                ResponsiveSystem.borderRadius(context, baseRadius: 8),
-              ),
+              borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
               border: Border.all(
                 color: ThemeProperties.getBorderColor(context),
               ),
@@ -292,7 +291,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                 BoxShadow(
                   color: ThemeProperties.getShadowColor(context),
                   blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                  offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  offset: Offset(
+                      0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
                 ),
               ],
             ),
@@ -310,7 +310,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   title: Text(
                     location['name'] ?? 'Unknown Location',
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 14),
                       color: ThemeProperties.getPrimaryTextColor(context),
                     ),
                   ),
@@ -345,17 +346,15 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
           horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
           vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
         ),
-              decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: ThemeProperties.getSurfaceColor(context),
-          borderRadius: BorderRadius.circular(
-            ResponsiveSystem.borderRadius(context, baseRadius: 8),
-          ),
+          borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
           border: Border.all(
             color: ThemeProperties.getBorderColor(context),
           ),
         ),
         child: Row(
-                children: [
+          children: [
             Icon(
               LucideIcons.compass,
               color: ThemeProperties.getPrimaryColor(context),
@@ -369,17 +368,17 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                 style: TextStyle(
                   fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                   color: ThemeProperties.getPrimaryTextColor(context),
-                      ),
-                    ),
-                  ),
+                ),
+              ),
+            ),
             Icon(
               LucideIcons.chevronDown,
               color: ThemeProperties.getSecondaryTextColor(context),
               size: ResponsiveSystem.iconSize(context, baseSize: 20),
-                  ),
-                ],
-              ),
             ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -394,9 +393,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
         ),
         decoration: BoxDecoration(
           color: ThemeProperties.getSurfaceColor(context),
-          borderRadius: BorderRadius.circular(
-            ResponsiveSystem.borderRadius(context, baseRadius: 8),
-          ),
+          borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
           border: Border.all(
             color: ThemeProperties.getBorderColor(context),
           ),
@@ -515,24 +512,26 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: AyanamshaType.values.length,
+            itemCount: AyanamshaInfoHelper.getAllAyanamshaTypes().length,
             itemBuilder: (context, index) {
-              final ayanamsha = AyanamshaType.values[index];
+              final ayanamsha =
+                  AyanamshaInfoHelper.getAllAyanamshaTypes()[index];
               final isSelected = _ayanamsha == ayanamsha;
               final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
-              
+
               return ListTile(
                 leading: Icon(
                   isSelected ? LucideIcons.check : LucideIcons.circle,
-                  color: isSelected 
+                  color: isSelected
                       ? ThemeProperties.getPrimaryColor(context)
                       : ThemeProperties.getSecondaryTextColor(context),
                 ),
                 title: Text(
-                  info?.name ?? ayanamsha.toString(),
+                  info?.name ?? ayanamsha,
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     color: ThemeProperties.getPrimaryTextColor(context),
                   ),
                 ),
@@ -542,7 +541,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     Text(
                       info?.description ?? 'No description available',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: ThemeProperties.getSecondaryTextColor(context),
                       ),
                     ),
@@ -550,7 +550,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                       Text(
                         'Regions: ${info!.regions.join(', ')}',
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 11),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 11),
                           color: ThemeProperties.getTertiaryTextColor(context),
                         ),
                       ),
@@ -598,16 +599,18 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: HouseSystem.values.length,
+            itemCount: HouseSystemInfoHelper.getAllHouseSystemTypes().length,
             itemBuilder: (context, index) {
-              final houseSystem = HouseSystem.values[index];
+              final houseSystem =
+                  HouseSystemInfoHelper.getAllHouseSystemTypes()[index];
               final isSelected = _houseSystem == houseSystem;
-              final info = HouseSystemInfoHelper.getHouseSystemInfo(houseSystem);
-              
+              final info =
+                  HouseSystemInfoHelper.getHouseSystemInfo(houseSystem);
+
               return ListTile(
                 leading: Icon(
                   isSelected ? LucideIcons.check : LucideIcons.circle,
-                  color: isSelected 
+                  color: isSelected
                       ? ThemeProperties.getPrimaryColor(context)
                       : ThemeProperties.getSecondaryTextColor(context),
                 ),
@@ -615,7 +618,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   info?.name ?? houseSystem.toString(),
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                     color: ThemeProperties.getPrimaryTextColor(context),
                   ),
                 ),
@@ -625,7 +629,8 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                     Text(
                       info?.description ?? 'No description available',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: ThemeProperties.getSecondaryTextColor(context),
                       ),
                     ),
@@ -633,14 +638,15 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                       Text(
                         'Usage: ${info!.usage}',
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 11),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 11),
                           color: ThemeProperties.getTertiaryTextColor(context),
                         ),
                       ),
                   ],
                 ),
                 onTap: () {
-      setState(() {
+                  setState(() {
                     _houseSystem = houseSystem;
                   });
                   Navigator.of(context).pop();
@@ -665,15 +671,15 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
   }
 
   /// Get ayanamsha display name
-  String _getAyanamshaDisplayName(AyanamshaType ayanamsha) {
+  String _getAyanamshaDisplayName(String ayanamsha) {
     final info = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
-    return info?.name ?? ayanamsha.toString();
+    return info?.name ?? ayanamsha;
   }
 
   /// Get house system display name
-  String _getHouseSystemDisplayName(HouseSystem houseSystem) {
+  String _getHouseSystemDisplayName(String houseSystem) {
     final info = HouseSystemInfoHelper.getHouseSystemInfo(houseSystem);
-    return info?.name ?? houseSystem.toString();
+    return info?.name ?? houseSystem;
   }
 
   /// Save profile
@@ -705,12 +711,11 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
       barrierDismissible: false,
       builder: (context) => Center(
         child: Container(
-          padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 20)),
+          padding: EdgeInsets.all(
+              ResponsiveSystem.spacing(context, baseSpacing: 20)),
           decoration: BoxDecoration(
             color: ThemeProperties.getSurfaceColor(context),
-            borderRadius: BorderRadius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 12),
-            ),
+            borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -738,7 +743,9 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
     try {
       // Create UserModel from form data
       final user = UserModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(), // Generate unique ID
+        id: DateTime.now()
+            .millisecondsSinceEpoch
+            .toString(), // Generate unique ID
         name: _nameController.text.trim(),
         dateOfBirth: _dob,
         timeOfBirth: TimeOfBirth.fromTimeOfDay(_tob),

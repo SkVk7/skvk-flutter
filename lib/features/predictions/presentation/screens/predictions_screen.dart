@@ -3,13 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import '../../../../features/predictions/presentation/widgets/daily_predictions_tab.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
-import '../../../../core/services/translation_service.dart';
-import '../../../../core/services/language_service.dart';
-import '../../../../core/theme/theme_provider.dart';
-import '../../../../core/services/user_service.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
+import '../../../../core/services/language/translation_service.dart';
+import '../../../../core/services/language/language_service.dart';
+import '../../../../core/design_system/theme/theme_provider.dart';
+import '../../../../core/services/user/user_service.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../core/utils/profile_completion_checker.dart';
+import '../../../../core/utils/validation/profile_completion_checker.dart';
 import '../../../../core/logging/logging_helper.dart';
 import '../../../../features/user/presentation/screens/user_edit_screen.dart';
 
@@ -70,7 +70,8 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
           slivers: [
             // Collapsible Hero Section using SliverAppBar
             SliverAppBar(
-              expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 250),
+              expandedHeight:
+                  ResponsiveSystem.spacing(context, baseSpacing: 250),
               floating: true,
               pinned: true,
               snap: true,
@@ -107,12 +108,13 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
                   ),
                   child: CentralizedProfilePhotoWithHover(
                     key: const ValueKey('profile_icon'),
-                    onTap: () =>
-                        _handleProfileTap(context, ref, ref.watch(translationServiceProvider)),
-                    tooltip: ref.watch(translationServiceProvider).translateContent(
-                          'my_profile',
-                          fallback: 'My Profile',
-                        ),
+                    onTap: () => _handleProfileTap(
+                        context, ref, ref.watch(translationServiceProvider)),
+                    tooltip:
+                        ref.watch(translationServiceProvider).translateContent(
+                              'my_profile',
+                              fallback: 'My Profile',
+                            ),
                   ),
                 ),
               ],
@@ -146,13 +148,16 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
-          bottomRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+          bottomLeft: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+          bottomRight: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
         ),
       ),
       child: Container(
         padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 60, // Adjusted for better collapse behavior
+          top: MediaQuery.of(context).padding.top +
+              60, // Adjusted for better collapse behavior
           bottom: ResponsiveSystem.spacing(context, baseSpacing: 20),
           left: ResponsiveSystem.spacing(context, baseSpacing: 20),
           right: ResponsiveSystem.spacing(context, baseSpacing: 20),
@@ -174,7 +179,8 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
               'Your personalized daily guidance from the stars',
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                color: ThemeProperties.getPrimaryTextColor(context).withValues(alpha: 0.9),
+                color: ThemeProperties.getPrimaryTextColor(context)
+                    .withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,
@@ -196,6 +202,9 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;
@@ -227,13 +236,14 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
   }
 
   /// Handle profile icon tap - show popup if profile incomplete, otherwise navigate to profile
-  Future<void> _handleProfileTap(
-      BuildContext context, WidgetRef ref, TranslationService translationService) async {
+  Future<void> _handleProfileTap(BuildContext context, WidgetRef ref,
+      TranslationService translationService) async {
     final currentContext = context;
     try {
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
-      final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+      final user =
+          ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Use ProfileCompletionChecker to determine if user has real profile data
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
@@ -250,7 +260,8 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
   }
 
   /// Show profile completion popup
-  void _showProfileCompletionPopup(BuildContext context, TranslationService translationService) {
+  void _showProfileCompletionPopup(
+      BuildContext context, TranslationService translationService) {
     showDialog(
       context: context,
       builder: (context) => CentralizedProfileCompletionPopup(
@@ -275,10 +286,13 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
       screenSize.width -
           ResponsiveSystem.spacing(context,
               baseSpacing: 60), // Approximate position of profile icon
-      ResponsiveSystem.spacing(context, baseSpacing: 60), // Approximate Y position
+      ResponsiveSystem.spacing(context,
+          baseSpacing: 60), // Approximate Y position
     );
-    final sourceSize = Size(ResponsiveSystem.spacing(context, baseSpacing: 40),
-        ResponsiveSystem.spacing(context, baseSpacing: 40)); // Approximate size of profile icon
+    final sourceSize = Size(
+        ResponsiveSystem.spacing(context, baseSpacing: 40),
+        ResponsiveSystem.spacing(context,
+            baseSpacing: 40)); // Approximate size of profile icon
 
     // Use hero navigation with zoom-out effect from profile icon
     HeroNavigationWithRipple.pushWithRipple(

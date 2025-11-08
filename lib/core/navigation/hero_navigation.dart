@@ -83,7 +83,8 @@ class HeroNavigationWithRipple {
         duration: duration,
         curve: curve,
         rippleColor: rippleColor ?? Theme.of(context).colorScheme.primary,
-        rippleRadius: rippleRadius ?? ResponsiveSystem.spacing(context, baseSpacing: 100),
+        rippleRadius:
+            rippleRadius ?? ResponsiveSystem.spacing(context, baseSpacing: 100),
       ),
     );
   }

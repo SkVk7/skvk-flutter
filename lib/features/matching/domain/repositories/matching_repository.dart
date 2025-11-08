@@ -5,7 +5,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
+import '../../../../core/models/user/user_model.dart';
 
 /// Matching result data
 class MatchingResult {
@@ -30,6 +30,7 @@ class PartnerData {
   final String placeOfBirth;
   final double latitude;
   final double longitude;
+  final UserModel? currentUser; // Optional: if this is the current user
 
   const PartnerData({
     required this.name,
@@ -38,12 +39,14 @@ class PartnerData {
     required this.placeOfBirth,
     required this.latitude,
     required this.longitude,
+    this.currentUser,
   });
 }
 
 /// Matching repository interface
 abstract class MatchingRepository {
   /// Perform compatibility matching with both persons' data
-  Future<Result<MatchingResult>> performMatching(PartnerData person1Data, PartnerData person2Data,
-      {AyanamshaType? ayanamsha});
+  Future<Result<MatchingResult>> performMatching(
+      PartnerData person1Data, PartnerData person2Data,
+      {String? ayanamsha, String? houseSystem});
 }

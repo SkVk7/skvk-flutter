@@ -11,10 +11,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:universal_html/html.dart' as html;
 import '../../../../core/design_system/design_system.dart';
-import '../../../../core/models/user_model.dart';
-import '../../../../core/services/profile_photo_service.dart';
-import '../../../../core/services/profile_photo_provider.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
+import '../../../../core/models/user/user_model.dart';
+import '../../../../core/services/user/profile_photo_service.dart';
+import '../../../../core/services/user/profile_photo_provider.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
 
 class ProfileHeaderWidget extends ConsumerStatefulWidget {
   final UserModel? user;
@@ -27,7 +27,8 @@ class ProfileHeaderWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ProfileHeaderWidget> createState() => _ProfileHeaderWidgetState();
+  ConsumerState<ProfileHeaderWidget> createState() =>
+      _ProfileHeaderWidgetState();
 }
 
 class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
@@ -50,7 +51,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
       decoration: BoxDecoration(
         gradient: ThemeProperties.getPrimaryGradient(context),
       ),
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 24)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 24)),
       child: Column(
         children: [
           // Profile Photo Picker Section
@@ -68,8 +70,10 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                 boxShadow: [
                   BoxShadow(
                     color: ThemeProperties.getShadowColor(context),
-                    blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 12),
-                    offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 6)),
+                    blurRadius:
+                        ResponsiveSystem.spacing(context, baseSpacing: 12),
+                    offset: Offset(
+                        0, ResponsiveSystem.spacing(context, baseSpacing: 6)),
                   ),
                 ],
               ),
@@ -78,12 +82,14 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                   CircleAvatar(
                     radius: ResponsiveSystem.spacing(context, baseSpacing: 58),
                     backgroundColor: ThemeProperties.getSurfaceColor(context),
-                    backgroundImage: profilePhotoAsync.hasValue && profilePhotoAsync.value != null
+                    backgroundImage: profilePhotoAsync.hasValue &&
+                            profilePhotoAsync.value != null
                         ? (profilePhotoAsync.value!.startsWith('data:')
                             ? null // For web data URLs, we'll handle in child
                             : FileImage(File(profilePhotoAsync.value!)))
                         : null,
-                    child: profilePhotoAsync.hasValue && profilePhotoAsync.value != null
+                    child: profilePhotoAsync.hasValue &&
+                            profilePhotoAsync.value != null
                         ? (profilePhotoAsync.value!.startsWith('data:')
                             ? _buildWebImage(profilePhotoAsync.value!)
                             : null)
@@ -95,19 +101,25 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                     right: 0,
                     child: Container(
                       width: ResponsiveSystem.spacing(context, baseSpacing: 32),
-                      height: ResponsiveSystem.spacing(context, baseSpacing: 32),
+                      height:
+                          ResponsiveSystem.spacing(context, baseSpacing: 32),
                       decoration: BoxDecoration(
                         color: ThemeProperties.getPrimaryColor(context),
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: ThemeProperties.getSurfaceColor(context),
-                          width: ResponsiveSystem.borderWidth(context, baseWidth: 3),
+                          width: ResponsiveSystem.borderWidth(context,
+                              baseWidth: 3),
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: ThemeProperties.getShadowColor(context),
-                            blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                            blurRadius: ResponsiveSystem.spacing(context,
+                                baseSpacing: 8),
+                            offset: Offset(
+                                0,
+                                ResponsiveSystem.spacing(context,
+                                    baseSpacing: 4)),
                           ),
                         ],
                       ),
@@ -132,7 +144,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                 : 'Tap to add your photo',
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-              color: ThemeProperties.getPrimaryTextColor(context).withAlpha((0.8 * 255).round()),
+              color: ThemeProperties.getPrimaryTextColor(context)
+                  .withAlpha((0.8 * 255).round()),
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -176,10 +189,14 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
       builder: (context) => Container(
         decoration: BoxDecoration(
           color: ThemeProperties.getSurfaceColor(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          boxShadow: ThemeProperties.getElevatedShadows(context, elevation: 2.0),
+          borderRadius: BorderRadius.vertical(
+              top: Radius.circular(
+                  ResponsiveSystem.borderRadius(context, baseRadius: 20))),
+          boxShadow:
+              ThemeProperties.getElevatedShadows(context, elevation: 2.0),
         ),
-        padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 20)),
+        padding:
+            EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 20)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -188,10 +205,11 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
               height: ResponsiveSystem.spacing(context, baseSpacing: 4),
               decoration: BoxDecoration(
                 color: ThemeProperties.getDividerColor(context),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 2),
               ),
             ),
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
             Text(
               'Select Profile Picture',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -199,7 +217,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: ResponsiveSystem.spacing(context, baseSpacing: 12),
@@ -234,7 +253,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                 ),
               ],
             ),
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
           ],
         ),
       ),
@@ -253,7 +273,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
         Navigator.pop(context);
         onTap();
       },
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
       backgroundColor: ThemeProperties.getSurfaceContainerColor(context),
     );
   }
@@ -276,12 +297,15 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
       if (image != null) {
         // Save image to app directory
-        final String? savedPath = await ProfilePhotoService.saveImageToAppDirectory(image.path);
+        final String? savedPath =
+            await ProfilePhotoService.saveImageToAppDirectory(image.path);
         if (savedPath != null) {
           // Save path to SharedPreferences
           await ProfilePhotoService.saveProfilePhotoPath(savedPath);
           // Update the global provider state
-          ref.read(profilePhotoNotifierProvider.notifier).updatePhotoPath(savedPath);
+          ref
+              .read(profilePhotoNotifierProvider.notifier)
+              .updatePhotoPath(savedPath);
           widget.onProfilePictureChanged?.call(savedPath);
         }
       }
@@ -320,7 +344,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
   Future<void> _pickImageFromWeb() async {
     try {
       // Create a file input element
-      final html.FileUploadInputElement uploadInput = html.FileUploadInputElement();
+      final html.FileUploadInputElement uploadInput =
+          html.FileUploadInputElement();
       uploadInput.accept = 'image/*';
       uploadInput.click();
 
@@ -339,7 +364,9 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
               // Save to SharedPreferences for persistence
               await ProfilePhotoService.saveProfilePhotoPath(dataUrl);
               // Update the provider state
-              ref.read(profilePhotoNotifierProvider.notifier).updatePhotoPath(dataUrl);
+              ref
+                  .read(profilePhotoNotifierProvider.notifier)
+                  .updatePhotoPath(dataUrl);
               widget.onProfilePictureChanged?.call(dataUrl);
             }
           });
@@ -375,7 +402,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
   Widget _buildDefaultAvatar(BuildContext context) {
     return Container(
-      width: ResponsiveSystem.spacing(context, baseSpacing: 23), // Match the circle avatar radius
+      width: ResponsiveSystem.spacing(context,
+          baseSpacing: 23), // Match the circle avatar radius
       height: ResponsiveSystem.spacing(context, baseSpacing: 23),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -383,7 +411,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
       ),
       child: Icon(
         Icons.face,
-        size: ResponsiveSystem.iconSize(context, baseSize: 60), // Increased icon size
+        size: ResponsiveSystem.iconSize(context,
+            baseSize: 60), // Increased icon size
         color: ThemeProperties.getSurfaceColor(context),
       ),
     );
@@ -398,11 +427,12 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          padding: EdgeInsets.all(
+              ResponsiveSystem.spacing(context, baseSpacing: 12)),
           decoration: BoxDecoration(
-            color: ThemeProperties.getSurfaceColor(context).withAlpha((0.2 * 255).round()),
-            borderRadius:
-                BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12)),
+            color: ThemeProperties.getSurfaceColor(context)
+                .withAlpha((0.2 * 255).round()),
+            borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           ),
           child: Icon(
             icon,
@@ -423,7 +453,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
           label,
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
-            color: ThemeProperties.getPrimaryTextColor(context).withAlpha((0.8 * 255).round()),
+            color: ThemeProperties.getPrimaryTextColor(context)
+                .withAlpha((0.8 * 255).round()),
           ),
         ),
       ],
@@ -434,7 +465,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
     if (birthDate == null) return 0;
     final now = DateTime.now();
     int age = now.year - birthDate.year;
-    if (now.month < birthDate.month || (now.month == birthDate.month && now.day < birthDate.day)) {
+    if (now.month < birthDate.month ||
+        (now.month == birthDate.month && now.day < birthDate.day)) {
       age--;
     }
     return age;

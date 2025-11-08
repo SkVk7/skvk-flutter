@@ -4,9 +4,12 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../domain/usecases/get_daily_predictions_usecase.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/entities/astrology_entities.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/services/user/user_service.dart';
+import '../../../../core/utils/validation/profile_completion_checker.dart';
+import '../../../../core/utils/astrology/timezone_util.dart';
+import '../../../../core/utils/either.dart';
 
 /// Daily predictions state
 class DailyPredictionsState {
@@ -38,37 +41,78 @@ class DailyPredictionsState {
 
 /// Daily predictions notifier
 class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
-  final GetDailyPredictionsUseCase _getDailyPredictionsUseCase;
+  final Ref _ref;
 
-  DailyPredictionsNotifier(this._getDailyPredictionsUseCase) : super(const DailyPredictionsState());
+  DailyPredictionsNotifier(this._ref) : super(const DailyPredictionsState());
 
-  /// Get daily predictions
+  /// Get daily predictions using AstrologyServiceBridge.getPredictions directly
   Future<void> getDailyPredictions({
-    required FixedBirthData birthData,
+    required Map<String, dynamic> birthData,
     required DateTime date,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final result = await _getDailyPredictionsUseCase.call(
-        birthData: birthData,
-        date: date,
+      // Get user data from UserService via provider
+      final userService = _ref.read(userServiceProvider.notifier);
+      final result = await userService.getCurrentUser();
+      final user =
+          ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+
+      // Check if user exists and profile is complete
+      if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: 'Please complete your profile to get predictions',
+        );
+        return;
+      }
+
+      // Get timezone from user's location
+      await TimezoneUtil.initialize();
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
+        user.latitude,
+        user.longitude,
       );
 
-      result.fold(
-        (failure) => state = state.copyWith(
-          isLoading: false,
-          errorMessage: failure.message,
-        ),
-        (predictions) => state = state.copyWith(
-          isLoading: false,
-          predictions: predictions,
-        ),
+      // Use AstrologyServiceBridge for predictions
+      final bridge = AstrologyServiceBridge.instance;
+      final predictions = await bridge.getPredictions(
+        localBirthDateTime: user.localBirthDateTime,
+        birthTimezoneId: timezoneId,
+        birthLatitude: user.latitude,
+        birthLongitude: user.longitude,
+        localTargetDateTime: date,
+        targetTimezoneId: timezoneId,
+        currentLatitude: user.latitude,
+        currentLongitude: user.longitude,
+        predictionType: 'daily',
+        ayanamsha: user.ayanamsha,
       );
-    } catch (e) {
+
+      // Extract prediction data from API response
+      final predictionData = <String, String>{};
+      if (predictions.containsKey('predictions')) {
+        final preds = predictions['predictions'] as Map<String, dynamic>?;
+        if (preds != null) {
+          preds.forEach((key, value) {
+            predictionData[key] = value.toString();
+          });
+        }
+      }
+
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'Failed to get predictions: $e',
+        predictions: predictionData.isNotEmpty ? predictionData : null,
+        errorMessage:
+            predictionData.isEmpty ? 'No predictions available' : null,
+      );
+    } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: userFriendlyMessage,
       );
     }
   }
@@ -79,22 +123,11 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
   }
 }
 
-/// Provider for daily predictions use case
-final dailyPredictionsUseCaseProvider = Provider<GetDailyPredictionsUseCase>((ref) {
-  final astrologyFacade = ref.watch(astrologyFacadeProvider);
-  return GetDailyPredictionsUseCase(astrologyFacade: astrologyFacade);
-});
-
-/// Provider for astrology facade
-final astrologyFacadeProvider = Provider<AstrologyFacade>((ref) {
-  return AstrologyFacade.instance;
-});
-
 /// Provider for daily predictions notifier
 final dailyPredictionsNotifierProvider =
-    StateNotifierProvider<DailyPredictionsNotifier, DailyPredictionsState>((ref) {
-  final useCase = ref.watch(dailyPredictionsUseCaseProvider);
-  return DailyPredictionsNotifier(useCase);
+    StateNotifierProvider<DailyPredictionsNotifier, DailyPredictionsState>(
+        (ref) {
+  return DailyPredictionsNotifier(ref);
 });
 
 /// Provider for daily predictions data

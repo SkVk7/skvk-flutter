@@ -229,7 +229,8 @@ class ResponsiveSystem {
     double? vertical,
   }) {
     return EdgeInsets.symmetric(
-      horizontal: horizontal != null ? spacing(context, baseSpacing: horizontal) : 0,
+      horizontal:
+          horizontal != null ? spacing(context, baseSpacing: horizontal) : 0,
       vertical: vertical != null ? spacing(context, baseSpacing: vertical) : 0,
     );
   }
@@ -510,7 +511,8 @@ extension ResponsiveSystemExtensions on ResponsiveSystem {
     double? height,
     TextDecoration? decoration,
   }) {
-    final responsiveFontSize = ResponsiveSystem.fontSize(context, baseSize: baseFontSize);
+    final responsiveFontSize =
+        ResponsiveSystem.fontSize(context, baseSize: baseFontSize);
 
     return TextStyle(
       fontSize: responsiveFontSize,
@@ -538,12 +540,18 @@ extension ResponsiveSystemExtensions on ResponsiveSystem {
     }
 
     return EdgeInsets.only(
-      left: left != null ? ResponsiveSystem.spacing(context, baseSpacing: left) : (horizontal ?? 0),
-      top: top != null ? ResponsiveSystem.spacing(context, baseSpacing: top) : (vertical ?? 0),
-      right:
-          right != null ? ResponsiveSystem.spacing(context, baseSpacing: right) : (horizontal ?? 0),
-      bottom:
-          bottom != null ? ResponsiveSystem.spacing(context, baseSpacing: bottom) : (vertical ?? 0),
+      left: left != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: left)
+          : (horizontal ?? 0),
+      top: top != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: top)
+          : (vertical ?? 0),
+      right: right != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: right)
+          : (horizontal ?? 0),
+      bottom: bottom != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: bottom)
+          : (vertical ?? 0),
     );
   }
 
@@ -564,12 +572,18 @@ extension ResponsiveSystemExtensions on ResponsiveSystem {
     }
 
     return EdgeInsets.only(
-      left: left != null ? ResponsiveSystem.spacing(context, baseSpacing: left) : (horizontal ?? 0),
-      top: top != null ? ResponsiveSystem.spacing(context, baseSpacing: top) : (vertical ?? 0),
-      right:
-          right != null ? ResponsiveSystem.spacing(context, baseSpacing: right) : (horizontal ?? 0),
-      bottom:
-          bottom != null ? ResponsiveSystem.spacing(context, baseSpacing: bottom) : (vertical ?? 0),
+      left: left != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: left)
+          : (horizontal ?? 0),
+      top: top != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: top)
+          : (vertical ?? 0),
+      right: right != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: right)
+          : (horizontal ?? 0),
+      bottom: bottom != null
+          ? ResponsiveSystem.spacing(context, baseSpacing: bottom)
+          : (vertical ?? 0),
     );
   }
 
@@ -579,17 +593,20 @@ extension ResponsiveSystemExtensions on ResponsiveSystem {
   }
 
   /// Get responsive expanded height for SliverAppBar
-  static double expandedHeight(BuildContext context, {double baseHeight = 120}) {
+  static double expandedHeight(BuildContext context,
+      {double baseHeight = 120}) {
     return ResponsiveSystem.spacing(context, baseSpacing: baseHeight);
   }
 
   /// Get responsive content top padding to prevent overlap with SliverAppBar
-  static double contentTopPadding(BuildContext context, {double basePadding = 20}) {
+  static double contentTopPadding(BuildContext context,
+      {double basePadding = 20}) {
     return ResponsiveSystem.spacing(context, baseSpacing: basePadding);
   }
 
   /// Get responsive section spacing
-  static double sectionSpacing(BuildContext context, {double baseSpacing = 40}) {
+  static double sectionSpacing(BuildContext context,
+      {double baseSpacing = 40}) {
     return ResponsiveSystem.spacing(context, baseSpacing: baseSpacing);
   }
 

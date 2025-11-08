@@ -7,9 +7,8 @@ import '../../domain/repositories/horoscope_repository.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/interfaces/user_repository_interface.dart';
-import '../../../../astrology/astrology_library.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 /// Horoscope repository implementation
 class HoroscopeRepositoryImpl implements HoroscopeRepository {
@@ -26,61 +25,68 @@ class HoroscopeRepositoryImpl implements HoroscopeRepository {
       if (userDataResult.isFailure || userDataResult.value == null) {
         return ResultHelper.failure(
           ValidationFailure(
-              message: 'User profile not complete. Please complete your profile first.'),
+              message:
+                  'User profile not complete. Please complete your profile first.'),
         );
       }
 
       final userData = userDataResult.value!;
 
-      // Initialize astrology library
-      await AstrologyLibrary.initialize();
+      // Use local birth datetime (bridge will convert to UTC)
+      final birthDateTime = userData['dateOfBirth'] is DateTime
+          ? userData['dateOfBirth'] as DateTime
+          : DateTime(
+              userData['dateOfBirth'].year,
+              userData['dateOfBirth'].month,
+              userData['dateOfBirth'].day,
+              userData['timeOfBirth'].hour,
+              userData['timeOfBirth'].minute,
+            );
 
-      // Use stored UTC birth time (converted once and stored)
-      final birthDateTime = userData['utcBirthDateTime'] ??
-          DateTime(
-            userData['dateOfBirth'].year,
-            userData['dateOfBirth'].month,
-            userData['dateOfBirth'].day,
-            userData['timeOfBirth'].hour,
-            userData['timeOfBirth'].minute,
-          );
-
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
+      // Use AstrologyServiceBridge for timezone handling and API calls
+      final bridge = AstrologyServiceBridge.instance;
 
       // Get timezone from user's location
-      final timezoneId = await astrologyFacade.getTimezoneFromLocation(
+      final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
           userData['latitude'], userData['longitude']);
 
-      // Get fixed birth data from AstrologyFacade
-      final birthData = await astrologyFacade.getFixedBirthData(
+      // Get birth data from API (handles timezone conversion automatically)
+      final birthData = await bridge.getBirthData(
         localBirthDateTime: birthDateTime,
         timezoneId: timezoneId,
         latitude: userData['latitude'],
         longitude: userData['longitude'],
-        isUserData: true,
-        ayanamsha: AyanamshaType.lahiri,
+        ayanamsha: 'lahiri',
       );
 
-      // Extract horoscope data
+      // Extract horoscope data from API response
+      final nakshatraMap = birthData['nakshatra'] as Map<String, dynamic>?;
+      final rashiMap = birthData['rashi'] as Map<String, dynamic>?;
+      final padaMap = birthData['pada'] as Map<String, dynamic>?;
+      final dashaMap = birthData['dasha'] as Map<String, dynamic>?;
+
+      final nakshatraNumber = nakshatraMap?['number'] as int? ?? 1;
+      final rashiNumber = rashiMap?['number'] as int? ?? 1;
+
       final horoscopeData = HoroscopeData(
-        nakshatram: birthData.nakshatra.name,
-        pada: birthData.pada.number,
-        raasi: birthData.rashi.name,
-        luckyNumber: _getLuckyNumber(birthData.nakshatra.number),
-        luckyColor: _getLuckyColor(birthData.nakshatra.number),
-        currentDasha: _getCurrentDasha(birthData),
-        upcomingDasha: _getUpcomingDasha(birthData),
-        generalPrediction:
-            _getGeneralPrediction(birthData.nakshatra.number, birthData.rashi.number),
-        careerPrediction: _getCareerPrediction(birthData.nakshatra.number, birthData.rashi.number),
-        healthPrediction: _getHealthPrediction(birthData.nakshatra.number, birthData.rashi.number),
+        nakshatram: nakshatraMap?['name'] as String? ?? 'Unknown',
+        pada: padaMap?['number'] as int? ?? 1,
+        raasi: rashiMap?['name'] as String? ?? 'Unknown',
+        luckyNumber: _getLuckyNumber(nakshatraNumber),
+        luckyColor: _getLuckyColor(nakshatraNumber),
+        currentDasha: _getCurrentDasha(dashaMap),
+        upcomingDasha: _getUpcomingDasha(dashaMap),
+        generalPrediction: _getGeneralPrediction(nakshatraNumber, rashiNumber),
+        careerPrediction: _getCareerPrediction(nakshatraNumber, rashiNumber),
+        healthPrediction: _getHealthPrediction(nakshatraNumber, rashiNumber),
       );
 
       return ResultHelper.success(horoscopeData);
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       return ResultHelper.failure(
-        UnexpectedFailure(message: 'Horoscope generation failed: $e'),
+        UnexpectedFailure(message: userFriendlyMessage),
       );
     }
   }
@@ -113,14 +119,19 @@ class HoroscopeRepositoryImpl implements HoroscopeRepository {
     return colors[nakshatraNumber % colors.length];
   }
 
-  String _getCurrentDasha(dynamic birthData) {
-    // Implementation for current dasha
-    return 'Current Dasha: ${birthData.dasha?.currentDasha ?? 'Unknown'}';
+  String _getCurrentDasha(Map<String, dynamic>? dashaMap) {
+    if (dashaMap == null) return 'Unknown';
+    final currentLord = dashaMap['currentLord'] as String? ?? 'Unknown';
+    return 'Current Dasha: $currentLord';
   }
 
-  String _getUpcomingDasha(dynamic birthData) {
-    // Implementation for upcoming dasha
-    return 'Upcoming Dasha: ${birthData.dasha?.upcomingDasha ?? 'Unknown'}';
+  String _getUpcomingDasha(Map<String, dynamic>? dashaMap) {
+    if (dashaMap == null) return 'Unknown';
+    final upcomingDashas = dashaMap['upcomingDashas'] as List?;
+    if (upcomingDashas == null || upcomingDashas.isEmpty) return 'Unknown';
+    final firstUpcoming = upcomingDashas.first as Map<String, dynamic>?;
+    final lord = firstUpcoming?['lord'] as String? ?? 'Unknown';
+    return 'Upcoming Dasha: $lord';
   }
 
   String _getGeneralPrediction(int nakshatraNumber, int rashiNumber) {

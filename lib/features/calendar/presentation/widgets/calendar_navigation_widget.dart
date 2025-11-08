@@ -66,20 +66,21 @@ class CalendarNavigationWidget extends StatelessWidget {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
-        borderRadius: BorderRadius.circular(8),
+        color: ThemeProperties.getPrimaryColor(context)
+            .withAlpha((0.1 * 255).round()),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
           child: Padding(
-            padding: const EdgeInsets.all(8),
+            padding: ResponsiveSystem.all(context, baseSpacing: 8),
             child: Icon(
               icon,
               color: ThemeProperties.getPrimaryColor(context),
-              size: 24,
+              size: ResponsiveSystem.iconSize(context, baseSize: 24),
             ),
           ),
         ),
@@ -97,7 +98,7 @@ class CalendarNavigationWidget extends StatelessWidget {
                 color: ThemeProperties.getPrimaryTextColor(context),
               ),
         ),
-        const SizedBox(height: 4),
+        ResponsiveSystem.sizedBox(context, height: 4),
         Text(
           _getCurrentPeriodSubtitle(),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(

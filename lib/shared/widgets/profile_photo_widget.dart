@@ -4,11 +4,12 @@
 library;
 
 import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../core/design_system/design_system.dart';
-import '../../core/services/profile_photo_provider.dart';
+import '../../core/services/user/profile_photo_provider.dart';
 
 class ProfilePhotoWidget extends ConsumerWidget {
   final double? size;
@@ -55,7 +56,8 @@ class ProfilePhotoWidget extends ConsumerWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: ThemeProperties.getPrimaryColor(context).withValues(alpha: 0.1),
-        border: Border.all(color: ThemeProperties.getPrimaryColor(context), width: 2),
+        border: Border.all(
+            color: ThemeProperties.getPrimaryColor(context), width: 2),
       ),
       child: Icon(
         Icons.person,
@@ -69,26 +71,31 @@ class ProfilePhotoWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     try {
       final profilePhotoAsync = ref.watch(profilePhotoNotifierProvider);
-      final double size = this.size ?? ResponsiveSystem.spacing(context, baseSpacing: 40);
+      final double size =
+          this.size ?? ResponsiveSystem.spacing(context, baseSpacing: 40);
       final Color backgroundColor =
           this.backgroundColor ?? ThemeProperties.getSurfaceColor(context);
-      final Color borderColor = this.borderColor ?? ThemeProperties.getPrimaryColor(context);
-      final double borderWidth =
-          this.borderWidth ?? ResponsiveSystem.borderWidth(context, baseWidth: 2);
+      final Color borderColor =
+          this.borderColor ?? ThemeProperties.getPrimaryColor(context);
+      final double borderWidth = this.borderWidth ??
+          ResponsiveSystem.borderWidth(context, baseWidth: 2);
 
       // Debug logging
       if (profilePhotoAsync.hasValue && profilePhotoAsync.value != null) {
         print('ProfilePhotoWidget: Photo path = ${profilePhotoAsync.value}');
-        print('ProfilePhotoWidget: Is data URL = ${profilePhotoAsync.value!.startsWith('data:')}');
+        print(
+            'ProfilePhotoWidget: Is data URL = ${profilePhotoAsync.value!.startsWith('data:')}');
         print('ProfilePhotoWidget: Platform = ${kIsWeb ? 'Web' : 'Mobile'}');
       } else if (profilePhotoAsync.hasError) {
-        print('ProfilePhotoWidget: Error loading photo: ${profilePhotoAsync.error}');
+        print(
+            'ProfilePhotoWidget: Error loading photo: ${profilePhotoAsync.error}');
       } else {
         print('ProfilePhotoWidget: No photo available');
       }
 
       if (profilePhotoAsync.isLoading) {
-        return _buildLoadingWidget(context, size, backgroundColor, borderColor, borderWidth);
+        return _buildLoadingWidget(
+            context, size, backgroundColor, borderColor, borderWidth);
       }
 
       if (profilePhotoAsync.hasError) {
@@ -108,8 +115,10 @@ class ProfilePhotoWidget extends ConsumerWidget {
               : [
                   BoxShadow(
                     color: ThemeProperties.getShadowColor(context),
-                    blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                    offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                    blurRadius:
+                        ResponsiveSystem.spacing(context, baseSpacing: 8),
+                    offset: Offset(
+                        0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
                   ),
                 ],
         ),
@@ -119,12 +128,13 @@ class ProfilePhotoWidget extends ConsumerWidget {
       );
     } catch (e) {
       print('ProfilePhotoWidget: Critical error in build method: $e');
-      return _buildDefaultAvatar(context, ResponsiveSystem.spacing(context, baseSpacing: 40));
+      return _buildDefaultAvatar(
+          context, ResponsiveSystem.spacing(context, baseSpacing: 40));
     }
   }
 
-  Widget _buildLoadingWidget(BuildContext context, double size, Color backgroundColor,
-      Color borderColor, double borderWidth) {
+  Widget _buildLoadingWidget(BuildContext context, double size,
+      Color backgroundColor, Color borderColor, double borderWidth) {
     return Container(
       width: size,
       height: size,
@@ -148,9 +158,11 @@ class ProfilePhotoWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildCrossPlatformImage(BuildContext context, String imagePath, double size) {
+  Widget _buildCrossPlatformImage(
+      BuildContext context, String imagePath, double size) {
     try {
-      print('ProfilePhotoWidget: Building cross-platform image for: $imagePath');
+      print(
+          'ProfilePhotoWidget: Building cross-platform image for: $imagePath');
       print('ProfilePhotoWidget: Platform check - kIsWeb: $kIsWeb');
 
       // ALWAYS check platform first to avoid any Image.file calls on web
@@ -160,13 +172,15 @@ class ProfilePhotoWidget extends ConsumerWidget {
           print('ProfilePhotoWidget: Using web image (data URL)');
           return _buildWebImage(context, imagePath, size);
         } else {
-          print('ProfilePhotoWidget: Web platform cannot display file path: $imagePath');
+          print(
+              'ProfilePhotoWidget: Web platform cannot display file path: $imagePath');
           return _buildDefaultAvatar(context, size);
         }
       } else {
         // On mobile, handle file paths
         if (imagePath.startsWith('data:')) {
-          print('ProfilePhotoWidget: Mobile platform with data URL, using network image');
+          print(
+              'ProfilePhotoWidget: Mobile platform with data URL, using network image');
           return _buildWebImage(context, imagePath, size);
         } else {
           print('ProfilePhotoWidget: Using file image (mobile)');
@@ -182,7 +196,8 @@ class ProfilePhotoWidget extends ConsumerWidget {
   Widget _buildFileImage(BuildContext context, String filePath, double size) {
     // Double-check platform to prevent any Image.file calls on web
     if (kIsWeb) {
-      print('ProfilePhotoWidget: CRITICAL ERROR - _buildFileImage called on web!');
+      print(
+          'ProfilePhotoWidget: CRITICAL ERROR - _buildFileImage called on web!');
       return _buildDefaultAvatar(context, size);
     }
 

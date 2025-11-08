@@ -5,8 +5,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/services/user_service.dart';
+import '../../../../core/services/user/user_service.dart';
 import '../../../../core/utils/either.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 import '../widgets/user_profile_form.dart';
 
 /// User profile state
@@ -84,15 +85,22 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isEditing: false,
         );
       } else {
+        // Convert technical error to user-friendly message
+        final errorMessage =
+            result.failure?.message ?? 'Failed to load user data';
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(errorMessage);
         state = state.copyWith(
           isLoading: false,
-          errorMessage: result.failure?.message ?? 'Failed to load user data',
+          errorMessage: userFriendlyMessage,
         );
       }
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred: $e',
+        errorMessage: userFriendlyMessage,
       );
     }
   }
@@ -118,7 +126,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   /// Save user data
   Future<void> saveUser(UserProfileFormData formData) async {
-    state = state.copyWith(isLoading: true, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        isLoading: true, errorMessage: null, successMessage: null);
 
     try {
       final userModel = formData.toUserModel();
@@ -137,15 +146,22 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           state = state.copyWith(successMessage: null);
         });
       } else {
+        // Convert technical error to user-friendly message
+        final errorMessage =
+            result.failure?.message ?? 'Failed to save profile';
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(errorMessage);
         state = state.copyWith(
           isLoading: false,
-          errorMessage: result.failure?.message ?? 'Failed to save profile',
+          errorMessage: userFriendlyMessage,
         );
       }
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred: $e',
+        errorMessage: userFriendlyMessage,
       );
     }
   }
@@ -162,15 +178,22 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           successMessage: 'Profile deleted successfully!',
         );
       } else {
+        // Convert technical error to user-friendly message
+        final errorMessage =
+            result.failure?.message ?? 'Failed to delete profile';
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(errorMessage);
         state = state.copyWith(
           isLoading: false,
-          errorMessage: result.failure?.message ?? 'Failed to delete profile',
+          errorMessage: userFriendlyMessage,
         );
       }
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred: $e',
+        errorMessage: userFriendlyMessage,
       );
     }
   }
@@ -192,7 +215,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 }
 
 /// User profile provider
-final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfileState>(() {
+final userProfileProvider =
+    NotifierProvider<UserProfileNotifier, UserProfileState>(() {
   return UserProfileNotifier();
 });
 

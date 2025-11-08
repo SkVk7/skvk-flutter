@@ -3,7 +3,7 @@
 /// Abstract interface for user data operations following Clean Architecture
 library;
 
-import '../models/user_model.dart';
+import '../models/user/user_model.dart';
 import '../utils/either.dart';
 
 /// Abstract user repository interface

@@ -1,4 +1,5 @@
 <!-- 808f8f1f-27ef-49ab-9c95-5788703788e3 c195d8b9-cabd-43b8-91e9-de44f0c55601 -->
+
 # Swiss Ephemeris Production Licensing Implementation
 
 ## License Requirement
@@ -128,19 +129,16 @@ Ensure Swiss Ephemeris `.so` files are included in release builds:
 ## Key Files to Modify
 
 1. **Legal/Attribution:**
-
    - `lib/screens/about_screen.dart` (create if not exists)
    - `lib/screens/licenses_screen.dart` (create)
    - `android/app/src/main/res/raw/licenses.txt`
 
 2. **Configuration:**
-
    - `android/app/build.gradle.kts` (ProGuard rules)
    - `android/app/proguard-rules.pro`
    - `lib/config/app_config.dart` (license info)
 
 3. **Documentation:**
-
    - `README.md` (update with license info)
    - `LICENSE` (your app license)
    - `licenses/SWISS_EPHEMERIS_LICENSE.txt` (new file)

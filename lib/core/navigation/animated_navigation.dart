@@ -327,7 +327,8 @@ class AnimatedDialog extends StatefulWidget {
   State<AnimatedDialog> createState() => _AnimatedDialogState();
 }
 
-class _AnimatedDialogState extends State<AnimatedDialog> with SingleTickerProviderStateMixin {
+class _AnimatedDialogState extends State<AnimatedDialog>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -467,7 +468,8 @@ class AnimatedSnackBarContent extends StatefulWidget {
   });
 
   @override
-  State<AnimatedSnackBarContent> createState() => _AnimatedSnackBarContentState();
+  State<AnimatedSnackBarContent> createState() =>
+      _AnimatedSnackBarContentState();
 }
 
 class _AnimatedSnackBarContentState extends State<AnimatedSnackBarContent>

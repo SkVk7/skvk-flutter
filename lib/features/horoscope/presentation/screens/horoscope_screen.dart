@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
-import '../../../../core/services/translation_service.dart';
-import '../../../../core/services/user_service.dart';
-import '../../../../core/utils/profile_completion_checker.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
+import '../../../../core/services/language/translation_service.dart';
+import '../../../../core/services/user/user_service.dart';
+import '../../../../core/utils/validation/profile_completion_checker.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../core/models/user_model.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/entities/astrology_entities.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart' as astrology_enums;
-import '../../../../core/services/language_service.dart';
-import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/models/user/user_model.dart';
+import '../../../../core/services/language/language_service.dart';
+import '../../../../core/design_system/theme/theme_provider.dart';
 import '../../../../core/logging/logging_helper.dart';
 import '../../../../features/user/presentation/screens/user_edit_screen.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
@@ -27,8 +24,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   bool _isLoading = true;
   bool _isProfileComplete = false;
   UserModel? _user;
-  BirthChart? _birthChart;
-  FixedBirthData? _fixedBirthData;
+  Map<String, dynamic>? _birthChart;
+  Map<String, dynamic>? _fixedBirthData;
   String? _errorMessage;
   bool _isDisposed = false;
 
@@ -49,12 +46,14 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     try {
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
-      final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+      final user =
+          ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       if (mounted && !_isDisposed) {
         setState(() {
           _user = user;
-          _isProfileComplete = user != null && ProfileCompletionChecker.isProfileComplete(user);
+          _isProfileComplete =
+              user != null && ProfileCompletionChecker.isProfileComplete(user);
           _isLoading = false;
         });
 
@@ -81,27 +80,16 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
         _errorMessage = null;
       });
 
-      // Use AstrologyFacade for timezone handling
-      final astrologyFacade = AstrologyFacade.instance;
-
-      // Get timezone from user's location
-      final timezoneId =
-          await astrologyFacade.getTimezoneFromLocation(user.latitude, user.longitude);
-
-      // Generate birth chart using AstrologyFacade (handles timezone conversion)
-      final fixedBirthData = await astrologyFacade.getFixedBirthData(
-        localBirthDateTime: user.localBirthDateTime,
-        timezoneId: timezoneId,
-        latitude: user.latitude,
-        longitude: user.longitude,
-        ayanamsha: user.ayanamsha,
-        isUserData: true,
-      );
+      // First, try to get cached user birth chart data (from when user saved profile)
+      final userService = ref.read(userServiceProvider.notifier);
+      Map<String, dynamic>? birthData =
+          await userService.getFormattedAstrologyData();
 
       if (mounted && !_isDisposed) {
         setState(() {
-          _birthChart = fixedBirthData.birthChart;
-          _fixedBirthData = fixedBirthData;
+          // Use camelCase only
+          _birthChart = birthData!['birthChart'] as Map<String, dynamic>?;
+          _fixedBirthData = birthData;
           _isLoading = false;
         });
       }
@@ -134,7 +122,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: CentralizedGradientAppBar(
-          title: translationService.translateHeader('horoscope_title', fallback: 'Horoscope'),
+          title: translationService.translateHeader('horoscope_title',
+              fallback: 'Horoscope'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -162,7 +151,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     if (!_isProfileComplete) {
       return Scaffold(
         appBar: CentralizedGradientAppBar(
-          title: translationService.translateHeader('horoscope_title', fallback: 'Horoscope'),
+          title: translationService.translateHeader('horoscope_title',
+              fallback: 'Horoscope'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -196,7 +186,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                     translationService.translateHeader('horoscope_title',
                         fallback: 'Your Horoscope'),
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 24),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 24),
                       fontWeight: FontWeight.bold,
                       color: ThemeProperties.getPrimaryTextColor(context),
                     ),
@@ -208,13 +199,15 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                             'Please complete your profile to view your personalized horoscope.'),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 16),
                       color: ThemeProperties.getSecondaryTextColor(context),
                     ),
                   ),
                   ResponsiveSystem.sizedBox(context, height: 24),
                   CentralizedModernButton(
-                    text: translationService.translateContent('complete_profile',
+                    text: translationService.translateContent(
+                        'complete_profile',
                         fallback: 'Complete Profile'),
                     onPressed: () {
                       Navigator.pushNamed(context, '/edit-profile');
@@ -241,7 +234,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
           slivers: [
             // Collapsible Hero Section using SliverAppBar
             SliverAppBar(
-              expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 250),
+              expandedHeight:
+                  ResponsiveSystem.spacing(context, baseSpacing: 250),
               floating: true,
               pinned: true,
               snap: true,
@@ -278,7 +272,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                   ),
                   child: CentralizedProfilePhotoWithHover(
                     key: const ValueKey('profile_icon'),
-                    onTap: () => _handleProfileTap(context, ref, translationService),
+                    onTap: () =>
+                        _handleProfileTap(context, ref, translationService),
                     tooltip: translationService.translateContent(
                       'my_profile',
                       fallback: 'My Profile',
@@ -288,7 +283,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
               ],
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
-                  translationService.translateHeader('horoscope_title', fallback: 'Horoscope'),
+                  translationService.translateHeader('horoscope_title',
+                      fallback: 'Horoscope'),
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
                     fontWeight: FontWeight.bold,
@@ -340,6 +336,32 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                           }
                         },
                         icon: Icons.error_outline,
+                      ),
+                    ] else ...[
+                      // Show loading state when data is being fetched
+                      CentralizedAnimatedCard(
+                        index: 0,
+                        child: _buildBirthChartInfo(),
+                      ),
+                      ResponsiveSystem.sizedBox(context, height: 16),
+                      CentralizedAnimatedCard(
+                        index: 1,
+                        child: _buildRasiNakshatraInfo(),
+                      ),
+                      ResponsiveSystem.sizedBox(context, height: 16),
+                      CentralizedAnimatedCard(
+                        index: 2,
+                        child: _buildPlanetaryPositions(),
+                      ),
+                      ResponsiveSystem.sizedBox(context, height: 16),
+                      CentralizedAnimatedCard(
+                        index: 3,
+                        child: _buildHousePositions(),
+                      ),
+                      ResponsiveSystem.sizedBox(context, height: 16),
+                      CentralizedAnimatedCard(
+                        index: 4,
+                        child: _buildAscendantInfo(),
                       ),
                     ],
                   ],
@@ -417,37 +439,44 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
           ResponsiveSystem.sizedBox(context, height: 16),
           CentralizedInfoRow(
             label: 'Rasi (Moon Sign)',
-            value: _fixedBirthData!.rashi.englishName,
+            value: _getRashiOrNakshatraName(
+                (_fixedBirthData!['rashi'] as Map<String, dynamic>?)),
             icon: Icons.nightlight_round,
           ),
           CentralizedInfoRow(
             label: 'Nakshatra (Birth Star)',
-            value: _fixedBirthData!.nakshatra.englishName,
+            value: _getRashiOrNakshatraName(
+                (_fixedBirthData!['nakshatra'] as Map<String, dynamic>?)),
             icon: Icons.star,
           ),
           CentralizedInfoRow(
             label: 'Pada (Quarter)',
-            value: '${_fixedBirthData!.pada.number}',
+            value:
+                '${(_fixedBirthData!['pada'] as Map<String, dynamic>?)?['number'] ?? 'Unknown'}',
             icon: Icons.grid_view,
           ),
           CentralizedInfoRow(
             label: 'Rasi Lord',
-            value: _getPlanetDisplayName(_fixedBirthData!.rashi.lord),
+            value: _getPlanetDisplayName((_fixedBirthData!['rashi']
+                as Map<String, dynamic>?)?['lord'] as String?),
             icon: Icons.king_bed,
           ),
           CentralizedInfoRow(
             label: 'Nakshatra Lord',
-            value: _getPlanetDisplayName(_fixedBirthData!.nakshatra.lord),
+            value: _getPlanetDisplayName((_fixedBirthData!['nakshatra']
+                as Map<String, dynamic>?)?['lord'] as String?),
             icon: Icons.star_border,
           ),
           CentralizedInfoRow(
             label: 'Element',
-            value: _getElementDisplayName(_fixedBirthData!.rashi.element),
+            value: _getElementDisplayName((_fixedBirthData!['rashi']
+                as Map<String, dynamic>?)?['element'] as String?),
             icon: Icons.water_drop,
           ),
           CentralizedInfoRow(
             label: 'Quality',
-            value: _getQualityDisplayName(_fixedBirthData!.rashi.quality),
+            value: _getQualityDisplayName((_fixedBirthData!['rashi']
+                as Map<String, dynamic>?)?['quality'] as String?),
             icon: Icons.speed,
           ),
         ],
@@ -456,7 +485,9 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   Widget _buildPlanetaryPositions() {
-    if (_birthChart?.planetRashis == null || _birthChart!.planetRashis.isEmpty) {
+    final planetaryPositions =
+        _birthChart?['planetaryPositions'] as Map<String, dynamic>?;
+    if (planetaryPositions == null || planetaryPositions.isEmpty) {
       return CentralizedInfoCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -512,7 +543,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   Widget _buildHousePositions() {
-    if (_birthChart?.houseLords == null || _birthChart!.houseLords.isEmpty) {
+    final houseLords = _birthChart?['houseLords'] as Map<String, dynamic>?;
+    if (houseLords == null || houseLords.isEmpty) {
       return CentralizedInfoCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,8 +599,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   Widget _buildAscendantInfo() {
-    // Get ascendant from house 1 lord
-    final ascendantLord = _birthChart?.houseLords[astrology_enums.House.first];
+    final houseLords = _birthChart?['houseLords'] as Map<String, dynamic>?;
+    final ascendantLord = houseLords?['House 1'] as String?;
     if (ascendantLord == null) {
       return CentralizedInfoCard(
         child: Column(
@@ -646,22 +678,29 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     );
   }
 
+  // Helper method to get planet data from planetaryPositions (camelCase)
+  Map<String, dynamic>? _getPlanetData(String planetName) {
+    final planetaryPositions =
+        _birthChart?['planetaryPositions'] as Map<String, dynamic>?;
+    return planetaryPositions?[planetName] as Map<String, dynamic>?;
+  }
+
   // Dynamic personality insights based on actual birth chart analysis
   String _getSunInsight() {
-    final sunRashi = _birthChart?.planetRashis[astrology_enums.Planet.sun];
-    if (sunRashi == null) return 'Your core identity is being calculated...';
+    final sunData = _getPlanetData('Sun');
+    if (sunData == null) return 'Your core identity is being calculated...';
 
-    // Get Sun's house position for dynamic analysis
-    final sunHouse = _birthChart?.planetHouses[astrology_enums.Planet.sun];
-    final sunNakshatra = _birthChart?.planetNakshatras[astrology_enums.Planet.sun];
+    final sunRashi = sunData['rashi'] as String?;
+    final sunHouse = sunData['house'] as int?;
+    final sunNakshatra = sunData['nakshatra'] as String?;
 
-    // Calculate Sun's strength and influence
-    final sunStrength = _calculatePlanetaryStrength(astrology_enums.Planet.sun);
-    final sunAspects = _calculatePlanetaryAspects(astrology_enums.Planet.sun);
+    final sunStrength = _calculatePlanetaryStrength('sun');
+    final sunAspects = _calculatePlanetaryAspects('sun');
 
     // Build dynamic interpretation based on actual chart data
-    String baseInterpretation = _getSunSignInterpretation(sunRashi.englishName);
-    String houseInfluence = _getHouseInfluence(sunHouse);
+    final sunRashiName = sunRashi ?? 'Unknown';
+    String baseInterpretation = _getSunSignInterpretation(sunRashiName);
+    String houseInfluence = _getHouseInfluence(sunHouse?.toString());
     String nakshatraInfluence = _getNakshatraInfluence(sunNakshatra);
     String strengthInfluence = _getStrengthInfluence(sunStrength);
     String aspectInfluence = _getAspectInfluence(sunAspects);
@@ -670,18 +709,18 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getMoonInsight() {
-    final moonRashi = _birthChart?.planetRashis[astrology_enums.Planet.moon];
-    if (moonRashi == null) return 'Your emotional nature is being analyzed...';
+    final moonData = _getPlanetData('Moon');
+    if (moonData == null) return 'Your emotional nature is being analyzed...';
 
-    // Get Moon's house position and nakshatra for dynamic analysis
-    final moonHouse = _birthChart?.planetHouses[astrology_enums.Planet.moon];
-    final moonNakshatra = _birthChart?.planetNakshatras[astrology_enums.Planet.moon];
-    final moonStrength = _calculatePlanetaryStrength(astrology_enums.Planet.moon);
-    final moonAspects = _calculatePlanetaryAspects(astrology_enums.Planet.moon);
+    final moonRashi = moonData['rashi'] as String?;
+    final moonHouse = moonData['house'] as int?;
+    final moonNakshatra = moonData['nakshatra'] as String?;
+    final moonStrength = _calculatePlanetaryStrength('moon');
+    final moonAspects = _calculatePlanetaryAspects('moon');
 
-    // Build dynamic interpretation
-    String baseInterpretation = _getMoonSignInterpretation(moonRashi.englishName);
-    String houseInfluence = _getHouseInfluence(moonHouse);
+    final moonRashiName = moonRashi ?? 'Unknown';
+    String baseInterpretation = _getMoonSignInterpretation(moonRashiName);
+    String houseInfluence = _getHouseInfluence(moonHouse?.toString());
     String nakshatraInfluence = _getNakshatraInfluence(moonNakshatra);
     String strengthInfluence = _getStrengthInfluence(moonStrength);
     String aspectInfluence = _getAspectInfluence(moonAspects);
@@ -690,18 +729,18 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getMarsInsight() {
-    final marsRashi = _birthChart?.planetRashis[astrology_enums.Planet.mars];
-    if (marsRashi == null) return 'Your energy and drive are being assessed...';
+    final marsData = _getPlanetData('Mars');
+    if (marsData == null) return 'Your energy and drive are being assessed...';
 
-    // Get Mars's house position and nakshatra for dynamic analysis
-    final marsHouse = _birthChart?.planetHouses[astrology_enums.Planet.mars];
-    final marsNakshatra = _birthChart?.planetNakshatras[astrology_enums.Planet.mars];
-    final marsStrength = _calculatePlanetaryStrength(astrology_enums.Planet.mars);
-    final marsAspects = _calculatePlanetaryAspects(astrology_enums.Planet.mars);
+    final marsRashi = marsData['rashi'] as String?;
+    final marsHouse = marsData['house'] as int?;
+    final marsNakshatra = marsData['nakshatra'] as String?;
+    final marsStrength = _calculatePlanetaryStrength('mars');
+    final marsAspects = _calculatePlanetaryAspects('mars');
 
-    // Build dynamic interpretation
-    String baseInterpretation = _getMarsSignInterpretation(marsRashi.englishName);
-    String houseInfluence = _getHouseInfluence(marsHouse);
+    final marsRashiName = marsRashi ?? 'Unknown';
+    String baseInterpretation = _getMarsSignInterpretation(marsRashiName);
+    String houseInfluence = _getHouseInfluence(marsHouse?.toString());
     String nakshatraInfluence = _getNakshatraInfluence(marsNakshatra);
     String strengthInfluence = _getStrengthInfluence(marsStrength);
     String aspectInfluence = _getAspectInfluence(marsAspects);
@@ -710,18 +749,19 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getJupiterInsight() {
-    final jupiterRashi = _birthChart?.planetRashis[astrology_enums.Planet.jupiter];
-    if (jupiterRashi == null) return 'Your wisdom and growth potential are being evaluated...';
+    final jupiterData = _getPlanetData('Jupiter');
+    if (jupiterData == null)
+      return 'Your wisdom and growth potential are being evaluated...';
 
-    // Get Jupiter's house position and nakshatra for dynamic analysis
-    final jupiterHouse = _birthChart?.planetHouses[astrology_enums.Planet.jupiter];
-    final jupiterNakshatra = _birthChart?.planetNakshatras[astrology_enums.Planet.jupiter];
-    final jupiterStrength = _calculatePlanetaryStrength(astrology_enums.Planet.jupiter);
-    final jupiterAspects = _calculatePlanetaryAspects(astrology_enums.Planet.jupiter);
+    final jupiterRashi = jupiterData['rashi'] as String?;
+    final jupiterHouse = jupiterData['house'] as int?;
+    final jupiterNakshatra = jupiterData['nakshatra'] as String?;
+    final jupiterStrength = _calculatePlanetaryStrength('jupiter');
+    final jupiterAspects = _calculatePlanetaryAspects('jupiter');
 
-    // Build dynamic interpretation
-    String baseInterpretation = _getJupiterSignInterpretation(jupiterRashi.englishName);
-    String houseInfluence = _getHouseInfluence(jupiterHouse);
+    final jupiterRashiName = jupiterRashi ?? 'Unknown';
+    String baseInterpretation = _getJupiterSignInterpretation(jupiterRashiName);
+    String houseInfluence = _getHouseInfluence(jupiterHouse?.toString());
     String nakshatraInfluence = _getNakshatraInfluence(jupiterNakshatra);
     String strengthInfluence = _getStrengthInfluence(jupiterStrength);
     String aspectInfluence = _getAspectInfluence(jupiterAspects);
@@ -730,18 +770,19 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getVenusInsight() {
-    final venusRashi = _birthChart?.planetRashis[astrology_enums.Planet.venus];
-    if (venusRashi == null) return 'Your love and relationship style is being analyzed...';
+    final venusData = _getPlanetData('Venus');
+    if (venusData == null)
+      return 'Your love and relationship style is being analyzed...';
 
-    // Get Venus's house position and nakshatra for dynamic analysis
-    final venusHouse = _birthChart?.planetHouses[astrology_enums.Planet.venus];
-    final venusNakshatra = _birthChart?.planetNakshatras[astrology_enums.Planet.venus];
-    final venusStrength = _calculatePlanetaryStrength(astrology_enums.Planet.venus);
-    final venusAspects = _calculatePlanetaryAspects(astrology_enums.Planet.venus);
+    final venusRashi = venusData['rashi'] as String?;
+    final venusHouse = venusData['house'] as int?;
+    final venusNakshatra = venusData['nakshatra'] as String?;
+    final venusStrength = _calculatePlanetaryStrength('venus');
+    final venusAspects = _calculatePlanetaryAspects('venus');
 
-    // Build dynamic interpretation
-    String baseInterpretation = _getVenusSignInterpretation(venusRashi.englishName);
-    String houseInfluence = _getHouseInfluence(venusHouse);
+    final venusRashiName = venusRashi ?? 'Unknown';
+    String baseInterpretation = _getVenusSignInterpretation(venusRashiName);
+    String houseInfluence = _getHouseInfluence(venusHouse?.toString());
     String nakshatraInfluence = _getNakshatraInfluence(venusNakshatra);
     String strengthInfluence = _getStrengthInfluence(venusStrength);
     String aspectInfluence = _getAspectInfluence(venusAspects);
@@ -749,15 +790,94 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     return '$baseInterpretation $houseInfluence $nakshatraInfluence $strengthInfluence $aspectInfluence';
   }
 
+  // Helper method to get house lord planet name
+  String? _getHouseLord(int houseNumber) {
+    final houseLords = _birthChart?['houseLords'] as Map<String, dynamic>?;
+    final houseLord = houseLords?['House $houseNumber'] as String?;
+    
+    // Check if it's a valid planet name
+    if (houseLord != null && _isValidPlanetName(houseLord)) {
+      return houseLord;
+    }
+    
+    // Calculate house lord from ascendant sign
+    final ascendantData = _birthChart?['ascendant'] as Map<String, dynamic>?;
+    final ascendantRashi = ascendantData?['rashi'] as String?;
+    if (ascendantRashi != null) {
+      return _calculateHouseLordFromAscendant(houseNumber, ascendantRashi);
+    }
+    
+    return null;
+  }
+
+  // Check if string is a valid planet name
+  bool _isValidPlanetName(String name) {
+    const validPlanets = ['Sun', 'Moon', 'Mars', 'Mercury', 'Jupiter', 'Venus', 'Saturn', 'Rahu', 'Ketu'];
+    return validPlanets.contains(name);
+  }
+
+  // Calculate house lord from ascendant sign
+  String? _calculateHouseLordFromAscendant(int houseNumber, String ascendantRashi) {
+    // Map of rashi names to their lords
+    const rashiLords = {
+      'Aries': 'Mars',
+      'Taurus': 'Venus',
+      'Gemini': 'Mercury',
+      'Cancer': 'Moon',
+      'Leo': 'Sun',
+      'Virgo': 'Mercury',
+      'Libra': 'Venus',
+      'Scorpio': 'Mars',
+      'Sagittarius': 'Jupiter',
+      'Capricorn': 'Saturn',
+      'Aquarius': 'Saturn',
+      'Pisces': 'Jupiter',
+    };
+    
+    // Find the ascendant rashi index (0-11)
+    const rashiNames = ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 
+                        'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'];
+    final ascendantIndex = rashiNames.indexWhere((r) => r.toLowerCase() == ascendantRashi.toLowerCase());
+    if (ascendantIndex == -1) return null;
+    
+    // Calculate which sign the house cusp is in (house 1 = ascendant sign, house 2 = next sign, etc.)
+    final houseSignIndex = (ascendantIndex + houseNumber - 1) % 12;
+    final houseSignName = rashiNames[houseSignIndex];
+    
+    // Return the lord of that sign
+    return rashiLords[houseSignName];
+  }
+
   // Life area insights based on house lords
   String _getCareerInsight() {
-    final careerLord = _birthChart?.houseLords[astrology_enums.House.tenth];
-    if (careerLord == null) return 'Your career potential is being analyzed...';
+    final careerLord = _getHouseLord(10);
+    if (careerLord == null) {
+      // Fallback to Sun's position for career
+      final sunData = _getPlanetData('Sun');
+      if (sunData != null) {
+        final sunRashi = sunData['rashi'] as String? ?? 'Unknown';
+        return _getCareerInsightByRashi(sunRashi);
+      }
+      return 'Your career potential is being analyzed...';
+    }
 
-    final careerRashi = _birthChart?.planetRashis[careerLord];
-    if (careerRashi == null) return 'Your career potential is being analyzed...';
+    final careerData = _getPlanetData(careerLord);
+    if (careerData == null) {
+      // Fallback to Sun's position for career
+      final sunData = _getPlanetData('Sun');
+      if (sunData != null) {
+        final sunRashi = sunData['rashi'] as String? ?? 'Unknown';
+        return _getCareerInsightByRashi(sunRashi);
+      }
+      return 'Your career potential is being analyzed...';
+    }
 
-    switch (careerRashi.englishName.toLowerCase()) {
+    final careerRashiName = careerData['rashi'] as String? ?? 'Unknown';
+    return _getCareerInsightByRashi(careerRashiName);
+  }
+
+  String _getCareerInsightByRashi(String rashiName) {
+    switch (rashiName.toLowerCase()) {
       case 'aries':
         return 'You excel in leadership roles and pioneering new ventures. Consider careers in management, entrepreneurship, or any field requiring initiative.';
       case 'taurus':
@@ -788,13 +908,34 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getMarriageInsight() {
-    final marriageLord = _birthChart?.houseLords[astrology_enums.House.seventh];
-    if (marriageLord == null) return 'Your relationship potential is being analyzed...';
+    final marriageLord = _getHouseLord(7);
+    if (marriageLord == null) {
+      // Fallback to Venus's position for relationships
+      final venusData = _getPlanetData('Venus');
+      if (venusData != null) {
+        final venusRashi = venusData['rashi'] as String? ?? 'Unknown';
+        return _getMarriageInsightByRashi(venusRashi);
+      }
+      return 'Your relationship potential is being analyzed...';
+    }
 
-    final marriageRashi = _birthChart?.planetRashis[marriageLord];
-    if (marriageRashi == null) return 'Your relationship potential is being analyzed...';
+    final marriageData = _getPlanetData(marriageLord);
+    if (marriageData == null) {
+      // Fallback to Venus's position for relationships
+      final venusData = _getPlanetData('Venus');
+      if (venusData != null) {
+        final venusRashi = venusData['rashi'] as String? ?? 'Unknown';
+        return _getMarriageInsightByRashi(venusRashi);
+      }
+      return 'Your relationship potential is being analyzed...';
+    }
 
-    switch (marriageRashi.englishName.toLowerCase()) {
+    final marriageRashiName = marriageData['rashi'] as String? ?? 'Unknown';
+    return _getMarriageInsightByRashi(marriageRashiName);
+  }
+
+  String _getMarriageInsightByRashi(String rashiName) {
+    switch (rashiName.toLowerCase()) {
       case 'aries':
         return 'You need a partner who is independent and exciting. Your relationships may be passionate but require mutual respect for freedom.';
       case 'taurus':
@@ -825,13 +966,34 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getWealthInsight() {
-    final wealthLord = _birthChart?.houseLords[astrology_enums.House.second];
-    if (wealthLord == null) return 'Your wealth potential is being analyzed...';
+    final wealthLord = _getHouseLord(2);
+    if (wealthLord == null) {
+      // Fallback to Jupiter's position for wealth
+      final jupiterData = _getPlanetData('Jupiter');
+      if (jupiterData != null) {
+        final jupiterRashi = jupiterData['rashi'] as String? ?? 'Unknown';
+        return _getWealthInsightByRashi(jupiterRashi);
+      }
+      return 'Your wealth potential is being analyzed...';
+    }
 
-    final wealthRashi = _birthChart?.planetRashis[wealthLord];
-    if (wealthRashi == null) return 'Your wealth potential is being analyzed...';
+    final wealthData = _getPlanetData(wealthLord);
+    if (wealthData == null) {
+      // Fallback to Jupiter's position for wealth
+      final jupiterData = _getPlanetData('Jupiter');
+      if (jupiterData != null) {
+        final jupiterRashi = jupiterData['rashi'] as String? ?? 'Unknown';
+        return _getWealthInsightByRashi(jupiterRashi);
+      }
+      return 'Your wealth potential is being analyzed...';
+    }
 
-    switch (wealthRashi.englishName.toLowerCase()) {
+    final wealthRashiName = wealthData['rashi'] as String? ?? 'Unknown';
+    return _getWealthInsightByRashi(wealthRashiName);
+  }
+
+  String _getWealthInsightByRashi(String rashiName) {
+    switch (rashiName.toLowerCase()) {
       case 'aries':
         return 'You build wealth through leadership and new ventures. Your energy and initiative help you create opportunities for financial growth.';
       case 'taurus':
@@ -862,13 +1024,34 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   String _getHealthInsight() {
-    final healthLord = _birthChart?.houseLords[astrology_enums.House.sixth];
-    if (healthLord == null) return 'Your health patterns are being analyzed...';
+    final healthLord = _getHouseLord(6);
+    if (healthLord == null) {
+      // Fallback to Mars's position for health
+      final marsData = _getPlanetData('Mars');
+      if (marsData != null) {
+        final marsRashi = marsData['rashi'] as String? ?? 'Unknown';
+        return _getHealthInsightByRashi(marsRashi);
+      }
+      return 'Your health patterns are being analyzed...';
+    }
 
-    final healthRashi = _birthChart?.planetRashis[healthLord];
-    if (healthRashi == null) return 'Your health patterns are being analyzed...';
+    final healthData = _getPlanetData(healthLord);
+    if (healthData == null) {
+      // Fallback to Mars's position for health
+      final marsData = _getPlanetData('Mars');
+      if (marsData != null) {
+        final marsRashi = marsData['rashi'] as String? ?? 'Unknown';
+        return _getHealthInsightByRashi(marsRashi);
+      }
+      return 'Your health patterns are being analyzed...';
+    }
 
-    switch (healthRashi.englishName.toLowerCase()) {
+    final healthRashiName = healthData['rashi'] as String? ?? 'Unknown';
+    return _getHealthInsightByRashi(healthRashiName);
+  }
+
+  String _getHealthInsightByRashi(String rashiName) {
+    switch (rashiName.toLowerCase()) {
       case 'aries':
         return 'You have strong vitality but may need to manage stress and anger. Regular exercise and competitive activities help maintain your health.';
       case 'taurus':
@@ -900,103 +1083,114 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
 
   // Current influences and timing insights
   String _getAscendantInsight() {
-    final ascendantLord = _birthChart?.houseLords[astrology_enums.House.first];
-    if (ascendantLord == null) return 'Your rising sign influence is being analyzed...';
+    final ascendantData = _birthChart?['ascendant'] as Map<String, dynamic>?;
+    if (ascendantData == null)
+      return 'Your rising sign influence is being analyzed...';
 
-    final ascendantRashi = _birthChart?.planetRashis[ascendantLord];
-    if (ascendantRashi == null) return 'Your rising sign influence is being analyzed...';
-
-    return 'Your rising sign in ${ascendantRashi.englishName} influences how others perceive you and your first impressions. This energy affects your approach to new situations and relationships.';
+    final ascendantRashiName = ascendantData['rashi'] as String? ?? 'Unknown';
+    return 'Your rising sign in $ascendantRashiName influences how others perceive you and your first impressions. This energy affects your approach to new situations and relationships.';
   }
 
   String _getCurrentFocusInsight() {
-    // This would ideally be calculated based on current planetary transits
-    // For now, providing a general insight based on the birth chart
-    final sunRashi = _birthChart?.planetRashis[astrology_enums.Planet.sun];
-    if (sunRashi == null) return 'Your current focus is being determined...';
+    final sunData = _getPlanetData('Sun');
+    if (sunData == null) return 'Your current focus is being determined...';
 
-    return 'Your current focus is on developing your ${sunRashi.englishName} qualities and expressing your authentic self. This is a time for personal growth and self-discovery.';
+    final sunRashiName = sunData['rashi'] as String? ?? 'Unknown';
+    return 'Your current focus is on developing your $sunRashiName qualities and expressing your authentic self. This is a time for personal growth and self-discovery.';
   }
 
   String _getBestTimeInsight() {
-    // This would ideally be calculated based on current planetary transits and dasha periods
-    // For now, providing a general insight based on the birth chart
-    final moonRashi = _birthChart?.planetRashis[astrology_enums.Planet.moon];
-    if (moonRashi == null) return 'Your best timing is being analyzed...';
+    final moonData = _getPlanetData('Moon');
+    if (moonData == null) return 'Your best timing is being analyzed...';
 
-    return 'Your best time for action is when you feel emotionally secure and connected to your ${moonRashi.englishName} nature. Trust your intuition and act from your heart.';
+    final moonRashiName = moonData['rashi'] as String? ?? 'Unknown';
+    return 'Your best time for action is when you feel emotionally secure and connected to your $moonRashiName nature. Trust your intuition and act from your heart.';
   }
 
-  // Dynamic calculation methods for truly personalized interpretations
-  double _calculatePlanetaryStrength(astrology_enums.Planet planet) {
-    final planetRashi = _birthChart?.planetRashis[planet];
-    final planetHouse = _birthChart?.planetHouses[planet];
-    final planetNakshatra = _birthChart?.planetNakshatras[planet];
+  double _calculatePlanetaryStrength(String planet) {
+    // Convert lowercase planet name to capitalized (e.g., 'sun' -> 'Sun')
+    final planetName = planet[0].toUpperCase() + planet.substring(1);
+    final planetData = _getPlanetData(planetName);
 
-    if (planetRashi == null || planetHouse == null || planetNakshatra == null) return 0.5;
+    if (planetData == null) return 0.5;
+
+    final signName = planetData['rashi'] as String? ?? 'Unknown';
+    final planetHouse = planetData['house'] as int?;
+    final planetNakshatra = planetData['nakshatra'] as String?;
+
+    if (signName == 'Unknown' || planetHouse == null || planetNakshatra == null)
+      return 0.5;
 
     double strength = 0.0;
 
-    // Sign strength (exaltation, debilitation, own sign)
-    strength += _getSignStrength(planet, planetRashi.englishName);
-
-    // House strength (angular, succedent, cadent)
-    strength += _getHouseStrength(planetHouse);
-
-    // Nakshatra strength
+    strength += _getSignStrength(planet, signName);
+    strength += _getHouseStrength(planetHouse.toString());
     strength += _getNakshatraStrength(planetNakshatra);
-
-    // Aspects from other planets
     strength += _getAspectStrength(planet);
 
     return (strength / 4.0).clamp(0.0, 1.0);
   }
 
-  List<String> _calculatePlanetaryAspects(astrology_enums.Planet planet) {
+  List<String> _calculatePlanetaryAspects(String planet) {
     final aspects = <String>[];
-    final planetRashi = _birthChart?.planetRashis[planet];
-    if (planetRashi == null) return aspects;
+    // Convert lowercase planet name to capitalized (e.g., 'sun' -> 'Sun')
+    final planetName = planet[0].toUpperCase() + planet.substring(1);
+    final planetData = _getPlanetData(planetName);
+    if (planetData == null) return aspects;
 
-    // Check aspects with other planets
-    for (final otherPlanet in astrology_enums.Planet.values) {
-      if (otherPlanet == planet) continue;
+    final planetNames = [
+      'Sun',
+      'Moon',
+      'Mars',
+      'Mercury',
+      'Jupiter',
+      'Venus',
+      'Saturn',
+      'Rahu',
+      'Ketu'
+    ];
+    for (final otherPlanetName in planetNames) {
+      if (otherPlanetName == planetName) continue;
 
-      final otherRashi = _birthChart?.planetRashis[otherPlanet];
-      if (otherRashi == null) continue;
+      final otherPlanetData = _getPlanetData(otherPlanetName);
+      if (otherPlanetData == null) continue;
 
-      final aspect = _calculateAspect(planetRashi, otherRashi);
+      final aspect = _calculateAspect(planetData, otherPlanetData);
       if (aspect.isNotEmpty) {
-        aspects.add('${_getPlanetName(otherPlanet)}: $aspect');
+        aspects
+            .add('${_getPlanetName(otherPlanetName.toLowerCase())}: $aspect');
       }
     }
 
     return aspects;
   }
 
-  double _getSignStrength(astrology_enums.Planet planet, String signName) {
-    // This would contain the actual Vedic astrology rules for planetary strength
-    // For now, providing a simplified version
-    switch (planet) {
-      case astrology_enums.Planet.sun:
+  double _getSignStrength(String planet, String signName) {
+    switch (planet.toLowerCase()) {
+      case 'sun':
         return signName.toLowerCase() == 'leo' ? 1.0 : 0.5;
-      case astrology_enums.Planet.moon:
+      case 'moon':
         return signName.toLowerCase() == 'cancer' ? 1.0 : 0.5;
-      case astrology_enums.Planet.mars:
+      case 'mars':
         return signName.toLowerCase() == 'aries' ? 1.0 : 0.5;
-      case astrology_enums.Planet.mercury:
-        return (signName.toLowerCase() == 'gemini' || signName.toLowerCase() == 'virgo')
+      case 'mercury':
+        return (signName.toLowerCase() == 'gemini' ||
+                signName.toLowerCase() == 'virgo')
             ? 1.0
             : 0.5;
-      case astrology_enums.Planet.jupiter:
-        return (signName.toLowerCase() == 'sagittarius' || signName.toLowerCase() == 'pisces')
+      case 'jupiter':
+        return (signName.toLowerCase() == 'sagittarius' ||
+                signName.toLowerCase() == 'pisces')
             ? 1.0
             : 0.5;
-      case astrology_enums.Planet.venus:
-        return (signName.toLowerCase() == 'taurus' || signName.toLowerCase() == 'libra')
+      case 'venus':
+        return (signName.toLowerCase() == 'taurus' ||
+                signName.toLowerCase() == 'libra')
             ? 1.0
             : 0.5;
-      case astrology_enums.Planet.saturn:
-        return (signName.toLowerCase() == 'capricorn' || signName.toLowerCase() == 'aquarius')
+      case 'saturn':
+        return (signName.toLowerCase() == 'capricorn' ||
+                signName.toLowerCase() == 'aquarius')
             ? 1.0
             : 0.5;
       default:
@@ -1004,41 +1198,40 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     }
   }
 
-  double _getHouseStrength(astrology_enums.House house) {
-    // Angular houses (1, 4, 7, 10) are strongest
-    switch (house) {
-      case astrology_enums.House.first:
-      case astrology_enums.House.fourth:
-      case astrology_enums.House.seventh:
-      case astrology_enums.House.tenth:
+  double _getHouseStrength(String? house) {
+    if (house == null) return 0.4;
+    switch (house.toLowerCase()) {
+      case 'first':
+      case 'fourth':
+      case 'seventh':
+      case 'tenth':
         return 1.0;
-      // Succedent houses (2, 5, 8, 11) are moderate
-      case astrology_enums.House.second:
-      case astrology_enums.House.fifth:
-      case astrology_enums.House.eighth:
-      case astrology_enums.House.eleventh:
+      case 'second':
+      case 'fifth':
+      case 'eighth':
+      case 'eleventh':
         return 0.7;
-      // Cadent houses (3, 6, 9, 12) are weakest
       default:
         return 0.4;
     }
   }
 
-  double _getNakshatraStrength(NakshatraData nakshatra) {
-    // This would contain the actual nakshatra strength calculations
-    // For now, providing a simplified version based on nakshatra number
-    return (nakshatra.number % 3 == 0) ? 1.0 : 0.7;
+  double _getNakshatraStrength(String? nakshatra) {
+    if (nakshatra == null || nakshatra.isEmpty) return 0.5;
+    // Simple strength calculation based on nakshatra name length
+    return (nakshatra.length % 3 == 0) ? 1.0 : 0.7;
   }
 
-  double _getAspectStrength(astrology_enums.Planet planet) {
-    // This would calculate the strength of aspects from other planets
-    // For now, providing a simplified version
+  double _getAspectStrength(String planet) {
     return 0.6;
   }
 
-  String _calculateAspect(RashiData planet1, RashiData planet2) {
-    final diff = (planet2.number - planet1.number).abs();
-    final aspect = diff % 12;
+  String _calculateAspect(
+      Map<String, dynamic> planet1, Map<String, dynamic> planet2) {
+    final longitude1 = planet1['longitude'] as double? ?? 0.0;
+    final longitude2 = planet2['longitude'] as double? ?? 0.0;
+    final diff = (longitude2 - longitude1).abs() % 360.0;
+    final aspect = (diff / 30.0).floor() % 12;
 
     switch (aspect) {
       case 0:
@@ -1059,28 +1252,28 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     }
   }
 
-  String _getPlanetName(astrology_enums.Planet planet) {
-    switch (planet) {
-      case astrology_enums.Planet.sun:
+  String _getPlanetName(String planet) {
+    switch (planet.toLowerCase()) {
+      case 'sun':
         return 'Sun';
-      case astrology_enums.Planet.moon:
+      case 'moon':
         return 'Moon';
-      case astrology_enums.Planet.mars:
+      case 'mars':
         return 'Mars';
-      case astrology_enums.Planet.mercury:
+      case 'mercury':
         return 'Mercury';
-      case astrology_enums.Planet.jupiter:
+      case 'jupiter':
         return 'Jupiter';
-      case astrology_enums.Planet.venus:
+      case 'venus':
         return 'Venus';
-      case astrology_enums.Planet.saturn:
+      case 'saturn':
         return 'Saturn';
-      case astrology_enums.Planet.rahu:
+      case 'rahu':
         return 'Rahu';
-      case astrology_enums.Planet.ketu:
+      case 'ketu':
         return 'Ketu';
       default:
-        return planet.name;
+        return planet.toUpperCase();
     }
   }
 
@@ -1116,41 +1309,76 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     }
   }
 
-  String _getHouseInfluence(astrology_enums.House? house) {
+  String _getHouseInfluence(String? house) {
     if (house == null) return '';
 
-    switch (house) {
-      case astrology_enums.House.first:
+    // Handle both numeric strings ("1", "2") and word strings ("first", "second")
+    final houseNum = int.tryParse(house) ?? 0;
+    if (houseNum > 0 && houseNum <= 12) {
+      switch (houseNum) {
+        case 1:
+          return 'This placement emphasizes your personality and first impressions.';
+        case 2:
+          return 'This placement influences your values and material resources.';
+        case 3:
+          return 'This placement affects your communication and immediate environment.';
+        case 4:
+          return 'This placement emphasizes your home life and emotional foundation.';
+        case 5:
+          return 'This placement influences your creativity and self-expression.';
+        case 6:
+          return 'This placement affects your daily routines and service to others.';
+        case 7:
+          return 'This placement emphasizes your partnerships and relationships.';
+        case 8:
+          return 'This placement influences transformation and shared resources.';
+        case 9:
+          return 'This placement affects your higher learning and philosophical outlook.';
+        case 10:
+          return 'This placement emphasizes your career and public reputation.';
+        case 11:
+          return 'This placement influences your hopes, dreams, and social connections.';
+        case 12:
+          return 'This placement affects your spirituality and subconscious mind.';
+        default:
+          return '';
+      }
+    }
+
+    // Fallback for word-based house names
+    switch (house.toLowerCase()) {
+      case 'first':
         return 'This placement emphasizes your personality and first impressions.';
-      case astrology_enums.House.second:
+      case 'second':
         return 'This placement influences your values and material resources.';
-      case astrology_enums.House.third:
+      case 'third':
         return 'This placement affects your communication and immediate environment.';
-      case astrology_enums.House.fourth:
+      case 'fourth':
         return 'This placement emphasizes your home life and emotional foundation.';
-      case astrology_enums.House.fifth:
+      case 'fifth':
         return 'This placement influences your creativity and self-expression.';
-      case astrology_enums.House.sixth:
+      case 'sixth':
         return 'This placement affects your daily routines and service to others.';
-      case astrology_enums.House.seventh:
+      case 'seventh':
         return 'This placement emphasizes your partnerships and relationships.';
-      case astrology_enums.House.eighth:
+      case 'eighth':
         return 'This placement influences transformation and shared resources.';
-      case astrology_enums.House.ninth:
+      case 'ninth':
         return 'This placement affects your higher learning and philosophical outlook.';
-      case astrology_enums.House.tenth:
+      case 'tenth':
         return 'This placement emphasizes your career and public reputation.';
-      case astrology_enums.House.eleventh:
+      case 'eleventh':
         return 'This placement influences your hopes, dreams, and social connections.';
-      case astrology_enums.House.twelfth:
+      case 'twelfth':
         return 'This placement affects your spirituality and subconscious mind.';
+      default:
+        return '';
     }
   }
 
-  String _getNakshatraInfluence(NakshatraData? nakshatra) {
-    if (nakshatra == null) return '';
-
-    return 'The ${nakshatra.englishName} nakshatra adds ${nakshatra.guna} qualities and ${nakshatra.yoni} characteristics to your nature.';
+  String _getNakshatraInfluence(String? nakshatra) {
+    if (nakshatra == null || nakshatra.isEmpty) return '';
+    return 'The $nakshatra nakshatra influences your personality and life path.';
   }
 
   String _getStrengthInfluence(double strength) {
@@ -1297,52 +1525,70 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   // Helper methods for displaying astrological information
-  String _getPlanetDisplayName(astrology_enums.Planet planet) {
-    switch (planet) {
-      case astrology_enums.Planet.sun:
+  String _getRashiOrNakshatraName(Map<String, dynamic>? data) {
+    if (data == null) return 'Unknown';
+    // Check for both 'englishName' and 'name' fields for backward compatibility
+    if (data.containsKey('englishName')) {
+      return data['englishName'] as String? ?? 'Unknown';
+    } else if (data.containsKey('name')) {
+      return data['name'] as String? ?? 'Unknown';
+    }
+    return 'Unknown';
+  }
+
+  String _getPlanetDisplayName(String? planet) {
+    if (planet == null) return 'Unknown';
+    switch (planet.toLowerCase()) {
+      case 'sun':
         return 'Sun';
-      case astrology_enums.Planet.moon:
+      case 'moon':
         return 'Moon';
-      case astrology_enums.Planet.mars:
+      case 'mars':
         return 'Mars';
-      case astrology_enums.Planet.mercury:
+      case 'mercury':
         return 'Mercury';
-      case astrology_enums.Planet.jupiter:
+      case 'jupiter':
         return 'Jupiter';
-      case astrology_enums.Planet.venus:
+      case 'venus':
         return 'Venus';
-      case astrology_enums.Planet.saturn:
+      case 'saturn':
         return 'Saturn';
-      case astrology_enums.Planet.rahu:
+      case 'rahu':
         return 'Rahu';
-      case astrology_enums.Planet.ketu:
+      case 'ketu':
         return 'Ketu';
       default:
-        return planet.name.toUpperCase();
+        return planet.toUpperCase();
     }
   }
 
-  String _getElementDisplayName(astrology_enums.Element element) {
-    switch (element) {
-      case astrology_enums.Element.fire:
+  String _getElementDisplayName(String? element) {
+    if (element == null) return 'Unknown';
+    switch (element.toLowerCase()) {
+      case 'fire':
         return 'Fire';
-      case astrology_enums.Element.earth:
+      case 'earth':
         return 'Earth';
-      case astrology_enums.Element.air:
+      case 'air':
         return 'Air';
-      case astrology_enums.Element.water:
+      case 'water':
         return 'Water';
+      default:
+        return element;
     }
   }
 
-  String _getQualityDisplayName(astrology_enums.Quality quality) {
-    switch (quality) {
-      case astrology_enums.Quality.cardinal:
+  String _getQualityDisplayName(String? quality) {
+    if (quality == null) return 'Unknown';
+    switch (quality.toLowerCase()) {
+      case 'cardinal':
         return 'Cardinal';
-      case astrology_enums.Quality.fixed:
+      case 'fixed':
         return 'Fixed';
-      case astrology_enums.Quality.mutable:
+      case 'mutable':
         return 'Mutable';
+      default:
+        return quality;
     }
   }
 
@@ -1355,6 +1601,9 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
         break;
       case 'hi':
         language = SupportedLanguage.hindi;
+        break;
+      case 'te':
+        language = SupportedLanguage.telugu;
         break;
       default:
         language = SupportedLanguage.english;
@@ -1386,13 +1635,14 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   /// Handle profile icon tap - show popup if profile incomplete, otherwise navigate to profile
-  Future<void> _handleProfileTap(
-      BuildContext context, WidgetRef ref, TranslationService translationService) async {
+  Future<void> _handleProfileTap(BuildContext context, WidgetRef ref,
+      TranslationService translationService) async {
     final currentContext = context;
     try {
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
-      final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+      final user =
+          ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Use ProfileCompletionChecker to determine if user has real profile data
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
@@ -1409,7 +1659,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
   }
 
   /// Show profile completion popup
-  void _showProfileCompletionPopup(BuildContext context, TranslationService translationService) {
+  void _showProfileCompletionPopup(
+      BuildContext context, TranslationService translationService) {
     showDialog(
       context: context,
       builder: (context) => CentralizedProfileCompletionPopup(
@@ -1434,10 +1685,13 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       screenSize.width -
           ResponsiveSystem.spacing(context,
               baseSpacing: 60), // Approximate position of profile icon
-      ResponsiveSystem.spacing(context, baseSpacing: 60), // Approximate Y position
+      ResponsiveSystem.spacing(context,
+          baseSpacing: 60), // Approximate Y position
     );
-    final sourceSize = Size(ResponsiveSystem.spacing(context, baseSpacing: 40),
-        ResponsiveSystem.spacing(context, baseSpacing: 40)); // Approximate size of profile icon
+    final sourceSize = Size(
+        ResponsiveSystem.spacing(context, baseSpacing: 40),
+        ResponsiveSystem.spacing(context,
+            baseSpacing: 40)); // Approximate size of profile icon
 
     // Use hero navigation with zoom-out effect from profile icon
     HeroNavigationWithRipple.pushWithRipple(
@@ -1463,13 +1717,16 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
-          bottomRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+          bottomLeft: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+          bottomRight: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
         ),
       ),
       child: Container(
         padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 60, // Adjusted for better collapse behavior
+          top: MediaQuery.of(context).padding.top +
+              60, // Adjusted for better collapse behavior
           bottom: ResponsiveSystem.spacing(context, baseSpacing: 20),
           left: ResponsiveSystem.spacing(context, baseSpacing: 20),
           right: ResponsiveSystem.spacing(context, baseSpacing: 20),
@@ -1491,7 +1748,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
               'Discover your cosmic blueprint and life path',
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                color: ThemeProperties.getPrimaryTextColor(context).withValues(alpha: 0.9),
+                color: ThemeProperties.getPrimaryTextColor(context)
+                    .withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,

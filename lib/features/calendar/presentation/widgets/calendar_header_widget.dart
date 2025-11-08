@@ -39,7 +39,8 @@ class CalendarHeaderWidget extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 24)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 24)),
       child: Column(
         children: [
           // Title and View Selector
@@ -66,9 +67,9 @@ class CalendarHeaderWidget extends StatelessWidget {
               vertical: ResponsiveSystem.spacing(context, baseSpacing: 8),
             ),
             decoration: BoxDecoration(
-              color: ThemeProperties.getSurfaceColor(context).withAlpha((0.2 * 255).round()),
-              borderRadius:
-                  BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 20)),
+              color: ThemeProperties.getSurfaceColor(context)
+                  .withAlpha((0.2 * 255).round()),
+              borderRadius: ResponsiveSystem.circular(context, baseRadius: 20),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -78,7 +79,8 @@ class CalendarHeaderWidget extends StatelessWidget {
                   color: ThemeProperties.getPrimaryTextColor(context),
                   size: ResponsiveSystem.iconSize(context, baseSize: 16),
                 ),
-                SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                SizedBox(
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
                 Text(
                   _formatDate(selectedDate),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -97,8 +99,9 @@ class CalendarHeaderWidget extends StatelessWidget {
   Widget _buildViewSelector(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: ThemeProperties.getSurfaceColor(context).withAlpha((0.2 * 255).round()),
-        borderRadius: BorderRadius.circular(20),
+        color: ThemeProperties.getSurfaceColor(context)
+            .withAlpha((0.2 * 255).round()),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 20),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -112,8 +115,10 @@ class CalendarHeaderWidget extends StatelessWidget {
                 vertical: 6,
               ),
               decoration: BoxDecoration(
-                color: isSelected ? ThemeProperties.getSurfaceColor(context) : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                color: isSelected
+                    ? ThemeProperties.getSurfaceColor(context)
+                    : Colors.transparent,
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
               ),
               child: Text(
                 _getViewName(view),
@@ -121,7 +126,8 @@ class CalendarHeaderWidget extends StatelessWidget {
                       color: isSelected
                           ? ThemeProperties.getPrimaryColor(context)
                           : ThemeProperties.getPrimaryTextColor(context),
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
               ),
             ),
@@ -160,7 +166,15 @@ class CalendarHeaderWidget extends StatelessWidget {
       'December'
     ];
 
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
 
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
   }

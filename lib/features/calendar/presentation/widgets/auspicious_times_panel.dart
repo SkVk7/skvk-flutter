@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
 
 class AuspiciousTimesPanel extends ConsumerWidget {
   final DateTime selectedDate;
@@ -24,16 +24,17 @@ class AuspiciousTimesPanel extends ConsumerWidget {
       child: Column(
         children: [
           _buildSunTimes(context, primaryColor, ref),
-          const SizedBox(height: 16),
+          ResponsiveSystem.sizedBox(context, height: 16),
           _buildAuspiciousPeriods(context, primaryColor, ref),
-          const SizedBox(height: 16),
+          ResponsiveSystem.sizedBox(context, height: 16),
           _buildInauspiciousPeriods(context, primaryColor, ref),
         ],
       ),
     );
   }
 
-  Widget _buildSunTimes(BuildContext context, Color primaryColor, WidgetRef ref) {
+  Widget _buildSunTimes(
+      BuildContext context, Color primaryColor, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -44,7 +45,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
               color: primaryColor,
               size: ResponsiveSystem.iconSize(context, baseSize: 16),
             ),
-            const SizedBox(width: 8),
+            ResponsiveSystem.sizedBox(context, width: 8),
             Text(
               'Sun Times',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -54,7 +55,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        ResponsiveSystem.sizedBox(context, height: 12),
         Row(
           children: [
             Expanded(
@@ -67,7 +68,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
                 ref,
               ),
             ),
-            const SizedBox(width: 12),
+            ResponsiveSystem.sizedBox(context, width: 12),
             Expanded(
               child: _buildTimeCard(
                 context,
@@ -84,7 +85,8 @@ class AuspiciousTimesPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildAuspiciousPeriods(BuildContext context, Color primaryColor, WidgetRef ref) {
+  Widget _buildAuspiciousPeriods(
+      BuildContext context, Color primaryColor, WidgetRef ref) {
     final auspiciousPeriods = _getAuspiciousPeriods();
 
     return Column(
@@ -97,7 +99,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
               color: primaryColor,
               size: ResponsiveSystem.iconSize(context, baseSize: 16),
             ),
-            const SizedBox(width: 8),
+            ResponsiveSystem.sizedBox(context, width: 8),
             Text(
               'Auspicious Periods',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -107,14 +109,15 @@ class AuspiciousTimesPanel extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ...auspiciousPeriods
-            .map((period) => _buildPeriodItem(context, period, true, primaryColor, ref)),
+        ResponsiveSystem.sizedBox(context, height: 8),
+        ...auspiciousPeriods.map((period) =>
+            _buildPeriodItem(context, period, true, primaryColor, ref)),
       ],
     );
   }
 
-  Widget _buildInauspiciousPeriods(BuildContext context, Color primaryColor, WidgetRef ref) {
+  Widget _buildInauspiciousPeriods(
+      BuildContext context, Color primaryColor, WidgetRef ref) {
     final inauspiciousPeriods = _getInauspiciousPeriods();
 
     return Column(
@@ -127,7 +130,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
               color: primaryColor.withAlpha((0.7 * 255).round()),
               size: ResponsiveSystem.iconSize(context, baseSize: 16),
             ),
-            const SizedBox(width: 8),
+            ResponsiveSystem.sizedBox(context, width: 8),
             Text(
               'Avoid These Times',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -137,9 +140,9 @@ class AuspiciousTimesPanel extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        ...inauspiciousPeriods
-            .map((period) => _buildPeriodItem(context, period, false, primaryColor, ref)),
+        ResponsiveSystem.sizedBox(context, height: 8),
+        ...inauspiciousPeriods.map((period) =>
+            _buildPeriodItem(context, period, false, primaryColor, ref)),
       ],
     );
   }
@@ -153,13 +156,14 @@ class AuspiciousTimesPanel extends ConsumerWidget {
     WidgetRef ref,
   ) {
     return Container(
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
       decoration: BoxDecoration(
         color: color.withAlpha((0.1 * 255).round()),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
           color: color.withAlpha((0.3 * 255).round()),
-          width: 1,
+          width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
       child: Column(
@@ -167,9 +171,9 @@ class AuspiciousTimesPanel extends ConsumerWidget {
           Icon(
             icon,
             color: color,
-            size: 20,
+            size: ResponsiveSystem.iconSize(context, baseSize: 20),
           ),
-          const SizedBox(height: 8),
+          ResponsiveSystem.sizedBox(context, height: 8),
           Text(
             label,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -177,7 +181,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
                   fontWeight: FontWeight.w500,
                 ),
           ),
-          const SizedBox(height: 4),
+          ResponsiveSystem.sizedBox(context, height: 4),
           Text(
             time,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -190,20 +194,24 @@ class AuspiciousTimesPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildPeriodItem(BuildContext context, Map<String, dynamic> period, bool isAuspicious,
-      Color primaryColor, WidgetRef ref) {
-    final color = isAuspicious ? primaryColor : primaryColor.withAlpha((0.7 * 255).round());
+  Widget _buildPeriodItem(BuildContext context, Map<String, dynamic> period,
+      bool isAuspicious, Color primaryColor, WidgetRef ref) {
+    final color = isAuspicious
+        ? primaryColor
+        : primaryColor.withAlpha((0.7 * 255).round());
     final icon = isAuspicious ? LucideIcons.check : LucideIcons.x;
 
     return Container(
-      margin: EdgeInsets.only(bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
+      margin: EdgeInsets.only(
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
       decoration: BoxDecoration(
         color: color.withAlpha((0.1 * 255).round()),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
           color: color.withAlpha((0.3 * 255).round()),
-          width: 1,
+          width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
       child: Row(
@@ -211,9 +219,9 @@ class AuspiciousTimesPanel extends ConsumerWidget {
           Icon(
             icon,
             color: color,
-            size: 16,
+            size: ResponsiveSystem.iconSize(context, baseSize: 16),
           ),
-          const SizedBox(width: 12),
+          ResponsiveSystem.sizedBox(context, width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,7 +234,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
                       ),
                 ),
                 if (period['time'] != null) ...[
-                  const SizedBox(height: 4),
+                  ResponsiveSystem.sizedBox(context, height: 4),
                   Text(
                     period['time'],
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -236,7 +244,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
                   ),
                 ],
                 if (period['description'] != null) ...[
-                  const SizedBox(height: 4),
+                  ResponsiveSystem.sizedBox(context, height: 4),
                   Text(
                     period['description'],
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(

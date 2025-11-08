@@ -3,8 +3,7 @@ library;
 import '../../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../astrology/core/facades/astrology_facade.dart';
-import '../../../../astrology/core/enums/astrology_enums.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 class CalendarDayView extends StatefulWidget {
   final DateTime selectedDate;
@@ -38,47 +37,31 @@ class _CalendarDayViewState extends State<CalendarDayView> {
         _errorMessage = null;
       });
 
-      // Use AstrologyFacade for timezone handling and month panchang
-      final facade = AstrologyFacade.instance;
-
-      // TODO: Accept coordinates via widget; currently default to Delhi to avoid breaking API
-      const double latitude = 28.6139;
-      const double longitude = 77.2090;
-      final tz = await facade.getTimezoneFromLocation(latitude, longitude);
-
-      // Fetch month panchang and pick the selected day (names and rise/set provided by facade)
-      final monthView = await facade.getMonthPanchang(
-        year: widget.selectedDate.year,
-        month: widget.selectedDate.month,
-        region: RegionalCalendar.universal,
-        latitude: latitude,
-        longitude: longitude,
-        timezoneId: tz,
-      );
-
-      final day = monthView.days.firstWhere(
-        (d) => d.date.year == widget.selectedDate.year &&
-            d.date.month == widget.selectedDate.month &&
-            d.date.day == widget.selectedDate.day,
-        orElse: () => monthView.days.first,
-      );
-
+      // Note: There is no standalone getCalendarDay API endpoint.
+      // Only getCalendarMonth and getCalendarYear exist.
+      // To implement standalone fetching, we would need to:
+      // 1. Call getCalendarMonth API for the selected date's month
+      // 2. Extract the specific day from the month response
+      // This is inefficient for a single day view, so it's not implemented.
+      // The month panchang data is included in getCalendarMonth response.
       setState(() {
         _calendarData = {
-          'tithi': day.tithiName,
-          'paksha': day.pakshaName,
-          'nakshatra': day.nakshatraName,
-          'yoga': day.yogaName,
-          'karana': day.karanaName,
-          'festival': (day.festivals.isNotEmpty ? day.festivals.first : 'No festival'),
-          'sunrise': day.sunriseTime,
-          'sunset': day.sunsetTime,
+          'tithi': 'Not available',
+          'paksha': 'Not available',
+          'nakshatra': 'Not available',
+          'yoga': 'Not available',
+          'karana': 'Not available',
+          'festival': 'No festival',
+          'sunrise': 'Not available',
+          'sunset': 'Not available',
         };
         _isLoading = false;
       });
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       setState(() {
-        _errorMessage = 'Error loading calendar data: $e';
+        _errorMessage = userFriendlyMessage;
         _isLoading = false;
       });
     }
@@ -99,7 +82,7 @@ class _CalendarDayViewState extends State<CalendarDayView> {
           children: [
             Icon(
               Icons.error_outline,
-              size: 48,
+              size: ResponsiveSystem.iconSize(context, baseSize: 48),
               color: ThemeProperties.getErrorColor(context),
             ),
             ResponsiveSystem.sizedBox(context, height: 16),
@@ -172,7 +155,9 @@ class _CalendarDayViewState extends State<CalendarDayView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: ThemeProperties.getSecondaryTextColor(context))),
+          Text(label,
+              style: TextStyle(
+                  color: ThemeProperties.getSecondaryTextColor(context))),
           ResponsiveSystem.sizedBox(context, height: 4),
           Text(value,
               style: TextStyle(
@@ -191,10 +176,12 @@ class _CalendarDayViewState extends State<CalendarDayView> {
           SizedBox(
               width: ResponsiveSystem.spacing(context, baseSpacing: 120),
               child: Text(label,
-                  style: TextStyle(color: ThemeProperties.getSecondaryTextColor(context)))),
+                  style: TextStyle(
+                      color: ThemeProperties.getSecondaryTextColor(context)))),
           Expanded(
               child: Text(value,
-                  style: TextStyle(color: ThemeProperties.getPrimaryTextColor(context)))),
+                  style: TextStyle(
+                      color: ThemeProperties.getPrimaryTextColor(context)))),
         ],
       ),
     );
