@@ -7,18 +7,20 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../core/services/language_service.dart';
-import '../../core/services/translation_service.dart';
+import '../../../../core/services/language/language_service.dart';
+import '../../../../core/services/language/translation_service.dart';
 import '../../core/design_system/design_system.dart';
 
 class LanguageSelectionWidget extends ConsumerStatefulWidget {
   const LanguageSelectionWidget({super.key});
 
   @override
-  ConsumerState<LanguageSelectionWidget> createState() => _LanguageSelectionWidgetState();
+  ConsumerState<LanguageSelectionWidget> createState() =>
+      _LanguageSelectionWidgetState();
 }
 
-class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidget> {
+class _LanguageSelectionWidgetState
+    extends ConsumerState<LanguageSelectionWidget> {
   bool _useSameLanguage = false;
   SupportedLanguage? _tempHeaderLanguage;
   SupportedLanguage? _tempContentLanguage;
@@ -34,7 +36,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
     final languagePrefs = ref.read(languageServiceProvider);
     _tempHeaderLanguage = languagePrefs.headerLanguage;
     _tempContentLanguage = languagePrefs.contentLanguage;
-    _useSameLanguage = languagePrefs.headerLanguage == languagePrefs.contentLanguage;
+    _useSameLanguage =
+        languagePrefs.headerLanguage == languagePrefs.contentLanguage;
     _hasChanges = false;
   }
 
@@ -46,14 +49,18 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
     final secondaryTextColor = ThemeProperties.getSecondaryTextColor(context);
     final surfaceColor = ThemeProperties.getSurfaceColor(context);
     final cardBackgroundColor = ThemeProperties.getSurfaceColor(context);
-    final borderColor = ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round());
-    final shadowColor = ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round());
+    final borderColor =
+        ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round());
+    final shadowColor =
+        ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round());
 
     return Container(
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
       decoration: BoxDecoration(
         color: cardBackgroundColor,
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+        borderRadius: BorderRadius.circular(
+            ResponsiveSystem.borderRadius(context, baseRadius: 16)),
         border: Border.all(
           color: borderColor,
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
@@ -62,7 +69,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
           BoxShadow(
             color: shadowColor,
             blurRadius: ResponsiveSystem.elevation(context, baseElevation: 8),
-            offset: Offset(0, ResponsiveSystem.elevation(context, baseElevation: 4)),
+            offset: Offset(
+                0, ResponsiveSystem.elevation(context, baseElevation: 4)),
           ),
         ],
       ),
@@ -78,11 +86,12 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                 size: ResponsiveSystem.iconSize(context, baseSize: 24),
                 color: primaryColor,
               ),
-              SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+              SizedBox(
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
               Expanded(
                 child: Text(
-                  TranslationService()
-                      .translate('language_settings', fallback: 'Language Settings'),
+                  TranslationService().translate('language_settings',
+                      fallback: 'Language Settings'),
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 20),
                     fontWeight: FontWeight.bold,
@@ -96,7 +105,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                 primaryTextColor: primaryTextColor,
                 secondaryTextColor: secondaryTextColor,
               ),
-              SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+              SizedBox(
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
               IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: Icon(
@@ -114,9 +124,11 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
           if (_useSameLanguage) ...[
             // Single Language Selection (when toggle is ON)
             _buildLanguageSelector(
-              title: globalTranslationService.translateHeader('language', fallback: 'Language'),
+              title: globalTranslationService.translateHeader('language',
+                  fallback: 'Language'),
               subtitle: 'For both headers and content',
-              currentLanguage: _tempHeaderLanguage ?? languagePrefs.headerLanguage,
+              currentLanguage:
+                  _tempHeaderLanguage ?? languagePrefs.headerLanguage,
               onChanged: (language) {
                 setState(() {
                   _tempHeaderLanguage = language;
@@ -135,7 +147,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
               title: globalTranslationService.translateHeader('header_language',
                   fallback: 'Header Language'),
               subtitle: 'For titles and headings',
-              currentLanguage: _tempHeaderLanguage ?? languagePrefs.headerLanguage,
+              currentLanguage:
+                  _tempHeaderLanguage ?? languagePrefs.headerLanguage,
               onChanged: (language) {
                 setState(() {
                   _tempHeaderLanguage = language;
@@ -148,14 +161,17 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
               surfaceColor: surfaceColor,
             ),
 
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
 
             // Content Language Selection (when toggle is OFF)
             _buildLanguageSelector(
-              title: globalTranslationService.translateHeader('content_language',
+              title: globalTranslationService.translateHeader(
+                  'content_language',
                   fallback: 'Content Language'),
               subtitle: 'For descriptions and content',
-              currentLanguage: _tempContentLanguage ?? languagePrefs.contentLanguage,
+              currentLanguage:
+                  _tempContentLanguage ?? languagePrefs.contentLanguage,
               onChanged: (language) {
                 setState(() {
                   _tempContentLanguage = language;
@@ -265,10 +281,12 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
             ),
             decoration: BoxDecoration(
               color: isSelected ? primaryColor : surfaceColor,
-              borderRadius:
-                  BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+              borderRadius: BorderRadius.circular(
+                  ResponsiveSystem.borderRadius(context, baseRadius: 8)),
               border: Border.all(
-                color: isSelected ? primaryColor : primaryColor.withAlpha((0.3 * 255).round()),
+                color: isSelected
+                    ? primaryColor
+                    : primaryColor.withAlpha((0.3 * 255).round()),
                 width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
               ),
             ),
@@ -281,7 +299,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                   ),
                 ),
-                SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 6)),
+                SizedBox(
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 6)),
                 Text(
                   language.nativeName,
                   style: TextStyle(
@@ -293,7 +312,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                   ),
                 ),
                 if (isSelected) ...[
-                  SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  SizedBox(
+                      width: ResponsiveSystem.spacing(context, baseSpacing: 4)),
                   Icon(
                     LucideIcons.check,
                     size: ResponsiveSystem.iconSize(context, baseSize: 12),
@@ -315,10 +335,12 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
     required Color secondaryTextColor,
   }) {
     return Container(
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
       decoration: BoxDecoration(
         color: primaryColor.withAlpha((0.1 * 255).round()),
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+        borderRadius: BorderRadius.circular(
+            ResponsiveSystem.borderRadius(context, baseRadius: 8)),
         border: Border.all(
           color: primaryColor.withAlpha((0.2 * 255).round()),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
@@ -334,7 +356,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                 size: ResponsiveSystem.iconSize(context, baseSize: 14),
                 color: primaryColor,
               ),
-              SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 6)),
+              SizedBox(
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 6)),
               Text(
                 'Current Selection',
                 style: TextStyle(
@@ -355,14 +378,16 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                     Text(
                       'Headers',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 10),
                         color: secondaryTextColor,
                       ),
                     ),
                     Text(
                       '${languagePrefs.headerLanguage.flag} ${languagePrefs.headerLanguage.nativeName}',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: primaryTextColor,
                         fontWeight: FontWeight.w500,
                       ),
@@ -377,14 +402,16 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
                     Text(
                       'Content',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 10),
                         color: secondaryTextColor,
                       ),
                     ),
                     Text(
                       '${languagePrefs.contentLanguage.flag} ${languagePrefs.contentLanguage.nativeName}',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: primaryTextColor,
                         fontWeight: FontWeight.w500,
                       ),
@@ -409,9 +436,12 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
         color: _useSameLanguage
             ? primaryColor.withAlpha((0.1 * 255).round())
             : ThemeProperties.getTransparentColor(context),
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+        borderRadius: BorderRadius.circular(
+            ResponsiveSystem.borderRadius(context, baseRadius: 8)),
         border: Border.all(
-          color: _useSameLanguage ? primaryColor : primaryColor.withAlpha((0.3 * 255).round()),
+          color: _useSameLanguage
+              ? primaryColor
+              : primaryColor.withAlpha((0.3 * 255).round()),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
@@ -431,8 +461,11 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
           size: ResponsiveSystem.iconSize(context, baseSize: 16),
           color: _useSameLanguage ? primaryColor : secondaryTextColor,
         ),
-        tooltip: _useSameLanguage ? 'Using same language for both' : 'Using different languages',
-        padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 8)),
+        tooltip: _useSameLanguage
+            ? 'Using same language for both'
+            : 'Using different languages',
+        padding:
+            EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 8)),
         constraints: BoxConstraints(
           minWidth: ResponsiveSystem.iconSize(context, baseSize: 32),
           minHeight: ResponsiveSystem.iconSize(context, baseSize: 32),
@@ -458,8 +491,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
             vertical: ResponsiveSystem.spacing(context, baseSpacing: 16),
           ),
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12)),
+            borderRadius: BorderRadius.circular(
+                ResponsiveSystem.borderRadius(context, baseRadius: 12)),
           ),
           elevation: ResponsiveSystem.elevation(context, baseElevation: 4),
         ),
@@ -473,7 +506,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
             ),
             SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
             Text(
-              globalTranslationService.translateHeader('save_changes', fallback: 'Save Changes'),
+              globalTranslationService.translateHeader('save_changes',
+                  fallback: 'Save Changes'),
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                 fontWeight: FontWeight.w600,
@@ -492,11 +526,17 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
     try {
       if (_useSameLanguage) {
         // Set both languages to the same
-        await ref.read(languageServiceProvider.notifier).setBothLanguages(_tempHeaderLanguage!);
+        await ref
+            .read(languageServiceProvider.notifier)
+            .setBothLanguages(_tempHeaderLanguage!);
       } else {
         // Set languages separately
-        await ref.read(languageServiceProvider.notifier).setHeaderLanguage(_tempHeaderLanguage!);
-        await ref.read(languageServiceProvider.notifier).setContentLanguage(_tempContentLanguage!);
+        await ref
+            .read(languageServiceProvider.notifier)
+            .setHeaderLanguage(_tempHeaderLanguage!);
+        await ref
+            .read(languageServiceProvider.notifier)
+            .setContentLanguage(_tempContentLanguage!);
       }
 
       // Update translation service with new preferences
@@ -526,8 +566,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
             duration: Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+              borderRadius: BorderRadius.circular(
+                  ResponsiveSystem.borderRadius(context, baseRadius: 8)),
             ),
           ),
         );
@@ -549,8 +589,8 @@ class _LanguageSelectionWidgetState extends ConsumerState<LanguageSelectionWidge
             duration: Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+              borderRadius: BorderRadius.circular(
+                  ResponsiveSystem.borderRadius(context, baseRadius: 8)),
             ),
           ),
         );

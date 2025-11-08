@@ -21,7 +21,8 @@ class GenerateHoroscopeUseCase {
     if (userDataResult.isFailure || userDataResult.value == null) {
       return ResultHelper.failure(
         ValidationFailure(
-            message: 'User profile not complete. Please complete your profile first.'),
+            message:
+                'User profile not complete. Please complete your profile first.'),
       );
     }
 

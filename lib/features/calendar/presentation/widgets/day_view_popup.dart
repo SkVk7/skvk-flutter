@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import '../../../../core/design_system/design_system.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 class DayViewPopup extends ConsumerStatefulWidget {
   final DateTime selectedDate;
@@ -39,7 +40,7 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  
+
   Map<String, dynamic>? _dayData;
   bool _isLoading = true;
   String? _errorMessage;
@@ -51,7 +52,7 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    
+
     _scaleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -59,7 +60,7 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
       parent: _animationController,
       curve: Curves.elasticOut,
     ));
-    
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -67,12 +68,13 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
       parent: _animationController,
       curve: Curves.easeInOut,
     ));
-    
+
     _animationController.forward();
-    
+
     // Use pre-loaded data if available, otherwise try to load it
     if (widget.dayData != null) {
-      print('🔍 DEBUG: Using pre-loaded day data: ${widget.dayData?['tithiName'] ?? 'N/A'}');
+      print(
+          '🔍 DEBUG: Using pre-loaded day data: ${widget.dayData?['tithiName'] ?? 'N/A'}');
       setState(() {
         _dayData = _normalizeDayData(widget.dayData!);
         _isLoading = false;
@@ -97,20 +99,29 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
         _errorMessage = null;
       });
 
-      // TODO: Fetch calendar day data from API when available
-      // This will be implemented when calendar API is available
+      // Note: There is no standalone getCalendarDay API endpoint.
+      // Only getCalendarMonth and getCalendarYear exist.
+      // When this widget is used from calendar_month_view, it receives pre-loaded dayData
+      // extracted from the month API response. When used standalone, it falls back to empty data.
+      // To implement standalone fetching, we would need to:
+      // 1. Call getCalendarMonth API for the selected date's month
+      // 2. Extract the specific day from the month response
+      // This is inefficient for a single day view, so it's not implemented.
       if (mounted) {
         setState(() {
-          _dayData = widget.dayData != null 
-              ? _normalizeDayData(widget.dayData!) 
+          _dayData = widget.dayData != null
+              ? _normalizeDayData(widget.dayData!)
               : <String, dynamic>{};
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
+        // Convert technical error to user-friendly message
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(e);
         setState(() {
-          _errorMessage = 'Failed to load day data: $e';
+          _errorMessage = userFriendlyMessage;
           _isLoading = false;
         });
       }
@@ -120,7 +131,7 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withAlpha((0.5 * 255).round()),
+      color: ThemeProperties.getShadowColor(context).withValues(alpha: 0.5),
       child: Center(
         child: AnimatedBuilder(
           animation: _animationController,
@@ -150,7 +161,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
           BoxShadow(
             color: ThemeProperties.getShadowColor(context),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 20),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
           ),
         ],
       ),
@@ -175,8 +187,10 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
       decoration: BoxDecoration(
         color: ThemeProperties.getPrimaryColor(context),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(16),
-          topRight: Radius.circular(16),
+          topLeft: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+          topRight: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
         ),
       ),
       child: Row(
@@ -186,7 +200,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
             color: ThemeProperties.getSurfaceColor(context),
             size: ResponsiveSystem.iconSize(context, baseSize: 24),
           ),
-          ResponsiveSystem.sizedBox(context, width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          ResponsiveSystem.sizedBox(context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,21 +214,27 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
                     color: ThemeProperties.getSurfaceColor(context),
                   ),
                 ),
-                ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
                 Text(
                   '${widget.selectedDate.day} ${_getMonthName(widget.selectedDate.month)} ${widget.selectedDate.year}',
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                    color: ThemeProperties.getSurfaceColor(context).withAlpha((0.8 * 255).round()),
+                    color: ThemeProperties.getSurfaceColor(context)
+                        .withAlpha((0.8 * 255).round()),
                   ),
                 ),
                 if (_dayData != null) ...[
-                  ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  ResponsiveSystem.sizedBox(context,
+                      height:
+                          ResponsiveSystem.spacing(context, baseSpacing: 4)),
                   Text(
                     _dayData!['tithiName'] as String? ?? 'Not available',
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
-                      color: ThemeProperties.getSurfaceColor(context).withAlpha((0.8 * 255).round()),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 14),
+                      color: ThemeProperties.getSurfaceColor(context)
+                          .withAlpha((0.8 * 255).round()),
                     ),
                   ),
                 ],
@@ -243,7 +264,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
               ThemeProperties.getPrimaryColor(context),
             ),
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
           Text(
             'Loading day information...',
             style: TextStyle(
@@ -266,7 +288,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
             size: ResponsiveSystem.iconSize(context, baseSize: 48),
             color: ThemeProperties.getErrorColor(context),
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
           Text(
             _errorMessage ?? 'Failed to load day data',
             style: TextStyle(
@@ -275,7 +298,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
             ),
             textAlign: TextAlign.center,
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
           ElevatedButton(
             onPressed: _loadDayData,
             child: Text('Retry'),
@@ -294,11 +318,14 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildBasicInfo(context),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
           _buildLunarInfo(context),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
           _buildFestivals(context),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
           _buildGadiyalu(context),
         ],
       ),
@@ -309,10 +336,12 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 16),
       decoration: BoxDecoration(
-        color: ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
+        color: ThemeProperties.getPrimaryColor(context)
+            .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         border: Border.all(
-          color: ThemeProperties.getPrimaryColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getPrimaryColor(context)
+              .withAlpha((0.3 * 255).round()),
         ),
       ),
       child: Column(
@@ -326,12 +355,33 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
               color: ThemeProperties.getPrimaryTextColor(context),
             ),
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
-          _buildInfoRow(context, 'Tithi', _dayData!['tithiName'] as String? ?? 'Not available', LucideIcons.moon),
-          _buildInfoRow(context, 'Nakshatra', _dayData!['nakshatraName'] as String? ?? 'Not available', LucideIcons.star),
-          _buildInfoRow(context, 'Paksha', _dayData!['pakshaName'] as String? ?? 'Not available', LucideIcons.calendar),
-          _buildInfoRow(context, 'Yoga', _dayData!['yogaName'] as String? ?? 'Not available', LucideIcons.activity),
-          _buildInfoRow(context, 'Karana', _dayData!['karanaName'] as String? ?? 'Not available', LucideIcons.clock),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          _buildInfoRow(
+              context,
+              'Tithi',
+              _dayData!['tithiName'] as String? ?? 'Not available',
+              LucideIcons.moon),
+          _buildInfoRow(
+              context,
+              'Nakshatra',
+              _dayData!['nakshatraName'] as String? ?? 'Not available',
+              LucideIcons.star),
+          _buildInfoRow(
+              context,
+              'Paksha',
+              _dayData!['pakshaName'] as String? ?? 'Not available',
+              LucideIcons.calendar),
+          _buildInfoRow(
+              context,
+              'Yoga',
+              _dayData!['yogaName'] as String? ?? 'Not available',
+              LucideIcons.activity),
+          _buildInfoRow(
+              context,
+              'Karana',
+              _dayData!['karanaName'] as String? ?? 'Not available',
+              LucideIcons.clock),
         ],
       ),
     );
@@ -341,10 +391,12 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 16),
       decoration: BoxDecoration(
-        color: ThemeProperties.getSecondaryColor(context).withAlpha((0.1 * 255).round()),
+        color: ThemeProperties.getSecondaryColor(context)
+            .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         border: Border.all(
-          color: ThemeProperties.getSecondaryColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getSecondaryColor(context)
+              .withAlpha((0.3 * 255).round()),
         ),
       ),
       child: Column(
@@ -358,11 +410,28 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
               color: ThemeProperties.getPrimaryTextColor(context),
             ),
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
-          _buildInfoRow(context, 'Sunrise', _dayData!['sunriseTime'] as String? ?? 'Not available', LucideIcons.sunrise),
-          _buildInfoRow(context, 'Sunset', _dayData!['sunsetTime'] as String? ?? 'Not available', LucideIcons.sunset),
-          _buildInfoRow(context, 'Moonrise', _dayData!['moonriseTime'] as String? ?? 'Not available', LucideIcons.moon),
-          _buildInfoRow(context, 'Moonset', _dayData!['moonsetTime'] as String? ?? 'Not available', LucideIcons.moon),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          _buildInfoRow(
+              context,
+              'Sunrise',
+              _dayData!['sunriseTime'] as String? ?? 'Not available',
+              LucideIcons.sunrise),
+          _buildInfoRow(
+              context,
+              'Sunset',
+              _dayData!['sunsetTime'] as String? ?? 'Not available',
+              LucideIcons.sunset),
+          _buildInfoRow(
+              context,
+              'Moonrise',
+              _dayData!['moonriseTime'] as String? ?? 'Not available',
+              LucideIcons.moon),
+          _buildInfoRow(
+              context,
+              'Moonset',
+              _dayData!['moonsetTime'] as String? ?? 'Not available',
+              LucideIcons.moon),
         ],
       ),
     );
@@ -371,14 +440,16 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
   Widget _buildFestivals(BuildContext context) {
     final festivalsRaw = _dayData!['festivals'];
     final festivals = _convertToListOfMaps(festivalsRaw);
-    
+
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 16),
       decoration: BoxDecoration(
-        color: ThemeProperties.getSecondaryColor(context).withAlpha((0.1 * 255).round()),
+        color: ThemeProperties.getSecondaryColor(context)
+            .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         border: Border.all(
-          color: ThemeProperties.getSecondaryColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getSecondaryColor(context)
+              .withAlpha((0.3 * 255).round()),
         ),
       ),
       child: Column(
@@ -392,7 +463,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
               color: ThemeProperties.getPrimaryTextColor(context),
             ),
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
           if (festivals.isEmpty)
             Text(
               'No festivals on this day',
@@ -415,18 +487,32 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
   Widget _buildGadiyalu(BuildContext context) {
     // Create mock gadiyalu data since it's not in DayData
     final gadiyalu = <Map<String, String>>[
-      {'name': 'Rahu Kalam', 'time': _dayData!['rahuKalam'] as String? ?? 'Not available', 'description': 'Avoid important activities'},
-      {'name': 'Yama Ganda', 'time': _dayData!['yamaGanda'] as String? ?? 'Not available', 'description': 'Avoid new ventures'},
-      {'name': 'Gulika Kalam', 'time': _dayData!['gulikaKalam'] as String? ?? 'Not available', 'description': 'Avoid auspicious activities'},
+      {
+        'name': 'Rahu Kalam',
+        'time': _dayData!['rahuKalam'] as String? ?? 'Not available',
+        'description': 'Avoid important activities'
+      },
+      {
+        'name': 'Yama Ganda',
+        'time': _dayData!['yamaGanda'] as String? ?? 'Not available',
+        'description': 'Avoid new ventures'
+      },
+      {
+        'name': 'Gulika Kalam',
+        'time': _dayData!['gulikaKalam'] as String? ?? 'Not available',
+        'description': 'Avoid auspicious activities'
+      },
     ];
-    
+
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 16),
       decoration: BoxDecoration(
-        color: ThemeProperties.getSuccessColor(context).withAlpha((0.1 * 255).round()),
+        color: ThemeProperties.getSuccessColor(context)
+            .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         border: Border.all(
-          color: ThemeProperties.getSuccessColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getSuccessColor(context)
+              .withAlpha((0.3 * 255).round()),
         ),
       ),
       child: Column(
@@ -440,7 +526,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
               color: ThemeProperties.getPrimaryTextColor(context),
             ),
           ),
-          ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          ResponsiveSystem.sizedBox(context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
           if (gadiyalu.isEmpty)
             Text(
               'No auspicious times available',
@@ -457,9 +544,11 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildInfoRow(
+      BuildContext context, String label, String value, IconData icon) {
     return Padding(
-      padding: ResponsiveSystem.only(context, bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+      padding: ResponsiveSystem.only(context,
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
       child: Row(
         children: [
           Icon(
@@ -467,7 +556,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
             size: ResponsiveSystem.iconSize(context, baseSize: 16),
             color: ThemeProperties.getPrimaryColor(context),
           ),
-          ResponsiveSystem.sizedBox(context, width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
           Expanded(
             flex: 2,
             child: Text(
@@ -497,13 +587,15 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
 
   Widget _buildFestivalItem(BuildContext context, String festival) {
     return Container(
-      margin: ResponsiveSystem.only(context, bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+      margin: ResponsiveSystem.only(context,
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
         color: ThemeProperties.getSurfaceColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeProperties.getSecondaryColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getSecondaryColor(context)
+              .withAlpha((0.3 * 255).round()),
         ),
       ),
       child: Row(
@@ -513,7 +605,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
             size: ResponsiveSystem.iconSize(context, baseSize: 16),
             color: ThemeProperties.getSecondaryColor(context),
           ),
-          ResponsiveSystem.sizedBox(context, width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -536,13 +629,15 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
 
   Widget _buildGadiyaluItem(BuildContext context, Map<String, String> gadi) {
     return Container(
-      margin: ResponsiveSystem.only(context, bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+      margin: ResponsiveSystem.only(context,
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
         color: ThemeProperties.getSurfaceColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeProperties.getSuccessColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getSuccessColor(context)
+              .withAlpha((0.3 * 255).round()),
         ),
       ),
       child: Row(
@@ -552,7 +647,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
             size: ResponsiveSystem.iconSize(context, baseSize: 16),
             color: ThemeProperties.getSuccessColor(context),
           ),
-          ResponsiveSystem.sizedBox(context, width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,7 +661,8 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
                     color: ThemeProperties.getPrimaryTextColor(context),
                   ),
                 ),
-                ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                ResponsiveSystem.sizedBox(context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
                 Text(
                   gadi['time'] ?? '',
                   style: TextStyle(
@@ -574,11 +671,14 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
                   ),
                 ),
                 if (gadi['description']?.isNotEmpty == true) ...[
-                  ResponsiveSystem.sizedBox(context, height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  ResponsiveSystem.sizedBox(context,
+                      height:
+                          ResponsiveSystem.spacing(context, baseSpacing: 4)),
                   Text(
                     gadi['description']!,
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 12),
                       color: ThemeProperties.getSecondaryTextColor(context),
                     ),
                   ),
@@ -591,11 +691,20 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
     );
   }
 
-
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return months[month - 1];
   }
@@ -604,11 +713,11 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
   /// This is necessary for Flutter web where JavaScript interop returns List<dynamic>
   Map<String, dynamic> _normalizeDayData(Map<String, dynamic> data) {
     final normalized = <String, dynamic>{};
-    
+
     for (final entry in data.entries) {
       final key = entry.key;
       final value = entry.value;
-      
+
       if (value is List) {
         // Convert list to proper type
         if (key == 'festivals' || key == 'gadiyalu') {
@@ -630,13 +739,14 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
         normalized[key] = _normalizeDayData(value);
       } else if (value is Map) {
         // Handle non-typed maps
-        normalized[key] = _normalizeDayData(Map<String, dynamic>.from(value.cast<String, dynamic>()));
+        normalized[key] = _normalizeDayData(
+            Map<String, dynamic>.from(value.cast<String, dynamic>()));
       } else {
         // Copy primitive values as-is
         normalized[key] = value;
       }
     }
-    
+
     return normalized;
   }
 

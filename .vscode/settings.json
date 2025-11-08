@@ -1,6 +1,10 @@
 {
-    "files.watcherExclude": {
-        "**/target": true
-    },
-    "java.configuration.updateBuildConfiguration": "disabled"
+  "files.watcherExclude": {
+    "**/target": true
+  },
+  "java.configuration.updateBuildConfiguration": "disabled",
+  "dart.flutterSdkPath": "/Users/KSHABARINATHGUPTA/Flutter Project/flutter",
+  "dart.analysisExcludedFolders": [".dart_tool", "build"],
+  "dart.enableSdkFormatter": true,
+  "dart.lineLength": 100
 }

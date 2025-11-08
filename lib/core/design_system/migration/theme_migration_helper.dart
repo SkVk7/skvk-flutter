@@ -109,27 +109,32 @@ class ResponsiveMigrationHelper {
   }
 
   /// Get responsive font size (replaces ResponsiveSystem.fontSize)
-  static double getResponsiveFontSize(BuildContext context, {required double baseSize}) {
+  static double getResponsiveFontSize(BuildContext context,
+      {required double baseSize}) {
     return ResponsiveSystem.fontSize(context, baseSize: baseSize);
   }
 
   /// Get responsive icon size (replaces ResponsiveSystem.iconSize)
-  static double getResponsiveIconSize(BuildContext context, {required double baseSize}) {
+  static double getResponsiveIconSize(BuildContext context,
+      {required double baseSize}) {
     return ResponsiveSystem.iconSize(context, baseSize: baseSize);
   }
 
   /// Get responsive spacing (replaces ResponsiveSystem.spacing)
-  static double getResponsiveSpacing(BuildContext context, {required double baseSpacing}) {
+  static double getResponsiveSpacing(BuildContext context,
+      {required double baseSpacing}) {
     return ResponsiveSystem.spacing(context, baseSpacing: baseSpacing);
   }
 
   /// Get responsive border radius (replaces ResponsiveSystem.borderRadius)
-  static double getResponsiveBorderRadius(BuildContext context, {required double baseRadius}) {
+  static double getResponsiveBorderRadius(BuildContext context,
+      {required double baseRadius}) {
     return ResponsiveSystem.borderRadius(context, baseRadius: baseRadius);
   }
 
   /// Get responsive elevation (replaces ResponsiveSystem.elevation)
-  static double getResponsiveElevation(BuildContext context, {required double baseElevation}) {
+  static double getResponsiveElevation(BuildContext context,
+      {required double baseElevation}) {
     return ResponsiveSystem.elevation(context, baseElevation: baseElevation);
   }
 

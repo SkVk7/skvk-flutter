@@ -7,12 +7,12 @@ library;
 import '../../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/models/user_model.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
+import '../../../../core/models/user/user_model.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
 import '../../../../shared/widgets/dropdown_widgets.dart';
 import '../../../../shared/widgets/dropdown_info_adapters.dart';
-import '../../../../core/utils/ayanamsha_info.dart';
-import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/utils/astrology/ayanamsha_info.dart';
+import '../../../../core/design_system/theme/theme_provider.dart';
 
 /// Form field types for validation
 enum UserProfileFieldType {
@@ -87,7 +87,8 @@ class UserProfileFormData {
     } else if (name.trim().length < 2) {
       errors[UserProfileFieldType.name] = 'Name must be at least 2 characters';
     } else if (name.trim().length > 50) {
-      errors[UserProfileFieldType.name] = 'Name must be less than 50 characters';
+      errors[UserProfileFieldType.name] =
+          'Name must be less than 50 characters';
     }
 
     // Place of birth validation
@@ -97,14 +98,17 @@ class UserProfileFormData {
 
     // Date of birth validation
     if (dateOfBirth.isAfter(DateTime.now())) {
-      errors[UserProfileFieldType.dateOfBirth] = 'Date of birth cannot be in the future';
+      errors[UserProfileFieldType.dateOfBirth] =
+          'Date of birth cannot be in the future';
     } else if (dateOfBirth.isBefore(DateTime(1900))) {
-      errors[UserProfileFieldType.dateOfBirth] = 'Date of birth cannot be before 1900';
+      errors[UserProfileFieldType.dateOfBirth] =
+          'Date of birth cannot be before 1900';
     }
 
     // Coordinates validation
     if (latitude == 0.0 && longitude == 0.0) {
-      errors[UserProfileFieldType.coordinates] = 'Please select a valid place of birth';
+      errors[UserProfileFieldType.coordinates] =
+          'Please select a valid place of birth';
     } else if (latitude < -90 || latitude > 90) {
       errors[UserProfileFieldType.coordinates] = 'Invalid latitude';
     } else if (longitude < -180 || longitude > 180) {
@@ -288,7 +292,8 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
       child: TextField(
         controller: _placeOfBirthController,
         enabled: widget.isEditing,
-        onChanged: (value) => _updateFormData(_formData.copyWith(placeOfBirth: value)),
+        onChanged: (value) =>
+            _updateFormData(_formData.copyWith(placeOfBirth: value)),
         decoration: InputDecoration(
           prefixIcon: Icon(Icons.location_on),
           hintText: 'Enter place of birth',
@@ -387,22 +392,25 @@ class _FormFieldWrapper extends ConsumerWidget {
                   ThemeProperties.getSurfaceColor(context),
                 ],
         ),
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
         boxShadow: [
           BoxShadow(
             color: ThemeProperties.getShadowColor(context).withAlpha(76),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 16),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 8)),
           ),
           BoxShadow(
             color: ThemeProperties.getShadowColor(context).withAlpha(38),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
           ),
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 20)),
+        padding:
+            EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 20)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -415,7 +423,8 @@ class _FormFieldWrapper extends ConsumerWidget {
               ),
             ),
             if (error != null) ...[
-              SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+              SizedBox(
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
               Text(
                 error!,
                 style: TextStyle(
@@ -425,7 +434,8 @@ class _FormFieldWrapper extends ConsumerWidget {
                 ),
               ),
             ],
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
             child,
           ],
         ),
@@ -449,21 +459,24 @@ class _AyanamshaSelector extends ConsumerWidget {
     final primaryColor = ref.watch(primaryColorProvider);
     final primaryTextColor = ref.watch(primaryTextColorProvider);
     final secondaryTextColor = ref.watch(secondaryTextColorProvider);
-    final borderColor = ref.watch(themePropertiesProvider)['borderColor'] as Color;
+    final borderColor =
+        ref.watch(themePropertiesProvider)['borderColor'] as Color;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(ResponsiveSystem.spacing(context, baseSpacing: 8)),
+      borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
       child: Container(
-        padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
+        padding:
+            EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
         decoration: BoxDecoration(
           border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         ),
         child: Row(
           children: [
             Icon(Icons.star,
-                color: primaryColor, size: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+                color: primaryColor,
+                size: ResponsiveSystem.spacing(context, baseSpacing: 20)),
             SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
             Expanded(
               child: Column(
@@ -472,22 +485,26 @@ class _AyanamshaSelector extends ConsumerWidget {
                   Text(
                     AyanamshaInfoHelper.getDisplayName(selectedAyanamsha),
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 16),
                       fontWeight: FontWeight.w500,
                       color: primaryTextColor,
                     ),
                   ),
                   Builder(
                     builder: (context) {
-                      final description = AyanamshaInfoHelper.getDescription(selectedAyanamsha);
+                      final description =
+                          AyanamshaInfoHelper.getDescription(selectedAyanamsha);
                       if (description.isEmpty) return const SizedBox.shrink();
                       return Padding(
-                        padding:
-                            EdgeInsets.only(top: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                        padding: EdgeInsets.only(
+                            top: ResponsiveSystem.spacing(context,
+                                baseSpacing: 4)),
                         child: Text(
                           description,
                           style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                            fontSize: ResponsiveSystem.fontSize(context,
+                                baseSize: 12),
                             color: secondaryTextColor,
                           ),
                         ),
@@ -499,7 +516,8 @@ class _AyanamshaSelector extends ConsumerWidget {
             ),
             if (onTap != null)
               Icon(Icons.arrow_drop_down,
-                  color: primaryColor, size: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+                  color: primaryColor,
+                  size: ResponsiveSystem.spacing(context, baseSpacing: 24)),
           ],
         ),
       ),
@@ -546,16 +564,18 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
             final isSelected = ayanamsha == selectedAyanamsha;
 
             return Card(
-              color: isSelected ? primaryColor.withAlpha((0.1 * 255).round()) : null,
-              margin:
-                  EdgeInsets.symmetric(vertical: ResponsiveSystem.spacing(context, baseSpacing: 2)),
+              color: isSelected
+                  ? primaryColor.withAlpha((0.1 * 255).round())
+                  : null,
+              margin: EdgeInsets.symmetric(
+                  vertical: ResponsiveSystem.spacing(context, baseSpacing: 2)),
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
                 side: isSelected
                     ? BorderSide(
                         color: primaryColor,
-                        width: ResponsiveSystem.borderWidth(context, baseWidth: 2))
+                        width:
+                            ResponsiveSystem.borderWidth(context, baseWidth: 2))
                     : BorderSide.none,
               ),
               child: Builder(
@@ -563,7 +583,8 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
                   final info = DropdownInfoAdapters.getAyanamshaInfo(ayanamsha);
                   if (info == null) {
                     // Fallback if info is null - create a simple adapter
-                    final ayanamshaInfo = AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
+                    final ayanamshaInfo =
+                        AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha);
                     if (ayanamshaInfo != null) {
                       return DropdownListTile<String>(
                         value: ayanamsha,
@@ -578,7 +599,9 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
                       );
                     }
                   }
-                  final finalInfo = info ?? AyanamshaInfoAdapter(AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha)!);
+                  final finalInfo = info ??
+                      AyanamshaInfoAdapter(
+                          AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha)!);
                   return DropdownListTile<String>(
                     value: ayanamsha,
                     info: finalInfo,

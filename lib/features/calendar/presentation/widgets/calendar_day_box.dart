@@ -42,7 +42,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  late DateTime _today; // Cache today's date to avoid multiple DateTime.now() calls
+  late DateTime
+      _today; // Cache today's date to avoid multiple DateTime.now() calls
 
   Map<String, dynamic>? _calendarData;
   bool _isLoading = true;
@@ -84,8 +85,14 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
         _isLoading = true;
       });
 
-      // TODO: Fetch calendar day data from API when available
-      // This will be implemented when calendar API is available
+      // Note: There is no standalone getCalendarDay API endpoint.
+      // Only getCalendarMonth and getCalendarYear exist.
+      // This widget is used in calendar grids where month data is already loaded.
+      // To implement standalone fetching, we would need to:
+      // 1. Call getCalendarMonth API for the date's month
+      // 2. Extract the specific day from the month response
+      // This is inefficient for individual day boxes in a grid, so it's not implemented.
+      // The parent calendar_month_view already loads month data and extracts day info.
       setState(() {
         _calendarData = {
           'tithi': 'Not available',
@@ -111,7 +118,6 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
       });
     }
   }
-
 
   @override
   void dispose() {
@@ -152,7 +158,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
         color: isSelected
             ? ThemeProperties.getPrimaryColor(context)
             : isToday
-                ? ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round())
+                ? ThemeProperties.getPrimaryColor(context)
+                    .withAlpha((0.2 * 255).round())
                 : ThemeProperties.getSurfaceColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
@@ -160,15 +167,18 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
               ? ThemeProperties.getPrimaryColor(context)
               : isToday
                   ? ThemeProperties.getPrimaryColor(context)
-                  : ThemeProperties.getSecondaryTextColor(context).withAlpha((0.3 * 255).round()),
+                  : ThemeProperties.getSecondaryTextColor(context)
+                      .withAlpha((0.3 * 255).round()),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
         boxShadow: isSelected
             ? [
                 BoxShadow(
-                  color: ThemeProperties.getPrimaryColor(context).withAlpha((0.3 * 255).round()),
+                  color: ThemeProperties.getPrimaryColor(context)
+                      .withAlpha((0.3 * 255).round()),
                   blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                  offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  offset: Offset(
+                      0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
                 ),
               ]
             : null,
@@ -192,7 +202,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
               _buildFestivalSymbols(context),
 
             // Amavasya/Purnima symbols
-            if (!_isLoading && _calendarData != null) _buildLunarSymbols(context),
+            if (!_isLoading && _calendarData != null)
+              _buildLunarSymbols(context),
           ],
         ),
       ),
@@ -208,13 +219,15 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
                 : isToday
                     ? ThemeProperties.getPrimaryColor(context)
                     : ThemeProperties.getPrimaryTextColor(context),
-            fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+            fontWeight:
+                isSelected || isToday ? FontWeight.bold : FontWeight.normal,
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
           ),
     );
   }
 
-  Widget _buildCalendarInfo(BuildContext context, bool isSelected, bool isToday) {
+  Widget _buildCalendarInfo(
+      BuildContext context, bool isSelected, bool isToday) {
     if (_calendarData == null) return const SizedBox.shrink();
 
     return Column(
@@ -240,7 +253,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
     );
   }
 
-  Widget _buildInfoChip(BuildContext context, String text, IconData icon, bool isSelected) {
+  Widget _buildInfoChip(
+      BuildContext context, String text, IconData icon, bool isSelected) {
     return Container(
       padding: ResponsiveSystem.symmetric(
         context,
@@ -250,7 +264,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeProperties.getSurfaceColor(context)
-            : ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
+            : ThemeProperties.getPrimaryColor(context)
+                .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 4),
       ),
       child: Row(
@@ -288,7 +303,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
       return const SizedBox.shrink();
     }
 
-    final festivals = _calendarData!['festivals'] as List<Map<String, dynamic>>? ?? [];
+    final festivals =
+        _calendarData!['festivals'] as List<Map<String, dynamic>>? ?? [];
     if (festivals.isEmpty) return const SizedBox.shrink();
 
     return Container(
@@ -344,7 +360,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
 
     final symbol = symbolMap.entries
         .firstWhere(
-          (entry) => festivalName.toLowerCase().contains(entry.key.toLowerCase()),
+          (entry) =>
+              festivalName.toLowerCase().contains(entry.key.toLowerCase()),
           orElse: () => const MapEntry('default', Icons.celebration),
         )
         .value;

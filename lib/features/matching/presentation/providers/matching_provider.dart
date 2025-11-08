@@ -8,10 +8,12 @@ import '../../domain/repositories/matching_repository.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../domain/usecases/perform_matching_usecase.dart';
 import '../../../../core/utils/either.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 /// Matching state
 class MatchingState {
   final bool isLoading;
+
   final bool showResults;
   final double? compatibilityScore;
   final Map<String, String>? kootaDetails;
@@ -67,11 +69,12 @@ class MatchingNotifier extends Notifier<MatchingState> {
       {String? ayanamsha, String? houseSystem}) async {
     print(
         '🔍 DEBUG: MatchingNotifier.performMatching called with ${person1Data.name} and ${person2Data.name}');
-    state = state.copyWith(isLoading: true, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        isLoading: true, errorMessage: null, successMessage: null);
 
     try {
       print('🔍 DEBUG: Calling _performMatchingUseCase');
-      final result = await _performMatchingUseCase(person1Data, person2Data, 
+      final result = await _performMatchingUseCase(person1Data, person2Data,
           ayanamsha: ayanamsha, houseSystem: houseSystem);
       print('🔍 DEBUG: Use case result: ${result.isSuccess}');
 
@@ -90,15 +93,21 @@ class MatchingNotifier extends Notifier<MatchingState> {
           state = state.copyWith(successMessage: null);
         });
       } else {
+        // Convert technical error to user-friendly message
+        final errorMessage = result.failure?.message ?? 'Matching failed';
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(errorMessage);
         state = state.copyWith(
           isLoading: false,
-          errorMessage: result.failure?.message ?? 'Matching failed',
+          errorMessage: userFriendlyMessage,
         );
       }
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred: $e',
+        errorMessage: userFriendlyMessage,
       );
     }
   }

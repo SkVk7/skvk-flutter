@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 class CalendarDayDetailPopup extends StatefulWidget {
   final DateTime date;
@@ -92,8 +93,13 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         _errorMessage = null;
       });
 
-      // TODO: Fetch calendar day data from API when available
-      // This will be implemented when calendar API is available
+      // Note: There is no standalone getCalendarDay API endpoint.
+      // Only getCalendarMonth and getCalendarYear exist.
+      // To implement standalone fetching, we would need to:
+      // 1. Call getCalendarMonth API for the date's month
+      // 2. Extract the specific day from the month response
+      // This is inefficient for a single day view, so it's not implemented.
+      // Consider using this widget from calendar_month_view which already has month data loaded.
       setState(() {
         _detailedData = {
           'tithi': 'Not available',
@@ -114,13 +120,14 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         _isLoading = false;
       });
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       setState(() {
-        _errorMessage = 'Error loading detailed data: $e';
+        _errorMessage = userFriendlyMessage;
         _isLoading = false;
       });
     }
   }
-
 
   @override
   void dispose() {
@@ -136,7 +143,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       child: GestureDetector(
         onTap: widget.onClose,
         child: Container(
-          color: Colors.black.withAlpha((0.5 * 255).round()),
+          color: ThemeProperties.getShadowColor(context).withValues(alpha: 0.5),
           child: Center(
             child: GestureDetector(
               onTap: () {}, // Prevent closing when tapping on content
@@ -170,9 +177,11 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha((0.3 * 255).round()),
+            color:
+                ThemeProperties.getShadowColor(context).withValues(alpha: 0.3),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 20),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
           ),
         ],
       ),
@@ -295,8 +304,10 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       decoration: BoxDecoration(
         color: ThemeProperties.getPrimaryColor(context),
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 16)),
-          topRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+          topLeft: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+          topRight: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
         ),
       ),
       child: Row(
@@ -316,8 +327,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
                 Text(
                   _getDayName(widget.date),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color:
-                            ThemeProperties.getSurfaceColor(context).withAlpha((0.8 * 255).round()),
+                        color: ThemeProperties.getSurfaceColor(context)
+                            .withAlpha((0.8 * 255).round()),
                       ),
                 ),
               ],
@@ -351,7 +362,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
   }
 
   Widget _buildFestivals(BuildContext context) {
-    final festivals = _detailedData!['festivals'] as List<Map<String, dynamic>>? ?? [];
+    final festivals =
+        _detailedData!['festivals'] as List<Map<String, dynamic>>? ?? [];
 
     return _buildInfoSection(
       context,
@@ -361,8 +373,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
           .map((festival) => _buildInfoRow(
                 context,
                 festival['name'] as String? ?? 'Festival',
-                (festival['description'] as String? ?? '').isNotEmpty 
-                    ? (festival['description'] as String) 
+                (festival['description'] as String? ?? '').isNotEmpty
+                    ? (festival['description'] as String)
                     : 'Hindu Festival',
               ))
           .toList(),
@@ -383,7 +395,8 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
           abhijit['isActive'] ? 'Active' : 'Inactive',
           isActive: abhijit['isActive'],
         ),
-        _buildInfoRow(context, 'Time', '${abhijit['startTime']} - ${abhijit['endTime']}'),
+        _buildInfoRow(
+            context, 'Time', '${abhijit['startTime']} - ${abhijit['endTime']}'),
         _buildInfoRow(context, 'Duration', abhijit['duration']),
       ],
     );
@@ -399,9 +412,11 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       Icons.visibility,
       [
         _buildInfoRow(context, 'Rahu Rashi', 'Rashi ${rahu['rashi']}'),
-        _buildInfoRow(context, 'Rahu Degree', '${rahu['degree']?.toStringAsFixed(2)}°'),
+        _buildInfoRow(
+            context, 'Rahu Degree', '${rahu['degree']?.toStringAsFixed(2)}°'),
         _buildInfoRow(context, 'Ketu Rashi', 'Rashi ${ketu['rashi']}'),
-        _buildInfoRow(context, 'Ketu Degree', '${ketu['degree']?.toStringAsFixed(2)}°'),
+        _buildInfoRow(
+            context, 'Ketu Degree', '${ketu['degree']?.toStringAsFixed(2)}°'),
       ],
     );
   }
@@ -430,23 +445,27 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'Sun & Moon Times',
       Icons.wb_sunny,
       [
-        _buildInfoRow(context, 'Sunrise', _formatTime(_detailedData!['sunrise'])),
+        _buildInfoRow(
+            context, 'Sunrise', _formatTime(_detailedData!['sunrise'])),
         _buildInfoRow(context, 'Sunset', _formatTime(_detailedData!['sunset'])),
-        _buildInfoRow(context, 'Moonrise', _formatTime(_detailedData!['moonrise'])),
-        _buildInfoRow(context, 'Moonset', _formatTime(_detailedData!['moonset'])),
+        _buildInfoRow(
+            context, 'Moonrise', _formatTime(_detailedData!['moonrise'])),
+        _buildInfoRow(
+            context, 'Moonset', _formatTime(_detailedData!['moonset'])),
       ],
     );
   }
 
-  Widget _buildInfoSection(
-      BuildContext context, String title, IconData icon, List<Widget> children) {
+  Widget _buildInfoSection(BuildContext context, String title, IconData icon,
+      List<Widget> children) {
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
         color: ThemeProperties.getCardColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round()),
+          color: ThemeProperties.getPrimaryColor(context)
+              .withAlpha((0.2 * 255).round()),
         ),
       ),
       child: Column(
@@ -501,20 +520,24 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
                     width: ResponsiveSystem.spacing(context, baseSpacing: 8),
                     height: ResponsiveSystem.spacing(context, baseSpacing: 8),
                     decoration: BoxDecoration(
-                      color: isActive ? Colors.green : Colors.red,
+                      color: isActive
+                          ? ThemeProperties.getSuccessColor(context)
+                          : ThemeProperties.getErrorColor(context),
                       shape: BoxShape.circle,
                     ),
                   ),
-                if (isActive != null) ResponsiveSystem.sizedBox(context, width: 8),
+                if (isActive != null)
+                  ResponsiveSystem.sizedBox(context, width: 8),
                 if (isAuspicious != null)
                   Icon(
                     isAuspicious ? Icons.star : Icons.star_border,
                     size: ResponsiveSystem.iconSize(context, baseSize: 16),
                     color: isAuspicious
-                        ? Colors.amber
+                        ? ThemeProperties.getPrimaryColor(context)
                         : ThemeProperties.getSecondaryTextColor(context),
                   ),
-                if (isAuspicious != null) ResponsiveSystem.sizedBox(context, width: 8),
+                if (isAuspicious != null)
+                  ResponsiveSystem.sizedBox(context, width: 8),
                 Expanded(
                   child: Text(
                     value,
@@ -551,7 +574,15 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
   }
 
   String _getDayName(DateTime date) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const days = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
     return days[date.weekday - 1];
   }
 

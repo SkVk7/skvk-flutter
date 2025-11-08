@@ -27,7 +27,8 @@ class WeeklyPredictionsTab extends StatelessWidget {
               size: ResponsiveSystem.iconSize(context, baseSize: 64),
               color: ThemeProperties.getPrimaryColor(context),
             ),
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
             Text(
               'Weekly Predictions',
               style: TextStyle(
@@ -44,15 +45,18 @@ class WeeklyPredictionsTab extends StatelessWidget {
                 color: ThemeProperties.getSecondaryTextColor(context),
               ),
             ),
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
             Container(
-              padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
+              padding: EdgeInsets.all(
+                  ResponsiveSystem.spacing(context, baseSpacing: 16)),
               margin: EdgeInsets.symmetric(
-                  horizontal: ResponsiveSystem.spacing(context, baseSpacing: 32)),
+                  horizontal:
+                      ResponsiveSystem.spacing(context, baseSpacing: 32)),
               decoration: BoxDecoration(
-                color: ThemeProperties.getSurfaceColor(context).withAlpha((0.8 * 255).round()),
-                borderRadius:
-                    BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12)),
+                color: ThemeProperties.getSurfaceColor(context)
+                    .withAlpha((0.8 * 255).round()),
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
               ),
               child: Text(
                 'Weekly predictions will provide detailed insights for the entire week, including planetary transits, auspicious days, and comprehensive guidance.',

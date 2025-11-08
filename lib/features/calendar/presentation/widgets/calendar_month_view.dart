@@ -7,14 +7,14 @@ library;
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../core/services/translation_service.dart';
+import '../../../../core/services/language/translation_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'day_view_popup.dart';
-import '../../../../core/services/astrology_service_bridge.dart';
-import '../../../../core/services/simple_location_service.dart';
-import '../../../../core/utils/timezone_util.dart';
-import '../../../../core/services/astrology_name_service.dart';
-import '../../../../core/services/language_service.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/services/location/simple_location_service.dart';
+import '../../../../core/utils/astrology/timezone_util.dart';
+import '../../../../core/services/astrology/astrology_name_service.dart';
+import '../../../../core/services/language/language_service.dart';
 
 class CalendarMonthView extends ConsumerStatefulWidget {
   final DateTime currentMonth;
@@ -42,7 +42,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late DateTime _today; // Cache today's date to avoid multiple DateTime.now() calls
+  late DateTime
+      _today; // Cache today's date to avoid multiple DateTime.now() calls
   late ScrollController _scrollController;
   Map<String, dynamic>? _monthData;
   bool _isMonthDataLoading = true;
@@ -94,21 +95,23 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
     // Find the day data from already cached month data
     Map<String, dynamic>? dayData;
-    
+
     print('🔍 DEBUG: _monthData is null: ${_monthData == null}');
     print('🔍 DEBUG: _isMonthDataLoading: $_isMonthDataLoading');
-    
+
     if (_monthData != null) {
       final daysRaw = _monthData!['days'];
       final days = _convertToListOfMaps(daysRaw);
       print('🔍 DEBUG: Month data has ${days.length} days');
       print('🔍 DEBUG: Looking for day ${date.day} in month ${date.month}');
-      
+
       try {
         final rawDayData = days.firstWhere(
           (day) {
             final dayDate = _parseDateTime(day['date']);
-            return dayDate != null && dayDate.day == date.day && dayDate.month == date.month;
+            return dayDate != null &&
+                dayDate.day == date.day &&
+                dayDate.month == date.month;
           },
         );
         // Transform nested API response to flat structure expected by DayViewPopup
@@ -161,9 +164,12 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
       // Get device location with fallback to country-level location
       final locationService = SimpleLocationService();
-      final locationResult = await locationService.getDeviceLocationWithFallback();
-      
-      if (!locationResult.isSuccess || locationResult.latitude == null || locationResult.longitude == null) {
+      final locationResult =
+          await locationService.getDeviceLocationWithFallback();
+
+      if (!locationResult.isSuccess ||
+          locationResult.latitude == null ||
+          locationResult.longitude == null) {
         throw Exception('Failed to get location: ${locationResult.error}');
       }
 
@@ -213,7 +219,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       // For simplicity, use a default timezone based on longitude
       // In production, you might want to use a timezone lookup service
       final offsetHours = (longitude / 15.0).round();
-      
+
       // Map common timezones (simplified)
       if (offsetHours >= 5 && offsetHours <= 6) {
         return 'Asia/Kolkata'; // India
@@ -228,7 +234,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       } else if (offsetHours >= 9 && offsetHours <= 10) {
         return 'Asia/Tokyo'; // Japan
       }
-      
+
       // Default to India timezone
       return 'Asia/Kolkata';
     } catch (e) {
@@ -260,8 +266,10 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
   @override
   Widget build(BuildContext context) {
-    final firstDayOfMonth = DateTime(widget.currentMonth.year, widget.currentMonth.month, 1);
-    final lastDayOfMonth = DateTime(widget.currentMonth.year, widget.currentMonth.month + 1, 0);
+    final firstDayOfMonth =
+        DateTime(widget.currentMonth.year, widget.currentMonth.month, 1);
+    final lastDayOfMonth =
+        DateTime(widget.currentMonth.year, widget.currentMonth.month + 1, 0);
     final firstDayOfWeek = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
@@ -287,47 +295,51 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
             // Calendar Grid with proper responsive sizing
             Expanded(
-              child: _isMonthDataLoading 
+              child: _isMonthDataLoading
                   ? _buildLoadingState(context)
                   : LayoutBuilder(
                       builder: (context, constraints) {
-                  // Calculate responsive cell size based on available space
-                  final availableWidth = constraints.maxWidth;
-                  final availableHeight = constraints.maxHeight;
+                        // Calculate responsive cell size based on available space
+                        final availableWidth = constraints.maxWidth;
+                        final availableHeight = constraints.maxHeight;
 
-                  // Calculate cell dimensions based on available space
-                  final spacing = ResponsiveSystem.spacing(context, baseSpacing: 4);
-                  final cellWidth = (availableWidth - (6 * spacing)) / 7;
-                  final cellHeight = (availableHeight - ((weeks - 1) * spacing)) / weeks;
+                        // Calculate cell dimensions based on available space
+                        final spacing =
+                            ResponsiveSystem.spacing(context, baseSpacing: 4);
+                        final cellWidth = (availableWidth - (6 * spacing)) / 7;
+                        final cellHeight =
+                            (availableHeight - ((weeks - 1) * spacing)) / weeks;
 
-                  // Use the smaller dimension to maintain square cells
-                  final cellSize = cellWidth < cellHeight ? cellWidth : cellHeight;
-                  final aspectRatio = 1.0; // Square cells
+                        // Use the smaller dimension to maintain square cells
+                        final cellSize =
+                            cellWidth < cellHeight ? cellWidth : cellHeight;
+                        final aspectRatio = 1.0; // Square cells
 
-                  return GridView.builder(
-                    controller: _scrollController,
-                    physics: const BouncingScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 7,
-                      crossAxisSpacing: spacing,
-                      mainAxisSpacing: spacing,
-                      childAspectRatio: aspectRatio,
+                        return GridView.builder(
+                          controller: _scrollController,
+                          physics: const BouncingScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 7,
+                            crossAxisSpacing: spacing,
+                            mainAxisSpacing: spacing,
+                            childAspectRatio: aspectRatio,
+                          ),
+                          itemCount: weeks * 7,
+                          itemBuilder: (context, index) {
+                            final dayIndex = index - (firstDayOfWeek - 1);
+                            if (dayIndex < 0 || dayIndex >= daysInMonth) {
+                              return const SizedBox.shrink();
+                            }
+                            final day = dayIndex + 1;
+                            final date = DateTime(widget.currentMonth.year,
+                                widget.currentMonth.month, day);
+
+                            return _buildDayCell(context, date, day, cellSize);
+                          },
+                        );
+                      },
                     ),
-                    itemCount: weeks * 7,
-                    itemBuilder: (context, index) {
-                      final dayIndex = index - (firstDayOfWeek - 1);
-                      if (dayIndex < 0 || dayIndex >= daysInMonth) {
-                        return const SizedBox.shrink();
-                      }
-                      final day = dayIndex + 1;
-                      final date =
-                          DateTime(widget.currentMonth.year, widget.currentMonth.month, day);
-
-                      return _buildDayCell(context, date, day, cellSize);
-                    },
-                  );
-                },
-              ),
             ),
           ],
         ),
@@ -357,7 +369,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         // Previous Month
         IconButton(
           onPressed: () {
-            final previousMonth = DateTime(widget.currentMonth.year, widget.currentMonth.month - 1);
+            final previousMonth = DateTime(
+                widget.currentMonth.year, widget.currentMonth.month - 1);
             widget.onDateSelected(previousMonth);
           },
           icon: Icon(
@@ -391,7 +404,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         // Next Month
         IconButton(
           onPressed: () {
-            final nextMonth = DateTime(widget.currentMonth.year, widget.currentMonth.month + 1);
+            final nextMonth = DateTime(
+                widget.currentMonth.year, widget.currentMonth.month + 1);
             widget.onDateSelected(nextMonth);
           },
           icon: Icon(
@@ -427,12 +441,14 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
   }
 
-  Widget _buildDayCell(BuildContext context, DateTime date, int day, double cellSize) {
+  Widget _buildDayCell(
+      BuildContext context, DateTime date, int day, double cellSize) {
     final isSelected = date.day == widget.selectedDate.day &&
         date.month == widget.selectedDate.month &&
         date.year == widget.selectedDate.year;
-    final isToday =
-        date.day == _today.day && date.month == _today.month && date.year == _today.year;
+    final isToday = date.day == _today.day &&
+        date.month == _today.month &&
+        date.year == _today.year;
 
     return GestureDetector(
       onTap: () => _showDetailedDayView(context, date),
@@ -440,69 +456,75 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         cursor: SystemMouseCursors.click,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-        width: cellSize,
-        height: cellSize,
-        decoration: BoxDecoration(
-          color: isSelected
-              ? ThemeProperties.getPrimaryColor(context)
-              : isToday
-                  ? ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round())
-                  : Colors.transparent,
-          borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-          border: isToday && !isSelected
-              ? Border.all(
-                  color: ThemeProperties.getPrimaryColor(context),
-                  width: ResponsiveSystem.borderWidth(context, baseWidth: 2))
-              : null,
-          boxShadow: [
-            BoxShadow(
-              color: ThemeProperties.getShadowColor(context).withAlpha((0.1 * 255).round()),
-              blurRadius: 2,
-              offset: const Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(cellSize * 0.05), // 5% of cell size
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Day number
-              Flexible(
-                child: Text(
-                  '$day',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isSelected
-                            ? ThemeProperties.getSurfaceColor(context)
-                            : isToday
-                                ? ThemeProperties.getPrimaryColor(context)
-                                : ThemeProperties.getPrimaryTextColor(context),
-                        fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
-                        fontSize: cellSize * 0.25, // 25% of cell size
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-
-              // Hindu info for all days
-              Flexible(
-                child: _buildHinduInfo(context, date, isSelected, cellSize),
+          width: cellSize,
+          height: cellSize,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? ThemeProperties.getPrimaryColor(context)
+                : isToday
+                    ? ThemeProperties.getPrimaryColor(context)
+                        .withAlpha((0.2 * 255).round())
+                    : Colors.transparent,
+            borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+            border: isToday && !isSelected
+                ? Border.all(
+                    color: ThemeProperties.getPrimaryColor(context),
+                    width: ResponsiveSystem.borderWidth(context, baseWidth: 2))
+                : null,
+            boxShadow: [
+              BoxShadow(
+                color: ThemeProperties.getShadowColor(context)
+                    .withAlpha((0.1 * 255).round()),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
-        ),
+          child: Padding(
+            padding: EdgeInsets.all(cellSize * 0.05), // 5% of cell size
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Day number
+                Flexible(
+                  child: Text(
+                    '$day',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isSelected
+                              ? ThemeProperties.getSurfaceColor(context)
+                              : isToday
+                                  ? ThemeProperties.getPrimaryColor(context)
+                                  : ThemeProperties.getPrimaryTextColor(
+                                      context),
+                          fontWeight: isSelected || isToday
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                          fontSize: cellSize * 0.25, // 25% of cell size
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+
+                // Hindu info for all days
+                Flexible(
+                  child: _buildHinduInfo(context, date, isSelected, cellSize),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildHinduInfo(BuildContext context, DateTime date, bool isSelected, double cellSize) {
+  Widget _buildHinduInfo(
+      BuildContext context, DateTime date, bool isSelected, double cellSize) {
     // Get current language and astrology name service
     final languagePrefs = ref.read(languageServiceProvider);
     final currentLanguage = languagePrefs.contentLanguage;
     final astrologyNameService = ref.read(astrologyNameServiceProvider);
-    
+
     // Prefer batch data if present; fallback to old per-day future
     final daysRaw = _monthData?['days'];
     final days = _convertToListOfMaps(daysRaw);
@@ -518,7 +540,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
     if (dayInfo.isNotEmpty) {
       final chips = <Widget>[];
-      
+
       // Get raw tithi value and convert to localized name
       String tithiRaw = '';
       if (dayInfo['tithi'] is Map) {
@@ -528,12 +550,14 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         tithiRaw = dayInfo['tithiName'] as String? ?? '';
       }
       if (tithiRaw.isNotEmpty) {
-        final tithiName = astrologyNameService.getTithiNameFromString(tithiRaw, currentLanguage);
-      if (tithiName.isNotEmpty) {
-        chips.add(_buildInfoChip(context, tithiName, isSelected, false, cellSize));
+        final tithiName = astrologyNameService.getTithiNameFromString(
+            tithiRaw, currentLanguage);
+        if (tithiName.isNotEmpty) {
+          chips.add(
+              _buildInfoChip(context, tithiName, isSelected, false, cellSize));
+        }
       }
-      }
-      
+
       // Get raw nakshatra value and convert to localized name
       String nakshatraRaw = '';
       if (dayInfo['nakshatra'] is Map) {
@@ -543,9 +567,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         nakshatraRaw = dayInfo['nakshatraName'] as String? ?? '';
       }
       if (nakshatraRaw.isNotEmpty) {
-        final nakshatraName = astrologyNameService.getNakshatraNameFromString(nakshatraRaw, currentLanguage);
-      if (nakshatraName.isNotEmpty) {
-        chips.add(_buildInfoChip(context, nakshatraName, isSelected, false, cellSize));
+        final nakshatraName = astrologyNameService.getNakshatraNameFromString(
+            nakshatraRaw, currentLanguage);
+        if (nakshatraName.isNotEmpty) {
+          chips.add(_buildInfoChip(
+              context, nakshatraName, isSelected, false, cellSize));
         }
       }
       final festivals = dayInfo['festivals'] as List<dynamic>? ?? [];
@@ -553,7 +579,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         final firstFestival = festivals.first as Map<String, dynamic>?;
         final festivalName = firstFestival?['name'] as String? ?? '';
         if (festivalName.isNotEmpty) {
-          chips.add(_buildInfoChip(context, festivalName, isSelected, true, cellSize));
+          chips.add(_buildInfoChip(
+              context, festivalName, isSelected, true, cellSize));
         }
       }
       return Column(mainAxisSize: MainAxisSize.min, children: chips);
@@ -563,7 +590,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     return FutureBuilder<Map<String, dynamic>>(
       future: _getCalendarInfo(date),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null) return const SizedBox.shrink();
+        if (!snapshot.hasData || snapshot.data == null)
+          return const SizedBox.shrink();
         final data = snapshot.data!;
         final tithi = data['tithi'] ?? '';
         final nakshatra = data['nakshatra'] ?? '';
@@ -576,15 +604,19 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (tithi.isNotEmpty) _buildInfoChip(context, tithi, isSelected, false, cellSize),
+            if (tithi.isNotEmpty)
+              _buildInfoChip(context, tithi, isSelected, false, cellSize),
             if (nakshatra.isNotEmpty)
               _buildInfoChip(context, nakshatra, isSelected, false, cellSize),
             if (isAmavasya)
-              _buildSymbolChip(context, '🌑', _getTranslatedText('new_moon'), isSelected, cellSize),
+              _buildSymbolChip(context, '🌑', _getTranslatedText('new_moon'),
+                  isSelected, cellSize),
             if (isPurnima)
-              _buildSymbolChip(context, '🌕', _getTranslatedText('full_moon'), isSelected, cellSize),
+              _buildSymbolChip(context, '🌕', _getTranslatedText('full_moon'),
+                  isSelected, cellSize),
             if (festivals.isNotEmpty)
-              _buildFestivalChip(context, festivals.first['name'] ?? '', isSelected, cellSize),
+              _buildFestivalChip(
+                  context, festivals.first['name'] ?? '', isSelected, cellSize),
           ],
         );
       },
@@ -597,7 +629,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       final languagePrefs = ref.read(languageServiceProvider);
       final currentLanguage = languagePrefs.contentLanguage;
       final astrologyNameService = ref.read(astrologyNameServiceProvider);
-      
+
       // Use month data if available (from API)
       if (_monthData != null && _monthData!.containsKey('days')) {
         final daysRaw = _monthData!['days'];
@@ -617,30 +649,36 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
           // Get raw tithi and nakshatra values
           String tithiRaw = '';
           String nakshatraRaw = '';
-          
+
           // Try to get from nested structure first
           if (dayData['tithi'] is Map) {
             final tithi = dayData['tithi'] as Map<String, dynamic>;
             tithiRaw = tithi['name'] as String? ?? '';
           } else {
-            tithiRaw = dayData['tithiName'] as String? ?? dayData['tithi'] as String? ?? '';
+            tithiRaw = dayData['tithiName'] as String? ??
+                dayData['tithi'] as String? ??
+                '';
           }
-          
+
           if (dayData['nakshatra'] is Map) {
             final nakshatra = dayData['nakshatra'] as Map<String, dynamic>;
             nakshatraRaw = nakshatra['name'] as String? ?? '';
           } else {
-            nakshatraRaw = dayData['nakshatraName'] as String? ?? dayData['nakshatra'] as String? ?? '';
+            nakshatraRaw = dayData['nakshatraName'] as String? ??
+                dayData['nakshatra'] as String? ??
+                '';
           }
-          
+
           // Convert to localized names
-          final tithiName = tithiRaw.isNotEmpty 
-              ? astrologyNameService.getTithiNameFromString(tithiRaw, currentLanguage)
+          final tithiName = tithiRaw.isNotEmpty
+              ? astrologyNameService.getTithiNameFromString(
+                  tithiRaw, currentLanguage)
               : '';
           final nakshatraName = nakshatraRaw.isNotEmpty
-              ? astrologyNameService.getNakshatraNameFromString(nakshatraRaw, currentLanguage)
+              ? astrologyNameService.getNakshatraNameFromString(
+                  nakshatraRaw, currentLanguage)
               : '';
-          
+
           return {
             'tithi': tithiName,
             'nakshatra': nakshatraName,
@@ -665,10 +703,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   }
 
   // Helper methods for building info chips
-  Widget _buildInfoChip(
-      BuildContext context, String text, bool isSelected, bool isImportant, double cellSize) {
+  Widget _buildInfoChip(BuildContext context, String text, bool isSelected,
+      bool isImportant, double cellSize) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
+      margin:
+          EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
       padding: EdgeInsets.symmetric(
         horizontal: cellSize * 0.02, // 2% of cell size
         vertical: cellSize * 0.01, // 1% of cell size
@@ -677,8 +716,10 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         color: isSelected
             ? ThemeProperties.getSurfaceColor(context)
             : isImportant
-                ? ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round())
-                : ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
+                ? ThemeProperties.getPrimaryColor(context)
+                    .withAlpha((0.2 * 255).round())
+                : ThemeProperties.getPrimaryColor(context)
+                    .withAlpha((0.1 * 255).round()),
         borderRadius: BorderRadius.circular(cellSize * 0.03), // 3% of cell size
       ),
       child: Text(
@@ -697,10 +738,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
   }
 
-  Widget _buildSymbolChip(
-      BuildContext context, String symbol, String tooltip, bool isSelected, double cellSize) {
+  Widget _buildSymbolChip(BuildContext context, String symbol, String tooltip,
+      bool isSelected, double cellSize) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
+      margin:
+          EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
       padding: EdgeInsets.symmetric(
         horizontal: cellSize * 0.02, // 2% of cell size
         vertical: cellSize * 0.01, // 1% of cell size
@@ -708,7 +750,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeProperties.getSurfaceColor(context)
-            : ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round()),
+            : ThemeProperties.getPrimaryColor(context)
+                .withAlpha((0.2 * 255).round()),
         borderRadius: BorderRadius.circular(cellSize * 0.03), // 3% of cell size
       ),
       child: Text(
@@ -724,10 +767,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
   }
 
-  Widget _buildFestivalChip(
-      BuildContext context, String festivalName, bool isSelected, double cellSize) {
+  Widget _buildFestivalChip(BuildContext context, String festivalName,
+      bool isSelected, double cellSize) {
     return Container(
-      margin: EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
+      margin:
+          EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
       padding: EdgeInsets.symmetric(
         horizontal: cellSize * 0.02, // 2% of cell size
         vertical: cellSize * 0.01, // 1% of cell size
@@ -735,7 +779,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeProperties.getSurfaceColor(context)
-            : ThemeProperties.getSecondaryColor(context).withAlpha((0.2 * 255).round()),
+            : ThemeProperties.getSecondaryColor(context)
+                .withAlpha((0.2 * 255).round()),
         borderRadius: BorderRadius.circular(cellSize * 0.03), // 3% of cell size
       ),
       child: Text(
@@ -762,9 +807,10 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     final translationService = ref.read(translationServiceProvider);
 
     // Get festival abbreviation based on user's language preference
-    final festivalKey = 'festival_${festivalName.toLowerCase().replaceAll(' ', '_')}';
-    final translatedFestival =
-        translationService.translate(festivalKey, fallback: festivalName.substring(0, maxLength));
+    final festivalKey =
+        'festival_${festivalName.toLowerCase().replaceAll(' ', '_')}';
+    final translatedFestival = translationService.translate(festivalKey,
+        fallback: festivalName.substring(0, maxLength));
 
     return translatedFestival;
   }
@@ -806,56 +852,64 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   /// Also converts numeric IDs to localized names using AstrologyNameService
   Map<String, dynamic> _flattenDayData(Map<String, dynamic> rawDayData) {
     final flattened = <String, dynamic>{};
-    
+
     // Get current language and astrology name service
     final languagePrefs = ref.read(languageServiceProvider);
     final currentLanguage = languagePrefs.contentLanguage;
     final astrologyNameService = ref.read(astrologyNameServiceProvider);
-    
+
     // Copy date as-is
     flattened['date'] = rawDayData['date'];
-    
+
     // Extract tithi name and convert to localized name
     final tithiValue = rawDayData['tithi'];
     if (tithiValue is Map) {
-      final tithi = Map<String, dynamic>.from(tithiValue.cast<String, dynamic>());
+      final tithi =
+          Map<String, dynamic>.from(tithiValue.cast<String, dynamic>());
       final tithiNameRaw = tithi['name'] as String? ?? '';
       // Convert "Tithi 11" or "11" to localized name
-      flattened['tithiName'] = astrologyNameService.getTithiNameFromString(tithiNameRaw, currentLanguage);
+      flattened['tithiName'] = astrologyNameService.getTithiNameFromString(
+          tithiNameRaw, currentLanguage);
     }
-    
+
     // Extract nakshatra name and convert to localized name
     final nakshatraValue = rawDayData['nakshatra'];
     if (nakshatraValue is Map) {
-      final nakshatra = Map<String, dynamic>.from(nakshatraValue.cast<String, dynamic>());
+      final nakshatra =
+          Map<String, dynamic>.from(nakshatraValue.cast<String, dynamic>());
       final nakshatraNameRaw = nakshatra['name'] as String? ?? '';
       // Convert "Nakshatra 11" or "11" to localized name
-      flattened['nakshatraName'] = astrologyNameService.getNakshatraNameFromString(nakshatraNameRaw, currentLanguage);
+      flattened['nakshatraName'] = astrologyNameService
+          .getNakshatraNameFromString(nakshatraNameRaw, currentLanguage);
     }
-    
+
     // Extract yoga name and convert to localized name
     final yogaValue = rawDayData['yoga'];
     if (yogaValue is Map) {
       final yoga = Map<String, dynamic>.from(yogaValue.cast<String, dynamic>());
       final yogaNameRaw = yoga['name'] as String? ?? '';
       // Convert "Yoga 11" or "11" to localized name
-      flattened['yogaName'] = astrologyNameService.getYogaNameFromString(yogaNameRaw, currentLanguage);
+      flattened['yogaName'] = astrologyNameService.getYogaNameFromString(
+          yogaNameRaw, currentLanguage);
     }
-    
+
     // Extract karana name and convert to localized name
     final karanaValue = rawDayData['karana'];
     if (karanaValue is Map) {
-      final karana = Map<String, dynamic>.from(karanaValue.cast<String, dynamic>());
+      final karana =
+          Map<String, dynamic>.from(karanaValue.cast<String, dynamic>());
       final karanaNameRaw = karana['name'] as String? ?? '';
       // Convert "Karana 11" or "11" to localized name
-      flattened['karanaName'] = astrologyNameService.getKaranaNameFromString(karanaNameRaw, currentLanguage);
+      flattened['karanaName'] = astrologyNameService.getKaranaNameFromString(
+          karanaNameRaw, currentLanguage);
     }
-    
+
     // Extract paksha (if available, otherwise derive from tithi)
     if (rawDayData.containsKey('paksha')) {
       final pakshaValue = rawDayData['paksha'];
       if (pakshaValue is int) {
-        flattened['pakshaName'] = astrologyNameService.getPakshaName(pakshaValue, currentLanguage);
+        flattened['pakshaName'] =
+            astrologyNameService.getPakshaName(pakshaValue, currentLanguage);
       } else {
         flattened['pakshaName'] = pakshaValue.toString();
       }
@@ -867,40 +921,46 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         if (tithiId != null) {
           // Normalize to 1-30 range
           final normalizedId = ((tithiId - 1) % 30) + 1;
-          final pakshaId = normalizedId <= 15 ? 1 : 2; // 1 = Shukla, 2 = Krishna
-          flattened['pakshaName'] = astrologyNameService.getPakshaName(pakshaId, currentLanguage);
+          final pakshaId =
+              normalizedId <= 15 ? 1 : 2; // 1 = Shukla, 2 = Krishna
+          flattened['pakshaName'] =
+              astrologyNameService.getPakshaName(pakshaId, currentLanguage);
         }
       }
     }
-    
+
     // Extract sunrise time
     final sunriseValue = rawDayData['sunrise'];
     if (sunriseValue is Map) {
-      final sunrise = Map<String, dynamic>.from(sunriseValue.cast<String, dynamic>());
+      final sunrise =
+          Map<String, dynamic>.from(sunriseValue.cast<String, dynamic>());
       flattened['sunriseTime'] = sunrise['time'] as String? ?? '';
     }
-    
+
     // Extract sunset time
     final sunsetValue = rawDayData['sunset'];
     if (sunsetValue is Map) {
-      final sunset = Map<String, dynamic>.from(sunsetValue.cast<String, dynamic>());
+      final sunset =
+          Map<String, dynamic>.from(sunsetValue.cast<String, dynamic>());
       flattened['sunsetTime'] = sunset['time'] as String? ?? '';
     }
-    
+
     // Extract moonrise time
     final moonriseValue = rawDayData['moonrise'];
     if (moonriseValue is Map) {
-      final moonrise = Map<String, dynamic>.from(moonriseValue.cast<String, dynamic>());
+      final moonrise =
+          Map<String, dynamic>.from(moonriseValue.cast<String, dynamic>());
       flattened['moonriseTime'] = moonrise['time'] as String? ?? '';
     }
-    
+
     // Extract moonset time
     final moonsetValue = rawDayData['moonset'];
     if (moonsetValue is Map) {
-      final moonset = Map<String, dynamic>.from(moonsetValue.cast<String, dynamic>());
+      final moonset =
+          Map<String, dynamic>.from(moonsetValue.cast<String, dynamic>());
       flattened['moonsetTime'] = moonset['time'] as String? ?? '';
     }
-    
+
     // Extract festivals (already a list, but ensure each has 'name' field)
     if (rawDayData['festivals'] != null) {
       final festivalsRaw = rawDayData['festivals'];
@@ -914,40 +974,47 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     } else {
       flattened['festivals'] = [];
     }
-    
+
     // Extract panchangam data (rahuKaal, yamaganda, gulikaKaal)
     final panchangamValue = rawDayData['panchangam'];
     if (panchangamValue is Map) {
-      final panchangam = Map<String, dynamic>.from(panchangamValue.cast<String, dynamic>());
-      
+      final panchangam =
+          Map<String, dynamic>.from(panchangamValue.cast<String, dynamic>());
+
       // Extract rahuKaal
       final rahuKaalValue = panchangam['rahuKaal'];
       if (rahuKaalValue is Map) {
-        final rahuKaal = Map<String, dynamic>.from(rahuKaalValue.cast<String, dynamic>());
+        final rahuKaal =
+            Map<String, dynamic>.from(rahuKaalValue.cast<String, dynamic>());
         final start = rahuKaal['start'] as String? ?? '';
         final end = rahuKaal['end'] as String? ?? '';
-        flattened['rahuKalam'] = start.isNotEmpty && end.isNotEmpty ? '$start - $end' : '';
+        flattened['rahuKalam'] =
+            start.isNotEmpty && end.isNotEmpty ? '$start - $end' : '';
       }
-      
+
       // Extract yamaganda
       final yamagandaValue = panchangam['yamaganda'];
       if (yamagandaValue is Map) {
-        final yamaganda = Map<String, dynamic>.from(yamagandaValue.cast<String, dynamic>());
+        final yamaganda =
+            Map<String, dynamic>.from(yamagandaValue.cast<String, dynamic>());
         final start = yamaganda['start'] as String? ?? '';
         final end = yamaganda['end'] as String? ?? '';
-        flattened['yamaGanda'] = start.isNotEmpty && end.isNotEmpty ? '$start - $end' : '';
+        flattened['yamaGanda'] =
+            start.isNotEmpty && end.isNotEmpty ? '$start - $end' : '';
       }
-      
+
       // Extract gulikaKaal
       final gulikaKaalValue = panchangam['gulikaKaal'];
       if (gulikaKaalValue is Map) {
-        final gulikaKaal = Map<String, dynamic>.from(gulikaKaalValue.cast<String, dynamic>());
+        final gulikaKaal =
+            Map<String, dynamic>.from(gulikaKaalValue.cast<String, dynamic>());
         final start = gulikaKaal['start'] as String? ?? '';
         final end = gulikaKaal['end'] as String? ?? '';
-        flattened['gulikaKalam'] = start.isNotEmpty && end.isNotEmpty ? '$start - $end' : '';
+        flattened['gulikaKalam'] =
+            start.isNotEmpty && end.isNotEmpty ? '$start - $end' : '';
       }
     }
-    
+
     return flattened;
   }
 }

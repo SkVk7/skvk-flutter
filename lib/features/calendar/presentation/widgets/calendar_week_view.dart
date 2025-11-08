@@ -5,7 +5,6 @@ library;
 
 import '../../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_constants.dart';
 
 class CalendarWeekView extends StatelessWidget {
   final DateTime selectedDate;
@@ -27,7 +26,8 @@ class CalendarWeekView extends StatelessWidget {
 
     // Calculate the start of the week (Monday)
     final startOfWeek = _getStartOfWeek(selectedDate);
-    final weekDays = List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
+    final weekDays =
+        List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
 
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 16),
@@ -53,7 +53,8 @@ class CalendarWeekView extends StatelessWidget {
                     day.month == DateTime.now().month &&
                     day.year == DateTime.now().year;
 
-                return _buildWeekDayCard(context, day, dayData, isSelected, isToday);
+                return _buildWeekDayCard(
+                    context, day, dayData, isSelected, isToday);
               },
             ),
           ),
@@ -67,7 +68,7 @@ class CalendarWeekView extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: ThemeProperties.getPrimaryGradient(context),
-        borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
       ),
       child: Row(
         children: weekDays.map((day) {
@@ -78,16 +79,16 @@ class CalendarWeekView extends StatelessWidget {
                   _getDayName(day.weekday),
                   style: TextStyle(
                     color: ThemeProperties.getPrimaryTextColor(context),
-                    fontSize: 12,
+                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
+                ResponsiveSystem.sizedBox(context, height: 4),
                 Text(
                   '${day.day}',
                   style: TextStyle(
                     color: ThemeProperties.getPrimaryTextColor(context),
-                    fontSize: 18,
+                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -109,27 +110,32 @@ class CalendarWeekView extends StatelessWidget {
     return GestureDetector(
       onTap: () => onDateSelected(day),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(16),
+        margin: ResponsiveSystem.only(context, bottom: 8),
+        padding: ResponsiveSystem.all(context, baseSpacing: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round())
+              ? ThemeProperties.getPrimaryColor(context)
+                  .withAlpha((0.1 * 255).round())
               : ThemeProperties.getSurfaceColor(context),
-          borderRadius: BorderRadius.circular(AppConstants.defaultBorderRadius),
+          borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           border: Border.all(
             color: isSelected
                 ? ThemeProperties.getPrimaryColor(context)
                 : isToday
-                    ? ThemeProperties.getPrimaryColor(context).withAlpha((0.5 * 255).round())
-                    : ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
-            width: isSelected ? 2 : 1,
+                    ? ThemeProperties.getPrimaryColor(context)
+                        .withAlpha((0.5 * 255).round())
+                    : ThemeProperties.getPrimaryColor(context)
+                        .withAlpha((0.1 * 255).round()),
+            width: isSelected
+                ? ResponsiveSystem.borderWidth(context, baseWidth: 2)
+                : ResponsiveSystem.borderWidth(context, baseWidth: 1),
           ),
         ),
         child: Row(
           children: [
             // Date Column
             SizedBox(
-              width: 60,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 60),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -152,7 +158,7 @@ class CalendarWeekView extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(width: 16),
+            ResponsiveSystem.sizedBox(context, width: 16),
 
             // Hindu Information
             Expanded(
@@ -161,11 +167,14 @@ class CalendarWeekView extends StatelessWidget {
                 children: [
                   if (dayData != null) ...[
                     _buildInfoRow(context, 'Tithi', '${dayData['tithi']}'),
-                    _buildInfoRow(context, 'Nakshatra', '${dayData['nakshatra']}'),
+                    _buildInfoRow(
+                        context, 'Nakshatra', '${dayData['nakshatra']}'),
                     if (showFestivals && dayData['festival'] != null)
-                      _buildInfoRow(context, 'Festival', '${dayData['festival']}'),
+                      _buildInfoRow(
+                          context, 'Festival', '${dayData['festival']}'),
                     if (showAuspiciousTimes && dayData['auspicious'] != null)
-                      _buildInfoRow(context, 'Auspicious', '${dayData['auspicious']}'),
+                      _buildInfoRow(
+                          context, 'Auspicious', '${dayData['auspicious']}'),
                   ] else ...[
                     Text(
                       'No data available',
@@ -187,7 +196,8 @@ class CalendarWeekView extends StatelessWidget {
                 color: isToday
                     ? ThemeProperties.getPrimaryColor(context)
                     : isSelected
-                        ? ThemeProperties.getPrimaryColor(context).withAlpha((0.7 * 255).round())
+                        ? ThemeProperties.getPrimaryColor(context)
+                            .withAlpha((0.7 * 255).round())
                         : Colors.transparent,
                 shape: BoxShape.circle,
                 border: isToday || isSelected
@@ -207,16 +217,16 @@ class CalendarWeekView extends StatelessWidget {
 
   Widget _buildInfoRow(BuildContext context, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: ResponsiveSystem.symmetric(context, vertical: 2),
       child: Row(
         children: [
           SizedBox(
-            width: 80,
+            width: ResponsiveSystem.spacing(context, baseSpacing: 80),
             child: Text(
               label,
               style: TextStyle(
                 color: ThemeProperties.getSecondaryTextColor(context),
-                fontSize: 12,
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -226,7 +236,7 @@ class CalendarWeekView extends StatelessWidget {
               value,
               style: TextStyle(
                 color: ThemeProperties.getPrimaryTextColor(context),
-                fontSize: 12,
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
               ),
             ),
           ),

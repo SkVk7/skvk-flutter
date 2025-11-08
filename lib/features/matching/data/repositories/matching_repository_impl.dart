@@ -6,12 +6,14 @@ library;
 import '../../domain/repositories/matching_repository.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
-import '../../../../core/services/astrology_service_bridge.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 /// Matching repository implementation
 class MatchingRepositoryImpl implements MatchingRepository {
   @override
-  Future<Result<MatchingResult>> performMatching(PartnerData person1Data, PartnerData person2Data,
+  Future<Result<MatchingResult>> performMatching(
+      PartnerData person1Data, PartnerData person2Data,
       {String? ayanamsha, String? houseSystem}) async {
     print('🔍 DEBUG: MatchingRepositoryImpl.performMatching called');
     try {
@@ -23,7 +25,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       // Use provided ayanamsha or default to Lahiri
       final selectedAyanamsha = ayanamsha ?? 'lahiri';
-      
+
       // Use provided house system or default to Placidus
       final selectedHouseSystem = houseSystem ?? 'placidus';
 
@@ -64,7 +66,8 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       // Check if API returned an error response
       if (result.containsKey('error') || result.containsKey('message')) {
-        final errorMessage = result['error'] ?? result['message'] ?? 'Unknown API error';
+        final errorMessage =
+            result['error'] ?? result['message'] ?? 'Unknown API error';
         print('🔍 DEBUG: API returned error: $errorMessage');
         return ResultHelper.failure(
           UnexpectedFailure(message: 'API error: $errorMessage'),
@@ -73,22 +76,33 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       // Handle both camelCase and snake_case for backward compatibility
       // Try camelCase first, then fall back to snake_case
-      final kootaScoresKey = result.containsKey('kootaScores') ? 'kootaScores' : 
-                              (result.containsKey('koota_scores') ? 'koota_scores' : null);
-      final percentageKey = result.containsKey('percentage') ? 'percentage' : null; // percentage is same in both
-      final totalScoreKey = result.containsKey('totalScore') ? 'totalScore' : 
-                           (result.containsKey('total_score') ? 'total_score' : null);
+      final kootaScoresKey = result.containsKey('kootaScores')
+          ? 'kootaScores'
+          : (result.containsKey('koota_scores') ? 'koota_scores' : null);
+      final percentageKey = result.containsKey('percentage')
+          ? 'percentage'
+          : null; // percentage is same in both
+      final totalScoreKey = result.containsKey('totalScore')
+          ? 'totalScore'
+          : (result.containsKey('total_score') ? 'total_score' : null);
 
       // Validate API response has required fields (check both naming conventions)
-      if (kootaScoresKey == null || percentageKey == null || totalScoreKey == null) {
+      if (kootaScoresKey == null ||
+          percentageKey == null ||
+          totalScoreKey == null) {
         print('🔍 DEBUG: API response missing required fields');
-        print('🔍 DEBUG: Has kootaScores: ${result.containsKey('kootaScores')}');
-        print('🔍 DEBUG: Has koota_scores: ${result.containsKey('koota_scores')}');
+        print(
+            '🔍 DEBUG: Has kootaScores: ${result.containsKey('kootaScores')}');
+        print(
+            '🔍 DEBUG: Has koota_scores: ${result.containsKey('koota_scores')}');
         print('🔍 DEBUG: Has percentage: ${result.containsKey('percentage')}');
         print('🔍 DEBUG: Has totalScore: ${result.containsKey('totalScore')}');
-        print('🔍 DEBUG: Has total_score: ${result.containsKey('total_score')}');
+        print(
+            '🔍 DEBUG: Has total_score: ${result.containsKey('total_score')}');
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid API response: missing required fields. Response keys: ${result.keys.toList()}'),
+          ValidationFailure(
+              message:
+                  'Invalid API response: missing required fields. Response keys: ${result.keys.toList()}'),
         );
       }
 
@@ -98,7 +112,8 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (kootaScoresMap == null || kootaScoresMap.isEmpty) {
         print('🔍 DEBUG: API response has empty kootaScores');
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid API response: kootaScores is empty'),
+          ValidationFailure(
+              message: 'Invalid API response: kootaScores is empty'),
         );
       }
 
@@ -106,7 +121,8 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (percentage == null) {
         print('🔍 DEBUG: API response missing percentage');
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid API response: missing percentage'),
+          ValidationFailure(
+              message: 'Invalid API response: missing percentage'),
         );
       }
 
@@ -114,12 +130,14 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (totalScore == null) {
         print('🔍 DEBUG: API response missing totalScore');
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid API response: missing totalScore'),
+          ValidationFailure(
+              message: 'Invalid API response: missing totalScore'),
         );
       }
 
       final compatibility = result['compatibility'] as String? ?? 'Unknown';
-      final recommendation = result['recommendation'] as String? ?? 'No recommendation available';
+      final recommendation =
+          result['recommendation'] as String? ?? 'No recommendation available';
 
       // Extract individual koota scores from nested structure (validate each score)
       final kootaDetails = <String, String>{};
@@ -142,30 +160,39 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (kootaDetails.isEmpty) {
         print('🔍 DEBUG: No valid koota scores found in API response');
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid API response: no valid koota scores found'),
+          ValidationFailure(
+              message: 'Invalid API response: no valid koota scores found'),
         );
       }
 
       // Extract birth data for person1 (groom) and person2 (bride)
       // Handle both camelCase and snake_case
-      final groomBirthDataKey = result.containsKey('groomBirthData') ? 'groomBirthData' : 
-                                (result.containsKey('groom_birth_data') ? 'groom_birth_data' : null);
-      final brideBirthDataKey = result.containsKey('brideBirthData') ? 'brideBirthData' : 
-                               (result.containsKey('bride_birth_data') ? 'bride_birth_data' : null);
+      final groomBirthDataKey = result.containsKey('groomBirthData')
+          ? 'groomBirthData'
+          : (result.containsKey('groom_birth_data')
+              ? 'groom_birth_data'
+              : null);
+      final brideBirthDataKey = result.containsKey('brideBirthData')
+          ? 'brideBirthData'
+          : (result.containsKey('bride_birth_data')
+              ? 'bride_birth_data'
+              : null);
 
       // Extract nakshatra, rashi, and pada from birth data
       if (groomBirthDataKey != null) {
-        final groomBirthData = result[groomBirthDataKey] as Map<String, dynamic>?;
+        final groomBirthData =
+            result[groomBirthDataKey] as Map<String, dynamic>?;
         if (groomBirthData != null) {
           // Extract nakshatra (handle both camelCase and snake_case)
-          final groomNakshatra = groomBirthData['nakshatra'] as Map<String, dynamic>?;
+          final groomNakshatra =
+              groomBirthData['nakshatra'] as Map<String, dynamic>?;
           if (groomNakshatra != null) {
             final nakshatraName = groomNakshatra['name'] as String?;
             if (nakshatraName != null) {
               kootaDetails['person1Nakshatram'] = nakshatraName;
             }
           }
-          
+
           // Extract rashi (handle both camelCase and snake_case)
           final groomRashi = groomBirthData['rashi'] as Map<String, dynamic>?;
           if (groomRashi != null) {
@@ -174,7 +201,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
               kootaDetails['person1Raasi'] = rashiName;
             }
           }
-          
+
           // Extract pada (handle both camelCase and snake_case)
           final groomPada = groomBirthData['pada'] as Map<String, dynamic>?;
           if (groomPada != null) {
@@ -193,17 +220,19 @@ class MatchingRepositoryImpl implements MatchingRepository {
       }
 
       if (brideBirthDataKey != null) {
-        final brideBirthData = result[brideBirthDataKey] as Map<String, dynamic>?;
+        final brideBirthData =
+            result[brideBirthDataKey] as Map<String, dynamic>?;
         if (brideBirthData != null) {
           // Extract nakshatra (handle both camelCase and snake_case)
-          final brideNakshatra = brideBirthData['nakshatra'] as Map<String, dynamic>?;
+          final brideNakshatra =
+              brideBirthData['nakshatra'] as Map<String, dynamic>?;
           if (brideNakshatra != null) {
             final nakshatraName = brideNakshatra['name'] as String?;
             if (nakshatraName != null) {
               kootaDetails['person2Nakshatram'] = nakshatraName;
             }
           }
-          
+
           // Extract rashi (handle both camelCase and snake_case)
           final brideRashi = brideBirthData['rashi'] as Map<String, dynamic>?;
           if (brideRashi != null) {
@@ -212,7 +241,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
               kootaDetails['person2Raasi'] = rashiName;
             }
           }
-          
+
           // Extract pada (handle both camelCase and snake_case)
           final bridePada = brideBirthData['pada'] as Map<String, dynamic>?;
           if (bridePada != null) {
@@ -232,7 +261,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       // Map koota names to display names (only include valid scores, no defaults)
       final displayKootaDetails = <String, String>{};
-      
+
       // Map camelCase API keys to display names
       if (kootaDetails.containsKey('varna')) {
         displayKootaDetails['Varna'] = kootaDetails['varna']!;
@@ -258,10 +287,11 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (kootaDetails.containsKey('nadi')) {
         displayKootaDetails['Nadi'] = kootaDetails['nadi']!;
       }
-      
+
       // Add birth data fields
       if (kootaDetails.containsKey('person1Nakshatram')) {
-        displayKootaDetails['person1Nakshatram'] = kootaDetails['person1Nakshatram']!;
+        displayKootaDetails['person1Nakshatram'] =
+            kootaDetails['person1Nakshatram']!;
       }
       if (kootaDetails.containsKey('person1Raasi')) {
         displayKootaDetails['person1Raasi'] = kootaDetails['person1Raasi']!;
@@ -270,7 +300,8 @@ class MatchingRepositoryImpl implements MatchingRepository {
         displayKootaDetails['person1Pada'] = kootaDetails['person1Pada']!;
       }
       if (kootaDetails.containsKey('person2Nakshatram')) {
-        displayKootaDetails['person2Nakshatram'] = kootaDetails['person2Nakshatram']!;
+        displayKootaDetails['person2Nakshatram'] =
+            kootaDetails['person2Nakshatram']!;
       }
       if (kootaDetails.containsKey('person2Raasi')) {
         displayKootaDetails['person2Raasi'] = kootaDetails['person2Raasi']!;
@@ -278,7 +309,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (kootaDetails.containsKey('person2Pada')) {
         displayKootaDetails['person2Pada'] = kootaDetails['person2Pada']!;
       }
-      
+
       // Add total points
       displayKootaDetails['totalPoints'] = totalScore.toString();
 
@@ -288,15 +319,17 @@ class MatchingRepositoryImpl implements MatchingRepository {
         level: compatibility,
         recommendation: recommendation,
       );
-      print('🔍 DEBUG: Matching result created successfully with ${displayKootaDetails.length} koota scores');
+      print(
+          '🔍 DEBUG: Matching result created successfully with ${displayKootaDetails.length} koota scores');
 
       return ResultHelper.success(matchingResult);
     } catch (e) {
       print('🔍 DEBUG: Exception caught in repository: $e');
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       return ResultHelper.failure(
-        UnexpectedFailure(message: 'Matching calculation failed: $e'),
+        UnexpectedFailure(message: userFriendlyMessage),
       );
     }
   }
-
 }

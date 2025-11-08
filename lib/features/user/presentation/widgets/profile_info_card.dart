@@ -31,13 +31,14 @@ class ProfileInfoCard extends ConsumerWidget {
       elevation: ResponsiveSystem.elevation(context, baseElevation: 4),
       color: ThemeProperties.getSurfaceColor(context),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12)),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12)),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         child: Container(
-          padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
+          padding: EdgeInsets.all(
+              ResponsiveSystem.spacing(context, baseSpacing: 16)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -45,12 +46,13 @@ class ProfileInfoCard extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                    padding: EdgeInsets.all(
+                        ResponsiveSystem.spacing(context, baseSpacing: 8)),
                     decoration: BoxDecoration(
-                      color:
-                          ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
-                      borderRadius: BorderRadius.circular(
-                          ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+                      color: ThemeProperties.getPrimaryColor(context)
+                          .withAlpha((0.1 * 255).round()),
+                      borderRadius: ResponsiveSystem.circular(context,
+                          baseRadius: 8),
                     ),
                     child: Icon(
                       icon,
@@ -58,12 +60,15 @@ class ProfileInfoCard extends ConsumerWidget {
                       size: ResponsiveSystem.iconSize(context, baseSize: 20),
                     ),
                   ),
-                  SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                  SizedBox(
+                      width:
+                          ResponsiveSystem.spacing(context, baseSpacing: 12)),
                   Expanded(
                     child: Text(
                       title,
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 19),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 19),
                         fontWeight: FontWeight.bold,
                         color: ThemeProperties.getPrimaryTextColor(context),
                       ),
@@ -78,7 +83,8 @@ class ProfileInfoCard extends ConsumerWidget {
                 ],
               ),
 
-              SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+              SizedBox(
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
 
               // Content
               ...children,

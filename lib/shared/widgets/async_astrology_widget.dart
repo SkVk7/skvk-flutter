@@ -5,9 +5,11 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../core/models/user_model.dart';
+
+import '../../../../core/models/user/user_model.dart';
 import '../../core/design_system/design_system.dart';
-import '../../core/services/astrology_service_bridge.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 /// Async astrology widget with progress indicators
 class AsyncAstrologyWidget extends StatefulWidget {
@@ -87,9 +89,12 @@ class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
       return birthData;
     } catch (e) {
       if (mounted) {
+        // Convert technical error to user-friendly message
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(e);
         setState(() {
           _isLoading = false;
-          _error = e.toString();
+          _error = userFriendlyMessage;
         });
       }
       rethrow;
@@ -108,7 +113,8 @@ class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
 
         // Error state
         if (snapshot.hasError || _error != null) {
-          return widget.errorBuilder?.call(_error ?? snapshot.error.toString()) ??
+          return widget.errorBuilder
+                  ?.call(_error ?? snapshot.error.toString()) ??
               _buildDefaultError(_error ?? snapshot.error.toString());
         }
 
@@ -135,7 +141,8 @@ class _AsyncAstrologyWidgetState extends State<AsyncAstrologyWidget> {
           ],
           Text(
             'Calculating astrology data...',
-            style: TextStyle(fontSize: ResponsiveSystem.fontSize(context, baseSize: 16)),
+            style: TextStyle(
+                fontSize: ResponsiveSystem.fontSize(context, baseSize: 16)),
             textAlign: TextAlign.center,
           ),
           if (widget.showProgressIndicator) ...[

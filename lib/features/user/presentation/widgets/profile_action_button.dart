@@ -6,7 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
 
 class ProfileActionButton extends StatelessWidget {
   final String title;

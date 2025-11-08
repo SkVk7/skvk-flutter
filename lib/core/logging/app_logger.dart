@@ -111,7 +111,8 @@ class CompressedLogFile {
     };
   }
 
-  double get compressionRatio => originalSize > 0 ? compressedSize / originalSize : 0.0;
+  double get compressionRatio =>
+      originalSize > 0 ? compressedSize / originalSize : 0.0;
   int get spaceSaved => originalSize - compressedSize;
 }
 
@@ -162,7 +163,8 @@ class AppLogger {
       _startCompressionTimer();
 
       // Log initialization
-      await _log(LogLevel.info, 'AppLogger initialized successfully', source: 'AppLogger');
+      await _log(LogLevel.info, 'AppLogger initialized successfully',
+          source: 'AppLogger');
     } catch (e) {
       // Fallback to console if logging system fails
       // Using print as last resort since debugPrint is not available
@@ -179,7 +181,8 @@ class AppLogger {
     StackTrace? stackTrace,
   }) async {
     try {
-      await _log(level, message, source: source, metadata: metadata, stackTrace: stackTrace);
+      await _log(level, message,
+          source: source, metadata: metadata, stackTrace: stackTrace);
     } catch (e) {
       // Fallback to console if logging fails
       // Using print as last resort since debugPrint is not available
@@ -214,7 +217,8 @@ class AppLogger {
     }
 
     // Flush buffer if it's getting large
-    if (_currentLogBuffer.length >= 50 || _currentLogFileSize >= _maxLogFileSize) {
+    if (_currentLogBuffer.length >= 50 ||
+        _currentLogFileSize >= _maxLogFileSize) {
       await _flushLogBuffer();
     }
   }
@@ -224,18 +228,20 @@ class AppLogger {
     if (_currentLogBuffer.isEmpty) return;
 
     try {
-      final logFile =
-          File('${_logDirectory.path}/log_${_currentLogFileIndex.toString().padLeft(3, '0')}.json');
+      final logFile = File(
+          '${_logDirectory.path}/log_${_currentLogFileIndex.toString().padLeft(3, '0')}.json');
 
       // Convert entries to JSON
-      final jsonEntries = _currentLogBuffer.map((entry) => entry.toJson()).toList();
+      final jsonEntries =
+          _currentLogBuffer.map((entry) => entry.toJson()).toList();
       final jsonString = json.encode(jsonEntries);
 
       // Write to file
       await logFile.writeAsString(jsonString);
 
       // Update index
-      await _updateLogIndex(logFile.path, _currentLogBuffer.length, jsonString.length);
+      await _updateLogIndex(
+          logFile.path, _currentLogBuffer.length, jsonString.length);
 
       // Reset buffer
       _currentLogBuffer.clear();
@@ -251,7 +257,8 @@ class AppLogger {
   }
 
   /// Update log index
-  Future<void> _updateLogIndex(String filePath, int entryCount, int fileSize) async {
+  Future<void> _updateLogIndex(
+      String filePath, int entryCount, int fileSize) async {
     try {
       final index = await _getLogIndex();
       index[filePath] = {
@@ -293,8 +300,9 @@ class AppLogger {
   Future<void> _checkCompressionNeeded() async {
     try {
       final index = await _getLogIndex();
-      final uncompressedFiles =
-          index.entries.where((entry) => !(entry.value['compressed'] ?? false)).length;
+      final uncompressedFiles = index.entries
+          .where((entry) => !(entry.value['compressed'] ?? false))
+          .length;
 
       if (uncompressedFiles >= _compressionThreshold) {
         await _compressOldLogs();
@@ -326,8 +334,10 @@ class AppLogger {
               .toList();
 
           // Create compressed file
-          final compressedFileName = 'compressed_${DateTime.now().millisecondsSinceEpoch}.json';
-          final compressedFile = File('${_compressedDirectory.path}/$compressedFileName');
+          final compressedFileName =
+              'compressed_${DateTime.now().millisecondsSinceEpoch}.json';
+          final compressedFile =
+              File('${_compressedDirectory.path}/$compressedFileName');
 
           // Simple compression: remove redundant data and format efficiently
           final compressedEntries = entries
@@ -336,7 +346,8 @@ class AppLogger {
                     'l': entry.level.level,
                     'm': entry.message,
                     if (entry.source != null) 's': entry.source,
-                    if (entry.metadata != null && entry.metadata!.isNotEmpty) 'd': entry.metadata,
+                    if (entry.metadata != null && entry.metadata!.isNotEmpty)
+                      'd': entry.metadata,
                     if (entry.stackTrace != null) 'st': entry.stackTrace,
                   })
               .toList();
@@ -388,7 +399,8 @@ class AppLogger {
   /// Clean up old log files
   Future<void> _cleanupOldLogs() async {
     try {
-      final cutoffDate = DateTime.now().subtract(Duration(days: _retentionDays));
+      final cutoffDate =
+          DateTime.now().subtract(Duration(days: _retentionDays));
       final index = await _getLogIndex();
       final filesToDelete = <String>[];
 
@@ -399,7 +411,8 @@ class AppLogger {
 
           // Also delete compressed file if it exists
           if (entry.value['compressedFile'] != null) {
-            final compressedFile = File(entry.value['compressedFile'] as String);
+            final compressedFile =
+                File(entry.value['compressedFile'] as String);
             if (await compressedFile.exists()) {
               await compressedFile.delete();
             }
@@ -418,7 +431,8 @@ class AppLogger {
 
       if (filesToDelete.isNotEmpty) {
         await _indexFile.writeAsString(json.encode(index));
-        await log(LogLevel.info, 'Cleaned up ${filesToDelete.length} old log files',
+        await log(
+            LogLevel.info, 'Cleaned up ${filesToDelete.length} old log files',
             source: 'AppLogger');
       }
     } catch (e) {
@@ -457,7 +471,8 @@ class AppLogger {
         'compressedSize': compressedSize,
         'originalSize': originalSize,
         'spaceSaved': originalSize - compressedSize,
-        'compressionRatio': originalSize > 0 ? compressedSize / originalSize : 0.0,
+        'compressionRatio':
+            originalSize > 0 ? compressedSize / originalSize : 0.0,
         'currentBufferSize': _currentLogBuffer.length,
         'currentFileSize': _currentLogFileSize,
       };
@@ -467,7 +482,8 @@ class AppLogger {
   }
 
   /// Get recent log entries for debugging
-  Future<List<LogEntry>> getRecentLogs({int count = 100, LogLevel? minLevel}) async {
+  Future<List<LogEntry>> getRecentLogs(
+      {int count = 100, LogLevel? minLevel}) async {
     try {
       final allEntries = <LogEntry>[];
       final index = await _getLogIndex();
@@ -493,7 +509,8 @@ class AppLogger {
 
             for (final compressedEntry in compressedEntries) {
               final entry = LogEntry(
-                timestamp: DateTime.fromMillisecondsSinceEpoch(compressedEntry['t'] as int),
+                timestamp: DateTime.fromMillisecondsSinceEpoch(
+                    compressedEntry['t'] as int),
                 level: LogLevel.values[compressedEntry['l'] as int],
                 message: compressedEntry['m'] as String,
                 source: compressedEntry['s'] as String?,
@@ -513,7 +530,8 @@ class AppLogger {
             final content = await file.readAsString();
             final entries = (json.decode(content) as List)
                 .map((json) => LogEntry.fromJson(json as Map<String, dynamic>))
-                .where((entry) => minLevel == null || entry.level.level >= minLevel.level)
+                .where((entry) =>
+                    minLevel == null || entry.level.level >= minLevel.level)
                 .toList();
             allEntries.addAll(entries);
           }
@@ -542,21 +560,32 @@ class AppLogger {
   }
 
   // Convenience methods for different log levels
-  Future<void> debug(String message, {String? source, Map<String, dynamic>? metadata}) =>
+  Future<void> debug(String message,
+          {String? source, Map<String, dynamic>? metadata}) =>
       log(LogLevel.debug, message, source: source, metadata: metadata);
 
-  Future<void> info(String message, {String? source, Map<String, dynamic>? metadata}) =>
+  Future<void> info(String message,
+          {String? source, Map<String, dynamic>? metadata}) =>
       log(LogLevel.info, message, source: source, metadata: metadata);
 
   Future<void> warning(String message,
-          {String? source, Map<String, dynamic>? metadata, StackTrace? stackTrace}) =>
-      log(LogLevel.warning, message, source: source, metadata: metadata, stackTrace: stackTrace);
+          {String? source,
+          Map<String, dynamic>? metadata,
+          StackTrace? stackTrace}) =>
+      log(LogLevel.warning, message,
+          source: source, metadata: metadata, stackTrace: stackTrace);
 
   Future<void> error(String message,
-          {String? source, Map<String, dynamic>? metadata, StackTrace? stackTrace}) =>
-      log(LogLevel.error, message, source: source, metadata: metadata, stackTrace: stackTrace);
+          {String? source,
+          Map<String, dynamic>? metadata,
+          StackTrace? stackTrace}) =>
+      log(LogLevel.error, message,
+          source: source, metadata: metadata, stackTrace: stackTrace);
 
   Future<void> critical(String message,
-          {String? source, Map<String, dynamic>? metadata, StackTrace? stackTrace}) =>
-      log(LogLevel.critical, message, source: source, metadata: metadata, stackTrace: stackTrace);
+          {String? source,
+          Map<String, dynamic>? metadata,
+          StackTrace? stackTrace}) =>
+      log(LogLevel.critical, message,
+          source: source, metadata: metadata, stackTrace: stackTrace);
 }

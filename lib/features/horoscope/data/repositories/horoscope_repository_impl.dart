@@ -7,7 +7,8 @@ import '../../domain/repositories/horoscope_repository.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/interfaces/user_repository_interface.dart';
-import '../../../../core/services/astrology_service_bridge.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 /// Horoscope repository implementation
 class HoroscopeRepositoryImpl implements HoroscopeRepository {
@@ -24,7 +25,8 @@ class HoroscopeRepositoryImpl implements HoroscopeRepository {
       if (userDataResult.isFailure || userDataResult.value == null) {
         return ResultHelper.failure(
           ValidationFailure(
-              message: 'User profile not complete. Please complete your profile first.'),
+              message:
+                  'User profile not complete. Please complete your profile first.'),
         );
       }
 
@@ -81,8 +83,10 @@ class HoroscopeRepositoryImpl implements HoroscopeRepository {
 
       return ResultHelper.success(horoscopeData);
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       return ResultHelper.failure(
-        UnexpectedFailure(message: 'Horoscope generation failed: $e'),
+        UnexpectedFailure(message: userFriendlyMessage),
       );
     }
   }

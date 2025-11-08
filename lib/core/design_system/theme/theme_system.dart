@@ -46,8 +46,10 @@ class ThemeSystem {
 
         // Container Colors - Sacred Earth Tones
         surfaceContainer: Color(0xFFFFF8E1), // Sacred Earth (Light Saffron)
-        surfaceContainerHigh: Color(0xFFFFF3E0), // Sacred Earth (Medium Saffron)
-        surfaceContainerHighest: Color(0xFFFFE0B2), // Sacred Earth (Deep Saffron)
+        surfaceContainerHigh:
+            Color(0xFFFFF3E0), // Sacred Earth (Medium Saffron)
+        surfaceContainerHighest:
+            Color(0xFFFFE0B2), // Sacred Earth (Deep Saffron)
         surfaceContainerLow: Color(0xFFFFFBF5), // Sacred Cream
         surfaceContainerLowest: Color(0xFFFFF8F0), // Sacred Light Cream
 
@@ -69,9 +71,12 @@ class ThemeSystem {
       textTheme: _buildTextTheme(tokens.DesignTokens.lightTextColors),
       appBarTheme: _buildAppBarTheme(tokens.DesignTokens.lightAppBarColors),
       cardTheme: _buildCardTheme(tokens.DesignTokens.lightCardColors),
-      elevatedButtonTheme: _buildElevatedButtonTheme(tokens.DesignTokens.lightButtonColors),
-      inputDecorationTheme: _buildInputDecorationTheme(tokens.DesignTokens.lightInputColors),
-      timePickerTheme: _buildTimePickerTheme(tokens.DesignTokens.lightButtonColors),
+      elevatedButtonTheme:
+          _buildElevatedButtonTheme(tokens.DesignTokens.lightButtonColors),
+      inputDecorationTheme:
+          _buildInputDecorationTheme(tokens.DesignTokens.lightInputColors),
+      timePickerTheme:
+          _buildTimePickerTheme(tokens.DesignTokens.lightButtonColors),
     );
   }
 
@@ -101,7 +106,8 @@ class ThemeSystem {
         // Container Colors - Black with subtle blends
         surfaceContainer: Color(0xFF0D1117), // Black with subtle blue blend
         surfaceContainerHigh: Color(0xFF1A1A1A), // Black with subtle gray blend
-        surfaceContainerHighest: Color(0xFF2D2D2D), // Black with more gray blend
+        surfaceContainerHighest:
+            Color(0xFF2D2D2D), // Black with more gray blend
         surfaceContainerLow: Color(0xFF000000), // Pure Black
         surfaceContainerLowest: Color(0xFF000000), // Pure Black
 
@@ -123,9 +129,12 @@ class ThemeSystem {
       textTheme: _buildTextTheme(tokens.DesignTokens.darkTextColors),
       appBarTheme: _buildAppBarTheme(tokens.DesignTokens.darkAppBarColors),
       cardTheme: _buildCardTheme(tokens.DesignTokens.darkCardColors),
-      elevatedButtonTheme: _buildElevatedButtonTheme(tokens.DesignTokens.darkButtonColors),
-      inputDecorationTheme: _buildInputDecorationTheme(tokens.DesignTokens.darkInputColors),
-      timePickerTheme: _buildTimePickerTheme(tokens.DesignTokens.darkButtonColors),
+      elevatedButtonTheme:
+          _buildElevatedButtonTheme(tokens.DesignTokens.darkButtonColors),
+      inputDecorationTheme:
+          _buildInputDecorationTheme(tokens.DesignTokens.darkInputColors),
+      timePickerTheme:
+          _buildTimePickerTheme(tokens.DesignTokens.darkButtonColors),
     );
   }
 
@@ -231,14 +240,16 @@ class ThemeSystem {
       color: cardColors['background'],
       elevation: tokens.DesignTokens.elevations.card,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(tokens.DesignTokens.borderRadius.card),
+        borderRadius:
+            BorderRadius.circular(tokens.DesignTokens.borderRadius.card),
       ),
       margin: EdgeInsets.all(tokens.DesignTokens.spacing.card),
     );
   }
 
   /// Build elevated button theme
-  static ElevatedButtonThemeData _buildElevatedButtonTheme(Map<String, Color> buttonColors) {
+  static ElevatedButtonThemeData _buildElevatedButtonTheme(
+      Map<String, Color> buttonColors) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: buttonColors['primary'],
@@ -249,31 +260,37 @@ class ThemeSystem {
           vertical: tokens.DesignTokens.spacing.buttonVertical,
         ),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(tokens.DesignTokens.borderRadius.button),
+          borderRadius:
+              BorderRadius.circular(tokens.DesignTokens.borderRadius.button),
         ),
       ),
     );
   }
 
   /// Build input decoration theme
-  static InputDecorationTheme _buildInputDecorationTheme(Map<String, Color> inputColors) {
+  static InputDecorationTheme _buildInputDecorationTheme(
+      Map<String, Color> inputColors) {
     return InputDecorationTheme(
       filled: true,
       fillColor: inputColors['background'],
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
+        borderRadius:
+            BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
         borderSide: BorderSide(color: inputColors['border']!),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
+        borderRadius:
+            BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
         borderSide: BorderSide(color: inputColors['border']!),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
+        borderRadius:
+            BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
         borderSide: BorderSide(color: inputColors['focused']!, width: 2),
       ),
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
+        borderRadius:
+            BorderRadius.circular(tokens.DesignTokens.borderRadius.input),
         borderSide: BorderSide(color: inputColors['error']!),
       ),
       contentPadding: EdgeInsets.symmetric(
@@ -284,7 +301,8 @@ class ThemeSystem {
   }
 
   /// Build time picker theme with Hindu traditional colors
-  static TimePickerThemeData _buildTimePickerTheme(Map<String, Color> buttonColors) {
+  static TimePickerThemeData _buildTimePickerTheme(
+      Map<String, Color> buttonColors) {
     return TimePickerThemeData(
       backgroundColor: buttonColors['background'] ?? const Color(0xFF1A1A1A),
       hourMinuteTextColor: buttonColors['onPrimary'] ?? Colors.white,
@@ -441,10 +459,12 @@ class ThemeUtils {
     final foregroundLuminance = foreground.computeLuminance();
     final backgroundLuminance = background.computeLuminance();
 
-    final lighter =
-        foregroundLuminance > backgroundLuminance ? foregroundLuminance : backgroundLuminance;
-    final darker =
-        foregroundLuminance > backgroundLuminance ? backgroundLuminance : foregroundLuminance;
+    final lighter = foregroundLuminance > backgroundLuminance
+        ? foregroundLuminance
+        : backgroundLuminance;
+    final darker = foregroundLuminance > backgroundLuminance
+        ? backgroundLuminance
+        : foregroundLuminance;
 
     final contrastRatio = (lighter + 0.05) / (darker + 0.05);
     return contrastRatio >= 4.5; // WCAG AA standard
@@ -509,11 +529,17 @@ class ThemeProperties {
   }
 
   static Color getTertiaryTextColor(BuildContext context) {
-    return Theme.of(context).colorScheme.onSurface.withAlpha((0.6 * 255).round());
+    return Theme.of(context)
+        .colorScheme
+        .onSurface
+        .withAlpha((0.6 * 255).round());
   }
 
   static Color getHintTextColor(BuildContext context) {
-    return Theme.of(context).colorScheme.onSurface.withAlpha((0.5 * 255).round());
+    return Theme.of(context)
+        .colorScheme
+        .onSurface
+        .withAlpha((0.5 * 255).round());
   }
 
   static Color getBorderColor(BuildContext context) {
@@ -644,7 +670,9 @@ class ThemeProperties {
   /// Get text color for the current theme
   static Color getTextColor(BuildContext context) {
     return Theme.of(context).textTheme.bodyLarge?.color ??
-        (Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black);
+        (Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : Colors.black);
   }
 
   /// Get text selection theme
@@ -722,7 +750,8 @@ class ThemeProperties {
   }
 
   /// Get bottom navigation bar theme
-  static BottomNavigationBarThemeData getBottomNavigationBarTheme(BuildContext context) {
+  static BottomNavigationBarThemeData getBottomNavigationBarTheme(
+      BuildContext context) {
     return Theme.of(context).bottomNavigationBarTheme;
   }
 
@@ -742,7 +771,8 @@ class ThemeProperties {
   }
 
   /// Get floating action button theme
-  static FloatingActionButtonThemeData getFloatingActionButtonTheme(BuildContext context) {
+  static FloatingActionButtonThemeData getFloatingActionButtonTheme(
+      BuildContext context) {
     return Theme.of(context).floatingActionButtonTheme;
   }
 
@@ -829,12 +859,14 @@ class ThemeProperties {
   }
 
   /// Get progress indicator theme
-  static ProgressIndicatorThemeData getProgressIndicatorTheme(BuildContext context) {
+  static ProgressIndicatorThemeData getProgressIndicatorTheme(
+      BuildContext context) {
     return Theme.of(context).progressIndicatorTheme;
   }
 
   /// Get segmented button theme
-  static SegmentedButtonThemeData getSegmentedButtonTheme(BuildContext context) {
+  static SegmentedButtonThemeData getSegmentedButtonTheme(
+      BuildContext context) {
     return Theme.of(context).segmentedButtonTheme;
   }
 

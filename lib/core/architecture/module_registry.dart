@@ -60,7 +60,8 @@ class ModuleRegistry {
 
     // Initialize dependencies first
     for (final dependency in module.dependencies) {
-      final dependencyModule = _modules.values.firstWhere((m) => m.runtimeType == dependency,
+      final dependencyModule = _modules.values.firstWhere(
+          (m) => m.runtimeType == dependency,
           orElse: () => throw Exception('Dependency $dependency not found'));
 
       if (!_initializationStatus[dependencyModule.name]!) {
@@ -116,7 +117,8 @@ class ModuleRegistry {
   List<AppModule> get allModules => _modules.values.toList();
 
   /// Get module initialization status
-  Map<String, bool> get initializationStatus => Map.unmodifiable(_initializationStatus);
+  Map<String, bool> get initializationStatus =>
+      Map.unmodifiable(_initializationStatus);
 }
 
 /// Provider for module registry

@@ -11,14 +11,14 @@ import '../../../../core/design_system/design_system.dart';
 import '../../domain/calendar_enums.dart';
 import '../widgets/calendar_month_view.dart';
 import '../widgets/calendar_year_view.dart';
-import '../../../../core/services/translation_service.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
-import '../../../../core/services/language_service.dart';
-import '../../../../core/theme/theme_provider.dart';
-import '../../../../core/services/user_service.dart';
+import '../../../../core/services/language/translation_service.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
+import '../../../../core/services/language/language_service.dart';
+import '../../../../core/design_system/theme/theme_provider.dart';
+import '../../../../core/services/user/user_service.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../core/utils/profile_completion_checker.dart';
-import '../../../../core/utils/region_ayanamsha_mapper.dart';
+import '../../../../core/utils/validation/profile_completion_checker.dart';
+import '../../../../core/utils/astrology/region_ayanamsha_mapper.dart';
 import '../../../../core/logging/logging_helper.dart';
 import '../../../../features/user/presentation/screens/user_edit_screen.dart';
 
@@ -51,7 +51,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
 
   // Regional selection for calendar calculations
   String _selectedRegion = 'All India'; // Default region
-  String _selectedAyanamsha = 'lahiri'; // Default ayanamsha (will be updated based on region)
+  String _selectedAyanamsha =
+      'lahiri'; // Default ayanamsha (will be updated based on region)
 
   @override
   void initState() {
@@ -89,9 +90,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
 
     _animationController.forward();
     _viewAnimationController.forward();
-    
+
     // Initialize region and ayanamsha
-    _selectedAyanamsha = RegionAyanamshaMapper.getAyanamshaForRegion(_selectedRegion);
+    _selectedAyanamsha =
+        RegionAyanamshaMapper.getAyanamshaForRegion(_selectedRegion);
   }
 
   @override
@@ -123,11 +125,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                 slivers: [
                   // Collapsible Hero Section using SliverAppBar
                   SliverAppBar(
-                    expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 250),
+                    expandedHeight:
+                        ResponsiveSystem.spacing(context, baseSpacing: 250),
                     floating: true,
                     pinned: true,
                     snap: true,
-                    backgroundColor: ThemeProperties.getTransparentColor(context),
+                    backgroundColor:
+                        ThemeProperties.getTransparentColor(context),
                     elevation: 0,
                     leading: IconButton(
                       icon: Icon(
@@ -162,7 +166,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                             icon: Icon(
                               LucideIcons.calendar,
                               color: ThemeProperties.getPrimaryColor(context),
-                              size: ResponsiveSystem.iconSize(context, baseSize: 20),
+                              size: ResponsiveSystem.iconSize(context,
+                                  baseSize: 20),
                             ),
                             tooltip: 'Year View',
                           ),
@@ -189,11 +194,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                       Padding(
                         padding: ResponsiveSystem.only(
                           context,
-                          right: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                          right:
+                              ResponsiveSystem.spacing(context, baseSpacing: 8),
                         ),
                         child: CentralizedProfilePhotoWithHover(
                           key: const ValueKey('profile_icon'),
-                          onTap: () => _handleProfileTap(context, ref, translationService),
+                          onTap: () => _handleProfileTap(
+                              context, ref, translationService),
                           tooltip: translationService.translateContent(
                             'my_profile',
                             fallback: 'My Profile',
@@ -205,7 +212,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                       title: Text(
                         '📅 ${translationService.translateHeader('calendar', fallback: 'Calendar')}',
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 18),
                           fontWeight: FontWeight.bold,
                           color: ThemeProperties.getPrimaryTextColor(context),
                         ),
@@ -217,7 +225,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
 
                   // Month View Calendar
                   SliverFillRemaining(
-                    child: _currentView == CalendarView.year ? _buildYearView() : _buildMonthView(),
+                    child: _currentView == CalendarView.year
+                        ? _buildYearView()
+                        : _buildMonthView(),
                   ),
                 ],
               ),
@@ -280,7 +290,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
     final allRegions = RegionAyanamshaMapper.getAllRegions();
 
     return Container(
-      width: ResponsiveSystem.spacing(context, baseSpacing: 120), // Wider for region names
+      width: ResponsiveSystem.spacing(context,
+          baseSpacing: 120), // Wider for region names
       height: ResponsiveSystem.spacing(context, baseSpacing: 40),
       decoration: BoxDecoration(
         color: surfaceColor,
@@ -315,7 +326,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                     child: Text(
                       regionInfo.name,
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: primaryTextColor,
                         fontWeight: FontWeight.w500,
                       ),
@@ -331,14 +343,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                           horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
                         color: primaryColor,
-                        borderRadius: BorderRadius.circular(
-                            ResponsiveSystem.borderRadius(context, baseRadius: 3)),
+                        borderRadius: ResponsiveSystem.circular(context,
+                            baseRadius: 3),
                       ),
                       child: Text(
                         '★',
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 8),
-                          color: Colors.white,
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 8),
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
                     ),
@@ -351,7 +364,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
               setState(() {
                 _selectedRegion = newRegion;
                 // Automatically update ayanamsha based on selected region
-                _selectedAyanamsha = RegionAyanamshaMapper.getAyanamshaForRegion(newRegion);
+                _selectedAyanamsha =
+                    RegionAyanamshaMapper.getAyanamshaForRegion(newRegion);
               });
             }
           },
@@ -366,8 +380,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
     final surfaceColor = ThemeProperties.getSurfaceColor(context);
 
     return Container(
-      width: ResponsiveSystem.spacing(context, baseSpacing: 80), // Fixed compact width
-      height: ResponsiveSystem.spacing(context, baseSpacing: 40), // Fixed compact height
+      width: ResponsiveSystem.spacing(context,
+          baseSpacing: 80), // Fixed compact width
+      height: ResponsiveSystem.spacing(context,
+          baseSpacing: 40), // Fixed compact height
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 6),
@@ -403,7 +419,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
                   color: primaryTextColor,
                   fontWeight: FontWeight.w500,
                 ),
-                textAlign: TextAlign.center, // Center the text in dropdown items
+                textAlign:
+                    TextAlign.center, // Center the text in dropdown items
                 overflow: TextOverflow.ellipsis,
               ),
             );
@@ -464,13 +481,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
   }
 
   /// Handle profile icon tap - show popup if profile incomplete, otherwise navigate to profile
-  Future<void> _handleProfileTap(
-      BuildContext context, WidgetRef ref, TranslationService translationService) async {
+  Future<void> _handleProfileTap(BuildContext context, WidgetRef ref,
+      TranslationService translationService) async {
     final currentContext = context;
     try {
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
-      final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+      final user =
+          ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Use ProfileCompletionChecker to determine if user has real profile data
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
@@ -487,7 +505,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
   }
 
   /// Show profile completion popup
-  void _showProfileCompletionPopup(BuildContext context, TranslationService translationService) {
+  void _showProfileCompletionPopup(
+      BuildContext context, TranslationService translationService) {
     showDialog(
       context: context,
       builder: (context) => CentralizedProfileCompletionPopup(
@@ -512,10 +531,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
       screenSize.width -
           ResponsiveSystem.spacing(context,
               baseSpacing: 60), // Approximate position of profile icon
-      ResponsiveSystem.spacing(context, baseSpacing: 60), // Approximate Y position
+      ResponsiveSystem.spacing(context,
+          baseSpacing: 60), // Approximate Y position
     );
-    final sourceSize = Size(ResponsiveSystem.spacing(context, baseSpacing: 40),
-        ResponsiveSystem.spacing(context, baseSpacing: 40)); // Approximate size of profile icon
+    final sourceSize = Size(
+        ResponsiveSystem.spacing(context, baseSpacing: 40),
+        ResponsiveSystem.spacing(context,
+            baseSpacing: 40)); // Approximate size of profile icon
 
     // Use hero navigation with zoom-out effect from profile icon
     HeroNavigationWithRipple.pushWithRipple(
@@ -541,13 +563,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
-          bottomRight: Radius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+          bottomLeft: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+          bottomRight: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
         ),
       ),
       child: Container(
         padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 60, // Adjusted for better collapse behavior
+          top: MediaQuery.of(context).padding.top +
+              60, // Adjusted for better collapse behavior
           bottom: ResponsiveSystem.spacing(context, baseSpacing: 20),
           left: ResponsiveSystem.spacing(context, baseSpacing: 20),
           right: ResponsiveSystem.spacing(context, baseSpacing: 20),
@@ -569,7 +594,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen>
               'Explore festivals, tithi, and auspicious days',
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                color: ThemeProperties.getPrimaryTextColor(context).withValues(alpha: 0.9),
+                color: ThemeProperties.getPrimaryTextColor(context)
+                    .withValues(alpha: 0.9),
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.center,

@@ -4,8 +4,8 @@
 /// for different types of information (house systems, ayanamsa, etc.)
 library;
 
-import '../../core/utils/house_system_info.dart';
-import '../../core/utils/ayanamsha_info.dart';
+import '../../core/utils/astrology/house_system_info.dart';
+import '../../core/utils/astrology/ayanamsha_info.dart';
 import 'dropdown_widgets.dart';
 
 /// Adapter for HouseSystemInfo to implement DropdownItemInfo

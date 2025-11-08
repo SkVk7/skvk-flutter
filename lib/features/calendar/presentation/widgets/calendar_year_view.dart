@@ -6,9 +6,9 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../core/services/astrology_service_bridge.dart';
-import '../../../../core/services/simple_location_service.dart';
-import '../../../../core/utils/timezone_util.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/services/location/simple_location_service.dart';
+import '../../../../core/utils/astrology/timezone_util.dart';
 
 class CalendarYearView extends StatefulWidget {
   final int selectedYear;
@@ -102,9 +102,12 @@ class _CalendarYearViewState extends State<CalendarYearView>
 
       // Get device location with fallback to country-level location
       final locationService = SimpleLocationService();
-      final locationResult = await locationService.getDeviceLocationWithFallback();
-      
-      if (!locationResult.isSuccess || locationResult.latitude == null || locationResult.longitude == null) {
+      final locationResult =
+          await locationService.getDeviceLocationWithFallback();
+
+      if (!locationResult.isSuccess ||
+          locationResult.latitude == null ||
+          locationResult.longitude == null) {
         throw Exception('Failed to get location: ${locationResult.error}');
       }
 
@@ -127,7 +130,8 @@ class _CalendarYearViewState extends State<CalendarYearView>
         latitude: latitude,
         longitude: longitude,
         timezoneId: timezoneId,
-        ayanamsha: widget.ayanamsha, // Pass ayanamsha for accurate nakshatra calculations
+        ayanamsha: widget
+            .ayanamsha, // Pass ayanamsha for accurate nakshatra calculations
       );
 
       // Parse API response
@@ -136,7 +140,7 @@ class _CalendarYearViewState extends State<CalendarYearView>
 
       if (yearData.containsKey('months')) {
         final months = yearData['months'] as Map<String, dynamic>? ?? {};
-      for (int month = 1; month <= 12; month++) {
+        for (int month = 1; month <= 12; month++) {
           final monthKey = month.toString();
           if (months.containsKey(monthKey)) {
             final monthData = months[monthKey] as Map<String, dynamic>;
@@ -146,11 +150,12 @@ class _CalendarYearViewState extends State<CalendarYearView>
               'specialPeriods': monthData['specialPeriods'] ?? [],
               'auspiciousDays': monthData['auspiciousDays'] ?? [],
             };
-            
+
             // Extract festivals
             if (monthData.containsKey('festivals')) {
               final festivals = monthData['festivals'] as List<dynamic>? ?? [];
-              monthFestivals[month] = festivals.map((f) => f.toString()).toList();
+              monthFestivals[month] =
+                  festivals.map((f) => f.toString()).toList();
             }
           } else {
             // Fallback: Use simple defaults if API doesn't have data
@@ -194,7 +199,7 @@ class _CalendarYearViewState extends State<CalendarYearView>
       // For simplicity, use a default timezone based on longitude
       // In production, you might want to use a timezone lookup service
       final offsetHours = (longitude / 15.0).round();
-      
+
       // Map common timezones (simplified)
       if (offsetHours >= 5 && offsetHours <= 6) {
         return 'Asia/Kolkata'; // India
@@ -209,7 +214,7 @@ class _CalendarYearViewState extends State<CalendarYearView>
       } else if (offsetHours >= 9 && offsetHours <= 10) {
         return 'Asia/Tokyo'; // Japan
       }
-      
+
       // Default to India timezone
       return 'Asia/Kolkata';
     } catch (e) {
@@ -305,18 +310,19 @@ class _CalendarYearViewState extends State<CalendarYearView>
       itemBuilder: (context, index) {
         final month = index + 1;
         final monthDate = DateTime(widget.selectedYear, month);
-        final isCurrentMonth =
-            month == DateTime.now().month && widget.selectedYear == DateTime.now().year;
-        final isSelectedMonth =
-            month == widget.selectedDate.month && widget.selectedYear == widget.selectedDate.year;
+        final isCurrentMonth = month == DateTime.now().month &&
+            widget.selectedYear == DateTime.now().year;
+        final isSelectedMonth = month == widget.selectedDate.month &&
+            widget.selectedYear == widget.selectedDate.year;
 
-        return _buildMonthCard(context, month, monthDate, isCurrentMonth, isSelectedMonth);
+        return _buildMonthCard(
+            context, month, monthDate, isCurrentMonth, isSelectedMonth);
       },
     );
   }
 
-  Widget _buildMonthCard(BuildContext context, int month, DateTime monthDate, bool isCurrentMonth,
-      bool isSelectedMonth) {
+  Widget _buildMonthCard(BuildContext context, int month, DateTime monthDate,
+      bool isCurrentMonth, bool isSelectedMonth) {
     final monthInfo = _monthInfo[month] ?? {};
     final festivals = _monthFestivals[month] ?? [];
 
@@ -327,7 +333,8 @@ class _CalendarYearViewState extends State<CalendarYearView>
           color: isSelectedMonth
               ? ThemeProperties.getPrimaryColor(context)
               : isCurrentMonth
-                  ? ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round())
+                  ? ThemeProperties.getPrimaryColor(context)
+                      .withAlpha((0.2 * 255).round())
                   : ThemeProperties.getSurfaceColor(context),
           borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           border: Border.all(
@@ -335,15 +342,19 @@ class _CalendarYearViewState extends State<CalendarYearView>
                 ? ThemeProperties.getPrimaryColor(context)
                 : isCurrentMonth
                     ? ThemeProperties.getPrimaryColor(context)
-                    : ThemeProperties.getSecondaryTextColor(context).withAlpha((0.3 * 255).round()),
+                    : ThemeProperties.getSecondaryTextColor(context)
+                        .withAlpha((0.3 * 255).round()),
             width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
           ),
           boxShadow: isSelectedMonth
               ? [
                   BoxShadow(
-                    color: ThemeProperties.getPrimaryColor(context).withAlpha((0.3 * 255).round()),
-                    blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                    offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                    color: ThemeProperties.getPrimaryColor(context)
+                        .withAlpha((0.3 * 255).round()),
+                    blurRadius:
+                        ResponsiveSystem.spacing(context, baseSpacing: 8),
+                    offset: Offset(
+                        0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
                   ),
                 ]
               : null,
@@ -354,12 +365,14 @@ class _CalendarYearViewState extends State<CalendarYearView>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Month name and year
-              _buildMonthHeader(context, month, isCurrentMonth, isSelectedMonth),
+              _buildMonthHeader(
+                  context, month, isCurrentMonth, isSelectedMonth),
 
               ResponsiveSystem.sizedBox(context, height: 8),
 
               // Hindu month name
-              _buildHinduMonthName(context, monthInfo, isCurrentMonth, isSelectedMonth),
+              _buildHinduMonthName(
+                  context, monthInfo, isCurrentMonth, isSelectedMonth),
 
               ResponsiveSystem.sizedBox(context, height: 8),
 
@@ -369,12 +382,14 @@ class _CalendarYearViewState extends State<CalendarYearView>
               ResponsiveSystem.sizedBox(context, height: 8),
 
               // Festivals count
-              _buildFestivalsInfo(context, festivals, isCurrentMonth, isSelectedMonth),
+              _buildFestivalsInfo(
+                  context, festivals, isCurrentMonth, isSelectedMonth),
 
               ResponsiveSystem.sizedBox(context, height: 4),
 
               // Special periods
-              _buildSpecialPeriods(context, monthInfo, isCurrentMonth, isSelectedMonth),
+              _buildSpecialPeriods(
+                  context, monthInfo, isCurrentMonth, isSelectedMonth),
             ],
           ),
         ),
@@ -382,8 +397,8 @@ class _CalendarYearViewState extends State<CalendarYearView>
     );
   }
 
-  Widget _buildMonthHeader(
-      BuildContext context, int month, bool isCurrentMonth, bool isSelectedMonth) {
+  Widget _buildMonthHeader(BuildContext context, int month, bool isCurrentMonth,
+      bool isSelectedMonth) {
     const monthNames = [
       'Jan',
       'Feb',
@@ -419,9 +434,11 @@ class _CalendarYearViewState extends State<CalendarYearView>
           '${widget.selectedYear}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: isSelectedMonth
-                    ? ThemeProperties.getSurfaceColor(context).withAlpha((0.8 * 255).round())
+                    ? ThemeProperties.getSurfaceColor(context)
+                        .withAlpha((0.8 * 255).round())
                     : isCurrentMonth
-                        ? ThemeProperties.getPrimaryColor(context).withAlpha((0.8 * 255).round())
+                        ? ThemeProperties.getPrimaryColor(context)
+                            .withAlpha((0.8 * 255).round())
                         : ThemeProperties.getSecondaryTextColor(context),
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
               ),
@@ -430,17 +447,22 @@ class _CalendarYearViewState extends State<CalendarYearView>
     );
   }
 
-  Widget _buildHinduMonthName(BuildContext context, Map<String, dynamic> monthInfo,
-      bool isCurrentMonth, bool isSelectedMonth) {
+  Widget _buildHinduMonthName(
+      BuildContext context,
+      Map<String, dynamic> monthInfo,
+      bool isCurrentMonth,
+      bool isSelectedMonth) {
     final hinduMonth = monthInfo['hinduMonth'] as String? ?? '';
 
     return Text(
       hinduMonth,
       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: isSelectedMonth
-                ? ThemeProperties.getSurfaceColor(context).withAlpha((0.9 * 255).round())
+                ? ThemeProperties.getSurfaceColor(context)
+                    .withAlpha((0.9 * 255).round())
                 : isCurrentMonth
-                    ? ThemeProperties.getPrimaryColor(context).withAlpha((0.9 * 255).round())
+                    ? ThemeProperties.getPrimaryColor(context)
+                        .withAlpha((0.9 * 255).round())
                     : ThemeProperties.getSecondaryTextColor(context),
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
             fontWeight: FontWeight.w600,
@@ -448,16 +470,18 @@ class _CalendarYearViewState extends State<CalendarYearView>
     );
   }
 
-  Widget _buildSeason(BuildContext context, Map<String, dynamic> monthInfo, bool isCurrentMonth,
-      bool isSelectedMonth) {
+  Widget _buildSeason(BuildContext context, Map<String, dynamic> monthInfo,
+      bool isCurrentMonth, bool isSelectedMonth) {
     final season = monthInfo['season'] as String? ?? '';
 
     return Container(
       padding: ResponsiveSystem.symmetric(context, horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: isSelectedMonth
-            ? ThemeProperties.getSurfaceColor(context).withAlpha((0.2 * 255).round())
-            : ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
+            ? ThemeProperties.getSurfaceColor(context)
+                .withAlpha((0.2 * 255).round())
+            : ThemeProperties.getPrimaryColor(context)
+                .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 6),
       ),
       child: Text(
@@ -504,8 +528,11 @@ class _CalendarYearViewState extends State<CalendarYearView>
     );
   }
 
-  Widget _buildSpecialPeriods(BuildContext context, Map<String, dynamic> monthInfo,
-      bool isCurrentMonth, bool isSelectedMonth) {
+  Widget _buildSpecialPeriods(
+      BuildContext context,
+      Map<String, dynamic> monthInfo,
+      bool isCurrentMonth,
+      bool isSelectedMonth) {
     final specialPeriods = monthInfo['specialPeriods'] as List<String>? ?? [];
 
     if (specialPeriods.isEmpty) return const SizedBox.shrink();
@@ -515,11 +542,14 @@ class _CalendarYearViewState extends State<CalendarYearView>
       runSpacing: 2,
       children: specialPeriods.take(2).map((period) {
         return Container(
-          padding: ResponsiveSystem.symmetric(context, horizontal: 6, vertical: 2),
+          padding:
+              ResponsiveSystem.symmetric(context, horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
             color: isSelectedMonth
-                ? ThemeProperties.getSurfaceColor(context).withAlpha((0.3 * 255).round())
-                : ThemeProperties.getPrimaryColor(context).withAlpha((0.2 * 255).round()),
+                ? ThemeProperties.getSurfaceColor(context)
+                    .withAlpha((0.3 * 255).round())
+                : ThemeProperties.getPrimaryColor(context)
+                    .withAlpha((0.2 * 255).round()),
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 4),
           ),
           child: Text(

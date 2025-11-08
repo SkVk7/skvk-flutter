@@ -4,6 +4,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 import '../../domain/repositories/horoscope_repository.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../domain/usecases/generate_horoscope_usecase.dart';
@@ -56,7 +57,8 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
 
   /// Generate horoscope
   Future<void> generateHoroscope() async {
-    state = state.copyWith(isLoading: true, errorMessage: null, successMessage: null);
+    state = state.copyWith(
+        isLoading: true, errorMessage: null, successMessage: null);
 
     try {
       final result = await _generateHoroscopeUseCase();
@@ -73,15 +75,22 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
           state = state.copyWith(successMessage: null);
         });
       } else {
+        // Convert technical error to user-friendly message
+        final errorMessage =
+            result.failure?.message ?? 'Failed to generate horoscope';
+        final userFriendlyMessage =
+            ErrorMessageHelper.getUserFriendlyMessage(errorMessage);
         state = state.copyWith(
           isLoading: false,
-          errorMessage: result.failure?.message ?? 'Failed to generate horoscope',
+          errorMessage: userFriendlyMessage,
         );
       }
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
-        errorMessage: 'An unexpected error occurred: $e',
+        errorMessage: userFriendlyMessage,
       );
     }
   }
@@ -103,7 +112,8 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
 }
 
 /// Horoscope provider
-final horoscopeProvider = NotifierProvider<HoroscopeNotifier, HoroscopeState>(() {
+final horoscopeProvider =
+    NotifierProvider<HoroscopeNotifier, HoroscopeState>(() {
   return HoroscopeNotifier();
 });
 

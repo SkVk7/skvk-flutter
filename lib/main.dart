@@ -1,30 +1,38 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
-
 // Core imports
+import 'dart:developer' as developer;
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'core/design_system/design_system.dart';
 import 'core/config/production_config.dart';
 import 'core/architecture/module_registry.dart';
-import 'core/theme/theme_provider.dart';
+import 'core/design_system/theme/theme_provider.dart';
 
 // Screen imports
-import 'screens/home_screen.dart' as home_screen;
-import 'screens/pradakshana_screen.dart' as pradakshana_screen;
-import 'features/user/presentation/screens/user_profile_screen.dart' as user_screen;
-import 'features/user/presentation/screens/user_edit_screen.dart' as edit_user_screen;
-import 'features/matching/presentation/screens/matching_screen.dart' as matching_screen;
-import 'features/horoscope/presentation/screens/horoscope_screen.dart' as horoscope_screen;
-import 'features/calendar/presentation/screens/calendar_screen.dart' as calendar_screen;
-import 'features/predictions/presentation/screens/predictions_screen.dart' as predictions_screen;
+import 'features/home/presentation/screens/home_screen.dart' as home_screen;
+import 'features/home/presentation/screens/pradakshana_screen.dart'
+    as pradakshana_screen;
+import 'features/user/presentation/screens/user_profile_screen.dart'
+    as user_screen;
+import 'features/user/presentation/screens/user_edit_screen.dart'
+    as edit_user_screen;
+import 'features/matching/presentation/screens/matching_screen.dart'
+    as matching_screen;
+import 'features/horoscope/presentation/screens/horoscope_screen.dart'
+    as horoscope_screen;
+import 'features/calendar/presentation/screens/calendar_screen.dart'
+    as calendar_screen;
+import 'features/predictions/presentation/screens/predictions_screen.dart'
+    as predictions_screen;
 
 // Service imports
-import 'core/utils/timezone_util.dart';
+import 'core/utils/astrology/timezone_util.dart';
 
 // Logging system
 import 'core/logging/app_logger.dart';
-import 'core/services/daily_prediction_scheduler.dart';
-import 'core/services/daily_prediction_notification_service.dart';
+import 'core/services/notification/daily_prediction_scheduler.dart';
+import 'core/services/notification/daily_prediction_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,20 +53,16 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize logging system first
-  try {
-    await AppLogger().initialize();
-    await AppLogger().info('Logging system initialized', source: 'main');
-  } catch (e) {
-    // Fallback to basic logging if centralized system fails
-    debugPrint('Failed to initialize logging system: $e');
-  }
+  // Initialize logging system first (non-blocking - run in background)
+  AppLogger().initialize().catchError((e) {
+    developer.log('Failed to initialize logging system: $e', name: 'main');
+  });
 
-  // Initialize module registry
+  // Initialize module registry (lightweight - just registration)
   try {
     final moduleRegistry = ModuleRegistry();
 
-    // Register all modules
+    // Register all modules (synchronous - fast)
     moduleRegistry.registerModule(CoreModule());
     moduleRegistry.registerModule(UserModule());
     moduleRegistry.registerModule(AstrologyModule());
@@ -67,45 +71,47 @@ Future<void> main() async {
     moduleRegistry.registerModule(CalendarModule());
     moduleRegistry.registerModule(PredictionsModule());
 
-    // Initialize all modules
-    await moduleRegistry.initializeAll();
-    await AppLogger().info('All modules initialized successfully', source: 'main');
+    // Initialize all modules in background (non-blocking)
+    moduleRegistry.initializeAll().catchError((e) {
+      developer.log('Failed to initialize modules: $e', name: 'main');
+    });
   } catch (e) {
-    await AppLogger().error('Failed to initialize modules: $e', source: 'main');
-    throw Exception('Failed to initialize application modules: $e');
+    developer.log('Failed to register modules: $e', name: 'main');
   }
 
-  await AppLogger().info('Astrology data will be fetched from API service', source: 'main');
+  // Initialize timezone utility in background (non-blocking)
+  TimezoneUtil.initialize().catchError((e) {
+    developer.log('Failed to initialize timezone utility: $e', name: 'main');
+  });
 
-  // Initialize timezone utility for UTC-local conversions
-  try {
-    await TimezoneUtil.initialize();
-    await AppLogger().info('Timezone utility initialized', source: 'main');
-  } catch (e) {
-    await AppLogger().error('Failed to initialize timezone utility: $e', source: 'main');
-    throw Exception('Failed to initialize timezone utility: $e');
-  }
+  // Initialize daily prediction services in background (non-blocking)
+  // These are not critical for app startup
+  Future.microtask(() async {
+    try {
+      final scheduler = DailyPredictionScheduler.instance;
+      await scheduler.initialize();
 
-  // Initialize daily prediction scheduler and notification service
-  try {
-    final scheduler = DailyPredictionScheduler.instance;
-    await scheduler.initialize();
-    await AppLogger().info('Daily prediction scheduler initialized', source: 'main');
-    
-    final notificationService = DailyPredictionNotificationService.instance;
-    await notificationService.initialize();
-    await AppLogger().info('Daily prediction notification service initialized', source: 'main');
-  } catch (e) {
-    await AppLogger().error('Failed to initialize daily prediction services: $e', source: 'main');
-    // Don't throw - app should still work without notifications
-  }
+      final notificationService = DailyPredictionNotificationService.instance;
+      await notificationService.initialize();
+    } catch (e) {
+      developer.log('Failed to initialize daily prediction services: $e',
+          name: 'main');
+      // Don't throw - app should still work without notifications
+    }
+  });
 
-  // Log production configuration
-  if (ProductionConfig.isProduction) {
-    await AppLogger().info('Running in production mode', source: 'main');
-  } else {
-    await AppLogger().info('Running in development mode', source: 'main');
-  }
+  // Log production configuration (non-blocking)
+  Future.microtask(() async {
+    try {
+      if (ProductionConfig.isProduction) {
+        await AppLogger().info('Running in production mode', source: 'main');
+      } else {
+        await AppLogger().info('Running in development mode', source: 'main');
+      }
+    } catch (e) {
+      developer.log('Failed to log production config: $e', name: 'main');
+    }
+  });
 
   runApp(
     const ProviderScope(
@@ -179,16 +185,25 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       themeMode: themeMode,
       initialRoute: '/',
       routes: {
-        '/': (context) => const home_screen.HomeScreen(),
-        '/pradakshana': (context) => const pradakshana_screen.PradakshanaScreen(),
-        '/user': (context) => const edit_user_screen.UserEditScreen(),
-        '/matching': (context) => const matching_screen.MatchingScreen(),
-        '/horoscope': (context) => const horoscope_screen.HoroscopeScreen(),
-        '/calendar': (context) => const calendar_screen.CalendarScreen(),
-        '/predictions': (context) => const predictions_screen.PredictionsScreen(),
-        '/edit-profile': (context) => const edit_user_screen.UserEditScreen(),
-        '/profile': (context) => const user_screen.UserProfileScreen(),
-        '/settings': (context) => const user_screen.UserProfileScreen(),
+        '/': (BuildContext context) => const home_screen.HomeScreen() as Widget,
+        '/pradakshana': (BuildContext context) =>
+            const pradakshana_screen.PradakshanaScreen() as Widget,
+        '/user': (BuildContext context) =>
+            const edit_user_screen.UserEditScreen() as Widget,
+        '/matching': (BuildContext context) =>
+            const matching_screen.MatchingScreen() as Widget,
+        '/horoscope': (BuildContext context) =>
+            const horoscope_screen.HoroscopeScreen() as Widget,
+        '/calendar': (BuildContext context) =>
+            const calendar_screen.CalendarScreen() as Widget,
+        '/predictions': (BuildContext context) =>
+            const predictions_screen.PredictionsScreen() as Widget,
+        '/edit-profile': (BuildContext context) =>
+            const edit_user_screen.UserEditScreen() as Widget,
+        '/profile': (BuildContext context) =>
+            const user_screen.UserProfileScreen() as Widget,
+        '/settings': (BuildContext context) =>
+            const user_screen.UserProfileScreen() as Widget,
       },
       // Production-ready settings
       builder: (context, child) {

@@ -71,7 +71,8 @@ class ResultHelper {
   }
 
   /// Create a result from an async function that might throw
-  static Future<Result<T>> tryCatchAsync<T>(Future<T> Function() computation) async {
+  static Future<Result<T>> tryCatchAsync<T>(
+      Future<T> Function() computation) async {
     try {
       final result = await computation();
       return Right(result);

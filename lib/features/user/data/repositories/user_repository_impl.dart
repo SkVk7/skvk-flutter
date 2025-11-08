@@ -4,15 +4,16 @@
 library;
 
 import '../../../../core/interfaces/user_repository_interface.dart';
-import '../../../../core/models/user_model.dart';
+import '../../../../core/models/user/user_model.dart';
 import '../../../../core/utils/either.dart';
-import '../../../../core/services/user_service.dart';
+import '../../../../core/services/user/user_service.dart';
 
 /// User repository implementation
 class UserRepositoryImpl implements UserRepositoryInterface {
   final UserService _userService;
 
-  UserRepositoryImpl({required UserService userService}) : _userService = userService;
+  UserRepositoryImpl({required UserService userService})
+      : _userService = userService;
 
   @override
   Future<Result<UserModel?>> getCurrentUser() async {

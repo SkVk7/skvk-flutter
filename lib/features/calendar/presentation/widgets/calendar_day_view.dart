@@ -3,6 +3,7 @@ library;
 import '../../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 class CalendarDayView extends StatefulWidget {
   final DateTime selectedDate;
@@ -36,10 +37,13 @@ class _CalendarDayViewState extends State<CalendarDayView> {
         _errorMessage = null;
       });
 
-      // TODO: Fetch calendar data from API when available
-
-      // TODO: Fetch month panchang from API - currently using placeholder
-      // This will be implemented when calendar API is available
+      // Note: There is no standalone getCalendarDay API endpoint.
+      // Only getCalendarMonth and getCalendarYear exist.
+      // To implement standalone fetching, we would need to:
+      // 1. Call getCalendarMonth API for the selected date's month
+      // 2. Extract the specific day from the month response
+      // This is inefficient for a single day view, so it's not implemented.
+      // The month panchang data is included in getCalendarMonth response.
       setState(() {
         _calendarData = {
           'tithi': 'Not available',
@@ -54,8 +58,10 @@ class _CalendarDayViewState extends State<CalendarDayView> {
         _isLoading = false;
       });
     } catch (e) {
+      // Convert technical error to user-friendly message
+      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       setState(() {
-        _errorMessage = 'Error loading calendar data: $e';
+        _errorMessage = userFriendlyMessage;
         _isLoading = false;
       });
     }
@@ -76,7 +82,7 @@ class _CalendarDayViewState extends State<CalendarDayView> {
           children: [
             Icon(
               Icons.error_outline,
-              size: 48,
+              size: ResponsiveSystem.iconSize(context, baseSize: 48),
               color: ThemeProperties.getErrorColor(context),
             ),
             ResponsiveSystem.sizedBox(context, height: 16),
@@ -149,7 +155,9 @@ class _CalendarDayViewState extends State<CalendarDayView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(color: ThemeProperties.getSecondaryTextColor(context))),
+          Text(label,
+              style: TextStyle(
+                  color: ThemeProperties.getSecondaryTextColor(context))),
           ResponsiveSystem.sizedBox(context, height: 4),
           Text(value,
               style: TextStyle(
@@ -168,10 +176,12 @@ class _CalendarDayViewState extends State<CalendarDayView> {
           SizedBox(
               width: ResponsiveSystem.spacing(context, baseSpacing: 120),
               child: Text(label,
-                  style: TextStyle(color: ThemeProperties.getSecondaryTextColor(context)))),
+                  style: TextStyle(
+                      color: ThemeProperties.getSecondaryTextColor(context)))),
           Expanded(
               child: Text(value,
-                  style: TextStyle(color: ThemeProperties.getPrimaryTextColor(context)))),
+                  style: TextStyle(
+                      color: ThemeProperties.getPrimaryTextColor(context)))),
         ],
       ),
     );

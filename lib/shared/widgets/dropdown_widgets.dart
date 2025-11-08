@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
+
 import '../../core/design_system/design_system.dart';
 
 /// Information interface for dropdown items
@@ -68,9 +69,10 @@ class DropdownItem<T> extends StatelessWidget {
                   child: Text(
                     'RECOMMENDED',
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 10),
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ),
@@ -101,16 +103,19 @@ class DropdownItem<T> extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(
-                            ResponsiveSystem.borderRadius(context, baseRadius: 4)),
+                            ResponsiveSystem.borderRadius(context,
+                                baseRadius: 4)),
                         border: Border.all(
                           color: primaryColor.withValues(alpha: 0.3),
-                          width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                          width: ResponsiveSystem.borderWidth(context,
+                              baseWidth: 1),
                         ),
                       ),
                       child: Text(
                         region,
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 10),
                           color: primaryColor,
                         ),
                       ),
@@ -152,9 +157,8 @@ class DropdownListTile<T> extends StatelessWidget {
         borderRadius: BorderRadius.circular(
             ResponsiveSystem.borderRadius(context, baseRadius: 8)),
         border: Border.all(
-          color: isSelected
-              ? primaryColor
-              : primaryColor.withValues(alpha: 0.2),
+          color:
+              isSelected ? primaryColor : primaryColor.withValues(alpha: 0.2),
           width: isSelected
               ? ResponsiveSystem.borderWidth(context, baseWidth: 2)
               : ResponsiveSystem.borderWidth(context, baseWidth: 1),
@@ -220,16 +224,19 @@ class DropdownListTile<T> extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: primaryColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(
-                                ResponsiveSystem.borderRadius(context, baseRadius: 4)),
+                                ResponsiveSystem.borderRadius(context,
+                                    baseRadius: 4)),
                             border: Border.all(
                               color: primaryColor.withValues(alpha: 0.3),
-                              width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                              width: ResponsiveSystem.borderWidth(context,
+                                  baseWidth: 1),
                             ),
                           ),
                           child: Text(
                             region,
                             style: TextStyle(
-                              fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                              fontSize: ResponsiveSystem.fontSize(context,
+                                  baseSize: 10),
                               color: primaryColor,
                             ),
                           ),
@@ -337,16 +344,19 @@ class CurrentSelection<T> extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(
-                              ResponsiveSystem.borderRadius(context, baseRadius: 4)),
+                              ResponsiveSystem.borderRadius(context,
+                                  baseRadius: 4)),
                           border: Border.all(
                             color: primaryColor.withValues(alpha: 0.3),
-                            width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                            width: ResponsiveSystem.borderWidth(context,
+                                baseWidth: 1),
                           ),
                         ),
                         child: Text(
                           region,
                           style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                            fontSize: ResponsiveSystem.fontSize(context,
+                                baseSize: 10),
                             color: primaryColor,
                           ),
                         ),

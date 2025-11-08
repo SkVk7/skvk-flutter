@@ -11,7 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../interfaces/user_repository_interface.dart';
 
 // User feature
-import '../../features/user/presentation/providers/user_provider.dart' as user_providers;
+import '../../features/user/presentation/providers/user_provider.dart'
+    as user_providers;
 import '../../features/user/data/repositories/user_repository_impl.dart';
 
 // Matching feature
@@ -43,7 +44,8 @@ class InjectionContainer {
 
         // Override repository implementations
         userRepositoryProvider.overrideWith((ref) {
-          final userService = ref.watch(user_providers.userServiceProvider.notifier);
+          final userService =
+              ref.watch(user_providers.userServiceProvider.notifier);
           return UserRepositoryImpl(userService: userService);
         }),
 

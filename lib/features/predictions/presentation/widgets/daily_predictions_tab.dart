@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../../core/services/user_service.dart';
+import '../../../../core/services/user/user_service.dart';
 import '../../../../core/utils/either.dart';
 import '../../../../core/design_system/design_system.dart';
-import '../../../../core/utils/profile_completion_checker.dart';
-import '../../../../core/services/astrology_service_bridge.dart';
+import '../../../../core/utils/validation/profile_completion_checker.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../../../core/services/translation_service.dart';
+import '../../../../core/services/language/translation_service.dart';
+import '../../../../core/utils/validation/error_message_helper.dart';
 
 class DailyPredictionsTab extends ConsumerStatefulWidget {
   const DailyPredictionsTab({super.key});
 
   @override
-  ConsumerState<DailyPredictionsTab> createState() => _DailyPredictionsTabState();
+  ConsumerState<DailyPredictionsTab> createState() =>
+      _DailyPredictionsTabState();
 }
 
 class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
@@ -41,7 +43,8 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
       // Get user data from UserService first
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
-      final user = ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
+      final user =
+          ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Check if user exists and profile is complete using ProfileCompletionChecker
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
@@ -98,111 +101,127 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
         ayanamsha: currentUser.ayanamsha,
       );
 
-    // Store prediction data from API
-    // Extract prediction data from API response
-    final rashiNameMap = {
-      1: 'Aries',
-      2: 'Taurus',
-      3: 'Gemini',
-      4: 'Cancer',
-      5: 'Leo',
-      6: 'Virgo',
-      7: 'Libra',
-      8: 'Scorpio',
-      9: 'Sagittarius',
-      10: 'Capricorn',
-      11: 'Aquarius',
-      12: 'Pisces',
-    };
+      // Store prediction data from API
+      // Extract prediction data from API response
+      final rashiNameMap = {
+        1: 'Aries',
+        2: 'Taurus',
+        3: 'Gemini',
+        4: 'Cancer',
+        5: 'Leo',
+        6: 'Virgo',
+        7: 'Libra',
+        8: 'Scorpio',
+        9: 'Sagittarius',
+        10: 'Capricorn',
+        11: 'Aquarius',
+        12: 'Pisces',
+      };
 
-    final nakshatraNameMap = {
-      1: 'Ashwini',
-      2: 'Bharani',
-      3: 'Krittika',
-      4: 'Rohini',
-      5: 'Mrigashira',
-      6: 'Ardra',
-      7: 'Punarvasu',
-      8: 'Pushya',
-      9: 'Ashlesha',
-      10: 'Magha',
-      11: 'Purva Phalguni',
-      12: 'Uttara Phalguni',
-      13: 'Hasta',
-      14: 'Chitra',
-      15: 'Swati',
-      16: 'Vishakha',
-      17: 'Anuradha',
-      18: 'Jyeshtha',
-      19: 'Mula',
-      20: 'Purva Ashadha',
-      21: 'Uttara Ashadha',
-      22: 'Shravana',
-      23: 'Dhanishtha',
-      24: 'Shatabhisha',
-      25: 'Purva Bhadrapada',
-      26: 'Uttara Bhadrapada',
-      27: 'Revati',
-    };
+      final nakshatraNameMap = {
+        1: 'Ashwini',
+        2: 'Bharani',
+        3: 'Krittika',
+        4: 'Rohini',
+        5: 'Mrigashira',
+        6: 'Ardra',
+        7: 'Punarvasu',
+        8: 'Pushya',
+        9: 'Ashlesha',
+        10: 'Magha',
+        11: 'Purva Phalguni',
+        12: 'Uttara Phalguni',
+        13: 'Hasta',
+        14: 'Chitra',
+        15: 'Swati',
+        16: 'Vishakha',
+        17: 'Anuradha',
+        18: 'Jyeshtha',
+        19: 'Mula',
+        20: 'Purva Ashadha',
+        21: 'Uttara Ashadha',
+        22: 'Shravana',
+        23: 'Dhanishtha',
+        24: 'Shatabhisha',
+        25: 'Purva Bhadrapada',
+        26: 'Uttara Bhadrapada',
+        27: 'Revati',
+      };
 
-    final rashiEnglishName = rashiNameMap[moonData['rashi']] ?? 'Pisces';
-    final nakshatraEnglishName = nakshatraNameMap[moonData['nakshatra']] ?? 'Uttara Bhadrapada';
+      final rashiEnglishName = rashiNameMap[moonData['rashi']] ?? 'Pisces';
+      final nakshatraEnglishName =
+          nakshatraNameMap[moonData['nakshatra']] ?? 'Uttara Bhadrapada';
 
-    // Extract data from API response structure
-    // API returns: predictions.career.content, predictions.health.content, etc.
-    final predictionsMap = precisePredictions['predictions'] as Map<String, dynamic>? ?? {};
-    final careerMap = predictionsMap['career'] as Map<String, dynamic>?;
-    final healthMap = predictionsMap['health'] as Map<String, dynamic>?;
-    final financeMap = predictionsMap['finance'] as Map<String, dynamic>?;
-    
-    // Extract dasha information
-    final dashaMap = precisePredictions['dasha'] as Map<String, dynamic>?;
-    final dashaInfluence = dashaMap?['influence'] as String?;
-    
-    // Extract lucky numbers and colors (using camelCase)
-    final luckyNumbersMap = precisePredictions['luckyNumbers'] as Map<String, dynamic>?;
-    final luckyNumbersList = luckyNumbersMap?['numbers'] as List<dynamic>?;
-    final luckyNumbers = luckyNumbersList?.map((n) => n.toString()).join(', ') ?? '1, 3, 7';
-    
-    final luckyColorsMap = precisePredictions['luckyColors'] as Map<String, dynamic>?;
-    final luckyColorsList = luckyColorsMap?['colors'] as List<dynamic>?;
-    final luckyColors = luckyColorsList?.join(', ') ?? 'Blue, Green';
-    
-    // Extract auspicious and avoid times (using camelCase)
-    final auspiciousTimeMap = precisePredictions['auspiciousTime'] as Map<String, dynamic>?;
-    final auspiciousTime = auspiciousTimeMap?['time'] as String? ?? 'Morning 6-8 AM';
-    
-    final avoidTimeMap = precisePredictions['avoidTime'] as Map<String, dynamic>?;
-    final avoidTime = avoidTimeMap?['time'] as String? ?? 'Evening 6-8 PM';
-    
-    // Extract remedies
-    final remediesMap = precisePredictions['remedies'] as Map<String, dynamic>?;
-    final remedies = remediesMap?['content'] as String? ?? 'Chant mantras, donate to charity';
+      // Extract data from API response structure
+      // API returns: predictions.career.content, predictions.health.content, etc.
+      final predictionsMap =
+          precisePredictions['predictions'] as Map<String, dynamic>? ?? {};
+      final careerMap = predictionsMap['career'] as Map<String, dynamic>?;
+      final healthMap = predictionsMap['health'] as Map<String, dynamic>?;
+      final financeMap = predictionsMap['finance'] as Map<String, dynamic>?;
+
+      // Extract dasha information
+      final dashaMap = precisePredictions['dasha'] as Map<String, dynamic>?;
+      final dashaInfluence = dashaMap?['influence'] as String?;
+
+      // Extract lucky numbers and colors (using camelCase)
+      final luckyNumbersMap =
+          precisePredictions['luckyNumbers'] as Map<String, dynamic>?;
+      final luckyNumbersList = luckyNumbersMap?['numbers'] as List<dynamic>?;
+      final luckyNumbers =
+          luckyNumbersList?.map((n) => n.toString()).join(', ') ?? '1, 3, 7';
+
+      final luckyColorsMap =
+          precisePredictions['luckyColors'] as Map<String, dynamic>?;
+      final luckyColorsList = luckyColorsMap?['colors'] as List<dynamic>?;
+      final luckyColors = luckyColorsList?.join(', ') ?? 'Blue, Green';
+
+      // Extract auspicious and avoid times (using camelCase)
+      final auspiciousTimeMap =
+          precisePredictions['auspiciousTime'] as Map<String, dynamic>?;
+      final auspiciousTime =
+          auspiciousTimeMap?['time'] as String? ?? 'Morning 6-8 AM';
+
+      final avoidTimeMap =
+          precisePredictions['avoidTime'] as Map<String, dynamic>?;
+      final avoidTime = avoidTimeMap?['time'] as String? ?? 'Evening 6-8 PM';
+
+      // Extract remedies
+      final remediesMap =
+          precisePredictions['remedies'] as Map<String, dynamic>?;
+      final remedies = remediesMap?['content'] as String? ??
+          'Chant mantras, donate to charity';
 
       _dailyPrediction = {
-      'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
-      'prediction': careerMap?['content'] as String? ??
-          translationService.translateContent('good_day_ahead', fallback: 'Good day ahead'),
-      'rashi': rashiEnglishName,
-      'nakshatra': nakshatraEnglishName,
-      'generalOutlook': careerMap?['content'] as String? ??
-          translationService.translateContent('good_day_ahead', fallback: 'Good day ahead'),
-      'love': translationService.translateContent('harmony_in_relationships',
-          fallback: 'Harmony in relationships'), // Love not in API response, use default
-      'career': careerMap?['content'] as String? ??
-          translationService.translateContent('progress_in_work', fallback: 'Progress in work'),
-      'health': healthMap?['content'] as String? ??
-          translationService.translateContent('good_health', fallback: 'Good health'),
-      'finance': financeMap?['content'] as String? ??
-          translationService.translateContent('stable_finances', fallback: 'Stable finances'),
-      'luckyNumbers': luckyNumbers,
-      'luckyColors': luckyColors,
-      'auspiciousTime': auspiciousTime,
-      'avoidTime': avoidTime,
-      'dashaInfluence': dashaInfluence ??
-          translationService.translateContent('current_dasha_effects',
-              fallback: 'Current dasha period influence'),
-      'remedies': remedies,
+        'date': DateFormat('yyyy-MM-dd').format(DateTime.now()),
+        'prediction': careerMap?['content'] as String? ??
+            translationService.translateContent('good_day_ahead',
+                fallback: 'Good day ahead'),
+        'rashi': rashiEnglishName,
+        'nakshatra': nakshatraEnglishName,
+        'generalOutlook': careerMap?['content'] as String? ??
+            translationService.translateContent('good_day_ahead',
+                fallback: 'Good day ahead'),
+        'love': translationService.translateContent('harmony_in_relationships',
+            fallback:
+                'Harmony in relationships'), // Love not in API response, use default
+        'career': careerMap?['content'] as String? ??
+            translationService.translateContent('progress_in_work',
+                fallback: 'Progress in work'),
+        'health': healthMap?['content'] as String? ??
+            translationService.translateContent('good_health',
+                fallback: 'Good health'),
+        'finance': financeMap?['content'] as String? ??
+            translationService.translateContent('stable_finances',
+                fallback: 'Stable finances'),
+        'luckyNumbers': luckyNumbers,
+        'luckyColors': luckyColors,
+        'auspiciousTime': auspiciousTime,
+        'avoidTime': avoidTime,
+        'dashaInfluence': dashaInfluence ??
+            translationService.translateContent('current_dasha_effects',
+                fallback: 'Current dasha period influence'),
+        'remedies': remedies,
       };
 
       if (mounted) {
@@ -212,30 +231,9 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
       }
     } catch (e) {
       if (mounted) {
-        final errorString = e.toString().toLowerCase();
-        
-        // Detect different types of errors
-        final isTimeout = errorString.contains('timeout') || errorString.contains('timed out');
-        final isConnectionError = errorString.contains('connection') || 
-            errorString.contains('socketexception') ||
-            errorString.contains('failed host lookup') ||
-            errorString.contains('network is unreachable') ||
-            errorString.contains('connection refused') ||
-            errorString.contains('connection reset');
-        final isServiceDown = errorString.contains('500') ||
-            errorString.contains('503') ||
-            errorString.contains('502') ||
-            errorString.contains('service unavailable');
-        
-        String errorMsg;
-        if (isConnectionError || isServiceDown) {
-          errorMsg = 'Unable to connect to astrology service. Please check your internet connection and try again.';
-        } else if (isTimeout) {
-          errorMsg = 'Request timed out. Please check your connection and try again.';
-        } else {
-          errorMsg = 'Failed to fetch predictions. Please try again.';
-        }
-        
+        // Use centralized error message helper
+        final errorMsg = ErrorMessageHelper.getUserFriendlyMessage(e);
+
         setState(() {
           _isLoading = false;
           _errorMessage = errorMsg;
@@ -263,18 +261,23 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: ThemeProperties.getPrimaryColor(context)),
-              SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+              CircularProgressIndicator(
+                  color: ThemeProperties.getPrimaryColor(context)),
+              SizedBox(
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
               Text(
-                translationService.translateContent('fetching_data', fallback: 'Fetching predictions...'),
+                translationService.translateContent('fetching_data',
+                    fallback: 'Fetching predictions...'),
                 style: TextStyle(
                   fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                   color: ThemeProperties.getPrimaryTextColor(context),
                 ),
               ),
-              SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+              SizedBox(
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
               Text(
-                translationService.translateContent('please_wait', fallback: 'Please wait'),
+                translationService.translateContent('please_wait',
+                    fallback: 'Please wait'),
                 style: TextStyle(
                   fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
                   color: ThemeProperties.getSecondaryTextColor(context),
@@ -298,7 +301,8 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
         ),
         child: Center(
           child: Padding(
-            padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 24)),
+            padding: EdgeInsets.all(
+                ResponsiveSystem.spacing(context, baseSpacing: 24)),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -307,9 +311,11 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                   size: ResponsiveSystem.iconSize(context, baseSize: 64),
                   color: ThemeProperties.getErrorColor(context),
                 ),
-                SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                SizedBox(
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
                 Text(
-                  translationService.translateContent('error_loading_predictions',
+                  translationService.translateContent(
+                      'error_loading_predictions',
                       fallback: 'Unable to Load Predictions'),
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 20),
@@ -318,7 +324,8 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                SizedBox(
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
                 Text(
                   _errorMessage!,
                   style: TextStyle(
@@ -327,42 +334,53 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+                SizedBox(
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
                 ElevatedButton.icon(
-                  onPressed: _isRetrying ? null : () {
-                    setState(() {
-                      _errorMessage = null;
-                      _isRetrying = true;
-                    });
-                    _fetchDailyPredictions().then((_) {
-                      if (mounted) {
-                        setState(() {
-                          _isRetrying = false;
-                        });
-                      }
-                    });
-                  },
+                  onPressed: _isRetrying
+                      ? null
+                      : () {
+                          setState(() {
+                            _errorMessage = null;
+                            _isRetrying = true;
+                          });
+                          _fetchDailyPredictions().then((_) {
+                            if (mounted) {
+                              setState(() {
+                                _isRetrying = false;
+                              });
+                            }
+                          });
+                        },
                   icon: _isRetrying
                       ? SizedBox(
-                          width: ResponsiveSystem.iconSize(context, baseSize: 20),
-                          height: ResponsiveSystem.iconSize(context, baseSize: 20),
+                          width:
+                              ResponsiveSystem.iconSize(context, baseSize: 20),
+                          height:
+                              ResponsiveSystem.iconSize(context, baseSize: 20),
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.onPrimary,
+                            ),
                           ),
                         )
                       : Icon(LucideIcons.refreshCw),
                   label: Text(
                     _isRetrying
-                        ? translationService.translateContent('retrying', fallback: 'Retrying...')
-                        : translationService.translateContent('retry', fallback: 'Retry'),
+                        ? translationService.translateContent('retrying',
+                            fallback: 'Retrying...')
+                        : translationService.translateContent('retry',
+                            fallback: 'Retry'),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ThemeProperties.getPrimaryColor(context),
-                    foregroundColor: Colors.white,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     padding: EdgeInsets.symmetric(
-                      horizontal: ResponsiveSystem.spacing(context, baseSpacing: 24),
-                      vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                      horizontal:
+                          ResponsiveSystem.spacing(context, baseSpacing: 24),
+                      vertical:
+                          ResponsiveSystem.spacing(context, baseSpacing: 12),
                     ),
                   ),
                 ),
@@ -387,10 +405,13 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: ThemeProperties.getPrimaryColor(context)),
-              SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+              CircularProgressIndicator(
+                  color: ThemeProperties.getPrimaryColor(context)),
+              SizedBox(
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
               Text(
-                translationService.translateContent('loading_data', fallback: 'Loading predictions...'),
+                translationService.translateContent('loading_data',
+                    fallback: 'Loading predictions...'),
                 style: TextStyle(
                   fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                   color: ThemeProperties.getPrimaryTextColor(context),
@@ -411,7 +432,8 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
           ),
         ),
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
+          padding: EdgeInsets.all(
+              ResponsiveSystem.spacing(context, baseSpacing: 16)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -423,22 +445,28 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                     fallback: 'General Outlook'),
                 icon: LucideIcons.eye,
                 content: _dailyPrediction!['generalOutlook']!,
-                explanation: translationService.translateContent('based_on_planetary_positions',
-                    fallback: 'Based on current planetary positions and dasha influences'),
+                explanation: translationService.translateContent(
+                    'based_on_planetary_positions',
+                    fallback:
+                        'Based on current planetary positions and dasha influences'),
               ),
               _buildModernPredictionCard(
                 title: translationService.translateHeader('love_relationships',
                     fallback: 'Love & Relationships'),
                 icon: LucideIcons.heart,
                 content: _dailyPrediction!['love']!,
-                explanation: translationService.translateContent('venus_moon_influences',
-                    fallback: 'Venus and Moon influences on emotional connections'),
+                explanation: translationService.translateContent(
+                    'venus_moon_influences',
+                    fallback:
+                        'Venus and Moon influences on emotional connections'),
               ),
               _buildModernPredictionCard(
-                title: translationService.translateHeader('career_work', fallback: 'Career & Work'),
+                title: translationService.translateHeader('career_work',
+                    fallback: 'Career & Work'),
                 icon: LucideIcons.briefcase,
                 content: _dailyPrediction!['career']!,
-                explanation: translationService.translateContent('sun_mars_influences',
+                explanation: translationService.translateContent(
+                    'sun_mars_influences',
                     fallback: 'Sun and Mars influences on professional growth'),
               ),
               _buildModernPredictionCard(
@@ -446,65 +474,84 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                     fallback: 'Health & Wellness'),
                 icon: LucideIcons.heart,
                 content: _dailyPrediction!['health']!,
-                explanation: translationService.translateContent('moon_mars_health_influences',
-                    fallback: 'Moon and Mars influences on physical and mental health'),
+                explanation: translationService.translateContent(
+                    'moon_mars_health_influences',
+                    fallback:
+                        'Moon and Mars influences on physical and mental health'),
               ),
               _buildModernPredictionCard(
                 title: translationService.translateHeader('finance_wealth',
                     fallback: 'Finance & Wealth'),
                 icon: LucideIcons.coins,
                 content: _dailyPrediction!['finance']!,
-                explanation: translationService.translateContent('jupiter_venus_finances',
-                    fallback: 'Jupiter and Venus influences on financial matters'),
+                explanation: translationService.translateContent(
+                    'jupiter_venus_finances',
+                    fallback:
+                        'Jupiter and Venus influences on financial matters'),
               ),
               _buildModernPredictionCard(
-                title:
-                    translationService.translateHeader('lucky_numbers', fallback: 'Lucky Numbers'),
+                title: translationService.translateHeader('lucky_numbers',
+                    fallback: 'Lucky Numbers'),
                 icon: LucideIcons.hash,
                 content: _dailyPrediction!['luckyNumbers']!,
-                explanation: translationService.translateContent('numerical_associations',
+                explanation: translationService.translateContent(
+                    'numerical_associations',
                     fallback:
                         'Based on current planetary positions and their numerical associations'),
               ),
               _buildModernPredictionCard(
-                title: translationService.translateHeader('lucky_colors', fallback: 'Lucky Colors'),
+                title: translationService.translateHeader('lucky_colors',
+                    fallback: 'Lucky Colors'),
                 icon: LucideIcons.palette,
                 content: _dailyPrediction!['luckyColors']!,
-                explanation: translationService.translateContent('colors_strong_planets',
-                    fallback: 'Colors associated with currently strong planets'),
+                explanation: translationService.translateContent(
+                    'colors_strong_planets',
+                    fallback:
+                        'Colors associated with currently strong planets'),
               ),
               _buildModernPredictionCard(
                 title: translationService.translateHeader('auspicious_time',
                     fallback: 'Auspicious Time'),
                 icon: LucideIcons.clock,
                 content: _dailyPrediction!['auspiciousTime']!,
-                explanation: translationService.translateContent('best_time_activities',
-                    fallback: 'Best time for important activities based on planetary influences'),
+                explanation: translationService.translateContent(
+                    'best_time_activities',
+                    fallback:
+                        'Best time for important activities based on planetary influences'),
               ),
               _buildModernPredictionCard(
-                title: translationService.translateHeader('avoid_time', fallback: 'Avoid Time'),
+                title: translationService.translateHeader('avoid_time',
+                    fallback: 'Avoid Time'),
                 icon: LucideIcons.clock,
                 content: _dailyPrediction!['avoidTime']!,
-                explanation: translationService.translateContent('avoid_important_decisions',
-                    fallback: 'Time to avoid important decisions or activities'),
+                explanation: translationService.translateContent(
+                    'avoid_important_decisions',
+                    fallback:
+                        'Time to avoid important decisions or activities'),
               ),
               _buildModernPredictionCard(
                 title: translationService.translateHeader('dasha_influence',
                     fallback: 'Dasha Influence'),
                 icon: LucideIcons.star,
                 content: _dailyPrediction!['dashaInfluence']!,
-                explanation: translationService.translateContent('current_dasha_effects',
-                    fallback: 'Current planetary period and its effects on your life'),
+                explanation: translationService.translateContent(
+                    'current_dasha_effects',
+                    fallback:
+                        'Current planetary period and its effects on your life'),
               ),
               _buildModernPredictionCard(
-                title: translationService.translateHeader('remedies', fallback: 'Remedies'),
+                title: translationService.translateHeader('remedies',
+                    fallback: 'Remedies'),
                 icon: LucideIcons.shield,
                 content: _dailyPrediction!['remedies']!,
-                explanation: translationService.translateContent('suggested_remedies',
-                    fallback: 'Suggested remedies to enhance positive influences'),
+                explanation: translationService.translateContent(
+                    'suggested_remedies',
+                    fallback:
+                        'Suggested remedies to enhance positive influences'),
               ),
               // Add bottom padding to prevent overflow
-              SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+              SizedBox(
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
             ],
           ),
         ));
@@ -517,15 +564,16 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
     required String explanation,
   }) {
     return Card(
-      margin: EdgeInsets.only(bottom: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+      margin: EdgeInsets.only(
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 16)),
       elevation: ResponsiveSystem.elevation(context, baseElevation: 6),
       shape: RoundedRectangleBorder(
-          borderRadius:
-              BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12))),
+          borderRadius: ResponsiveSystem.circular(context, baseRadius: 12)),
       color: ThemeProperties.getSurfaceColor(context),
       shadowColor: ThemeProperties.getShadowColor(context),
       child: Padding(
-        padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
+        padding:
+            EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -534,12 +582,14 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                 Icon(icon,
                     color: ThemeProperties.getPrimaryColor(context),
                     size: ResponsiveSystem.iconSize(context, baseSize: 24)),
-                SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                SizedBox(
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
                 Expanded(
                   child: Text(
                     title,
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 18),
                       fontWeight: FontWeight.bold,
                       color: ThemeProperties.getPrimaryTextColor(context),
                     ),
@@ -547,7 +597,8 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
                 ),
               ],
             ),
-            SizedBox(height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            SizedBox(
+                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
             Text(
               content,
               style: TextStyle(
@@ -572,24 +623,24 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
 
   /// Get daily predictions from API
 
-
-
-
   /// Build astrological information section with symbols
   Widget _buildAstrologicalInfoSection() {
     if (_dailyPrediction == null) return SizedBox.shrink();
 
     return Container(
-      margin: EdgeInsets.only(bottom: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-      padding: EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
+      margin: EdgeInsets.only(
+          bottom: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+      padding:
+          EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 16)),
       decoration: BoxDecoration(
         color: ThemeProperties.getSurfaceColor(context),
-        borderRadius: BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 12)),
+        borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         boxShadow: [
           BoxShadow(
             color: ThemeProperties.getShadowColor(context),
             blurRadius: ResponsiveSystem.elevation(context, baseElevation: 8),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 2)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 2)),
           ),
         ],
       ),
@@ -601,7 +652,8 @@ class _DailyPredictionsTabState extends ConsumerState<DailyPredictionsTab> {
               Icon(LucideIcons.star,
                   color: ThemeProperties.getPrimaryColor(context),
                   size: ResponsiveSystem.iconSize(context, baseSize: 24)),
-              SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+              SizedBox(
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
               Text(
                 'Your Astrological Profile',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(

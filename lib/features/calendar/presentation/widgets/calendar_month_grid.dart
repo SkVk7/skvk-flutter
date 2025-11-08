@@ -83,8 +83,10 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
 
   @override
   Widget build(BuildContext context) {
-    final firstDayOfMonth = DateTime(widget.currentMonth.year, widget.currentMonth.month, 1);
-    final lastDayOfMonth = DateTime(widget.currentMonth.year, widget.currentMonth.month + 1, 0);
+    final firstDayOfMonth =
+        DateTime(widget.currentMonth.year, widget.currentMonth.month, 1);
+    final lastDayOfMonth =
+        DateTime(widget.currentMonth.year, widget.currentMonth.month + 1, 0);
     final firstDayOfWeek = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
@@ -107,7 +109,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
 
               // Calendar Grid
               SizedBox(
-                height: weeks * ResponsiveSystem.spacing(context, baseSpacing: 60),
+                height:
+                    weeks * ResponsiveSystem.spacing(context, baseSpacing: 60),
                 child: GridView.builder(
                   physics: const BouncingScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -123,7 +126,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       return const SizedBox.shrink();
                     }
                     final day = dayIndex + 1;
-                    final date = DateTime(widget.currentMonth.year, widget.currentMonth.month, day);
+                    final date = DateTime(widget.currentMonth.year,
+                        widget.currentMonth.month, day);
 
                     return CalendarDayBox(
                       date: date,
@@ -156,7 +160,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
           child: Container(
             padding: ResponsiveSystem.symmetric(context, vertical: 12),
             decoration: BoxDecoration(
-              color: ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
+              color: ThemeProperties.getPrimaryColor(context)
+                  .withAlpha((0.1 * 255).round()),
               borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
             ),
             child: Text(

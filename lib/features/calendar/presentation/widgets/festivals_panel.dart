@@ -5,8 +5,11 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../../../shared/widgets/centralized_widgets.dart';
+import '../../../../shared/widgets/common/centralized_widgets.dart';
 import '../../../../core/design_system/design_system.dart';
+import '../../../../core/services/astrology/astrology_service_bridge.dart';
+import '../../../../core/services/location/simple_location_service.dart';
+import '../../../../core/utils/astrology/timezone_util.dart';
 
 class FestivalsPanel extends StatefulWidget {
   final DateTime selectedDate;
@@ -36,16 +39,105 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
   }
 
   Future<void> _loadFestivals() async {
-    // TODO: Fetch festivals from API when available
-    // For now, use empty lists as festivals should come from API
-    final festivals = <Map<String, dynamic>>[];
-    final upcoming = <Map<String, dynamic>>[];
+    try {
+      setState(() {
+        _isLoading = true;
+      });
 
-    setState(() {
-      _festivals = festivals;
-      _upcomingFestivals = upcoming;
-      _isLoading = false;
-    });
+      // Get device location with fallback
+      final locationService = SimpleLocationService();
+      final locationResult =
+          await locationService.getDeviceLocationWithFallback();
+
+      if (!locationResult.isSuccess ||
+          locationResult.latitude == null ||
+          locationResult.longitude == null) {
+        throw Exception('Failed to get location: ${locationResult.error}');
+      }
+
+      final latitude = locationResult.latitude!;
+      final longitude = locationResult.longitude!;
+
+      // Get timezone from device or use default
+      await TimezoneUtil.initialize();
+      final timezoneId =
+          AstrologyServiceBridge.getTimezoneFromLocation(latitude, longitude);
+
+      // Fetch calendar month data from API to extract festivals
+      final bridge = AstrologyServiceBridge.instance;
+      final monthData = await bridge.getCalendarMonth(
+        year: widget.selectedDate.year,
+        month: widget.selectedDate.month,
+        region: 'lahiri', // Default ayanamsha
+        latitude: latitude,
+        longitude: longitude,
+        timezoneId: timezoneId,
+        ayanamsha: 'lahiri',
+      );
+
+      // Extract festivals from month data
+      final festivals = <Map<String, dynamic>>[];
+      final upcoming = <Map<String, dynamic>>[];
+
+      if (monthData.containsKey('days')) {
+        final days = monthData['days'] as Map<String, dynamic>? ?? {};
+        final selectedDayKey = widget.selectedDate.day.toString();
+
+        // Get festivals for selected day
+        if (days.containsKey(selectedDayKey)) {
+          final dayData = days[selectedDayKey] as Map<String, dynamic>? ?? {};
+          final dayFestivals = dayData['festivals'] as List<dynamic>? ?? [];
+
+          for (var festival in dayFestivals) {
+            if (festival is Map<String, dynamic>) {
+              festivals.add({
+                'name': festival['name'] ?? 'Festival',
+                'description': festival['description'] ?? '',
+                'date': widget.selectedDate.toString().split(' ')[0],
+                'type': festival['type'] ?? 'religious',
+              });
+            }
+          }
+        }
+
+        // Get upcoming festivals (next 7 days)
+        final today = DateTime.now();
+        for (int i = 1; i <= 7; i++) {
+          final futureDate = today.add(Duration(days: i));
+          if (futureDate.year == widget.selectedDate.year &&
+              futureDate.month == widget.selectedDate.month) {
+            final dayKey = futureDate.day.toString();
+            if (days.containsKey(dayKey)) {
+              final dayData = days[dayKey] as Map<String, dynamic>? ?? {};
+              final dayFestivals = dayData['festivals'] as List<dynamic>? ?? [];
+
+              for (var festival in dayFestivals) {
+                if (festival is Map<String, dynamic>) {
+                  upcoming.add({
+                    'name': festival['name'] ?? 'Festival',
+                    'description': festival['description'] ?? '',
+                    'date': futureDate.toString().split(' ')[0],
+                    'type': festival['type'] ?? 'religious',
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+
+      setState(() {
+        _festivals = festivals;
+        _upcomingFestivals = upcoming;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _festivals = [];
+        _upcomingFestivals = [];
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -82,7 +174,7 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
             Icon(
               LucideIcons.calendar,
               color: ThemeProperties.getPrimaryColor(context),
-              size: 16,
+              size: ResponsiveSystem.iconSize(context, baseSize: 16),
             ),
             ResponsiveSystem.sizedBox(context, width: 8),
             Text(
@@ -96,7 +188,8 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
         ),
         ResponsiveSystem.sizedBox(context, height: 8),
         if (todayFestivals.isNotEmpty)
-          ...todayFestivals.map((festival) => _buildFestivalItem(context, festival))
+          ...todayFestivals
+              .map((festival) => _buildFestivalItem(context, festival))
         else
           Text(
             'No festivals today',
@@ -134,7 +227,9 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
         ),
         ResponsiveSystem.sizedBox(context, height: 8),
         if (upcomingFestivals.isNotEmpty)
-          ...upcomingFestivals.take(3).map((festival) => _buildFestivalItem(context, festival))
+          ...upcomingFestivals
+              .take(3)
+              .map((festival) => _buildFestivalItem(context, festival))
         else
           Text(
             'No upcoming festivals',
@@ -147,15 +242,18 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
     );
   }
 
-  Widget _buildFestivalItem(BuildContext context, Map<String, dynamic> festival) {
+  Widget _buildFestivalItem(
+      BuildContext context, Map<String, dynamic> festival) {
     return Container(
       margin: ResponsiveSystem.only(context, bottom: 8),
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
-        color: ThemeProperties.getPrimaryColor(context).withAlpha((0.1 * 255).round()),
+        color: ThemeProperties.getPrimaryColor(context)
+            .withAlpha((0.1 * 255).round()),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeProperties.getPrimaryColor(context).withAlpha((0.3 * 255).round()),
+          color: ThemeProperties.getPrimaryColor(context)
+              .withAlpha((0.3 * 255).round()),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
@@ -166,8 +264,7 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
             height: ResponsiveSystem.spacing(context, baseSpacing: 40),
             decoration: BoxDecoration(
               color: ThemeProperties.getPrimaryColor(context),
-              borderRadius:
-                  BorderRadius.circular(ResponsiveSystem.borderRadius(context, baseRadius: 2)),
+              borderRadius: ResponsiveSystem.circular(context, baseRadius: 2),
             ),
           ),
           ResponsiveSystem.sizedBox(context, width: 12),
@@ -208,7 +305,7 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
           Icon(
             _getFestivalIcon(festival['type']),
             color: ThemeProperties.getPrimaryColor(context),
-            size: 20,
+            size: ResponsiveSystem.iconSize(context, baseSize: 20),
           ),
         ],
       ),

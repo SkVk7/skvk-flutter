@@ -15,7 +15,8 @@ class PerformMatchingUseCase {
       : _matchingRepository = matchingRepository;
 
   /// Execute the matching use case with both persons' data
-  Future<Result<MatchingResult>> call(PartnerData person1Data, PartnerData person2Data,
+  Future<Result<MatchingResult>> call(
+      PartnerData person1Data, PartnerData person2Data,
       {String? ayanamsha, String? houseSystem}) async {
     print(
         '🔍 DEBUG: PerformMatchingUseCase called with ${person1Data.name} and ${person2Data.name}');

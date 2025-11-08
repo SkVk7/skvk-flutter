@@ -5,6 +5,7 @@
 library;
 
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,7 +47,8 @@ class AstrologyTooltip extends StatefulWidget {
   State<AstrologyTooltip> createState() => _AstrologyTooltipState();
 }
 
-class _AstrologyTooltipState extends State<AstrologyTooltip> with TickerProviderStateMixin {
+class _AstrologyTooltipState extends State<AstrologyTooltip>
+    with TickerProviderStateMixin {
   OverlayEntry? _overlayEntry;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -152,8 +154,10 @@ class _TooltipOverlay extends StatelessWidget {
         final backgroundColor = ThemeProperties.getBackgroundColor(context);
         final surfaceColor = ThemeProperties.getSurfaceColor(context);
         final primaryTextColor = ThemeProperties.getPrimaryTextColor(context);
-        final secondaryTextColor = ThemeProperties.getSecondaryTextColor(context);
-        final tertiaryTextColor = ThemeProperties.getSecondaryTextColor(context);
+        final secondaryTextColor =
+            ThemeProperties.getSecondaryTextColor(context);
+        final tertiaryTextColor =
+            ThemeProperties.getSecondaryTextColor(context);
 
         return AnimatedBuilder(
           animation: Listenable.merge([fadeAnimation, scaleAnimation]),
@@ -171,7 +175,8 @@ class _TooltipOverlay extends StatelessWidget {
                         onTap: onClose,
                         child: Container(
                           color: isDarkMode
-                              ? ThemeProperties.getTextColor(context).withAlpha((0.3 * 255).round())
+                              ? ThemeProperties.getTextColor(context)
+                                  .withAlpha((0.3 * 255).round())
                               : ThemeProperties.getTextColor(context)
                                   .withAlpha((0.1 * 255).round()),
                           width: ResponsiveSystem.screenWidth(context),
@@ -183,7 +188,8 @@ class _TooltipOverlay extends StatelessWidget {
                         child: Container(
                           margin: ResponsiveSystem.symmetric(
                             context,
-                            horizontal: ResponsiveSystem.spacing(context, baseSpacing: 20),
+                            horizontal: ResponsiveSystem.spacing(context,
+                                baseSpacing: 20),
                           ),
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.of(context).size.width * 0.85,
@@ -249,10 +255,13 @@ class _TooltipContent extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isDarkMode
-                ? ThemeProperties.getTextColor(context).withAlpha((0.4 * 255).round())
-                : ThemeProperties.getTextColor(context).withAlpha((0.15 * 255).round()),
+                ? ThemeProperties.getTextColor(context)
+                    .withAlpha((0.4 * 255).round())
+                : ThemeProperties.getTextColor(context)
+                    .withAlpha((0.15 * 255).round()),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 20),
-            offset: Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            offset:
+                Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 8)),
           ),
         ],
         border: Border.all(
