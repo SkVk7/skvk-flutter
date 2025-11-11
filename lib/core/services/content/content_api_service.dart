@@ -113,7 +113,7 @@ class ContentApiService {
     try {
       const cacheKey = 'music_list';
 
-      // Check cache (cache for 10 days)
+      // Check cache (cache for 7 days, TTL based on last access)
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -134,11 +134,11 @@ class ContentApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-        // Cache for 10 days
+        // Cache for 7 days (TTL extends on each access - last-access-based)
         _cache.set(
           cacheKey,
           data,
-          duration: const Duration(days: 10),
+          duration: const Duration(days: 7),
         );
 
         return data;
@@ -214,11 +214,11 @@ class ContentApiService {
             await _getLyricsMobile('$baseUrl/api/lyrics/$musicId?lang=$lang');
       }
 
-      // Cache for 10 days (store as string in cache)
+      // Cache for 7 days (TTL extends on each access - last-access-based)
       _cache.set(
         cacheKey,
         {'lyrics': lyrics},
-        duration: const Duration(days: 10),
+        duration: const Duration(days: 7),
       );
 
       return lyrics;
@@ -239,7 +239,7 @@ class ContentApiService {
       final lang = language ?? 'en';
       final cacheKey = 'books_list_$lang';
 
-      // Check cache (cache for 10 days)
+      // Check cache (cache for 7 days, TTL based on last access)
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -260,11 +260,11 @@ class ContentApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-        // Cache for 10 days
+        // Cache for 7 days (TTL extends on each access - last-access-based)
         _cache.set(
           cacheKey,
           data,
-          duration: const Duration(days: 10),
+          duration: const Duration(days: 7),
         );
 
         return data;

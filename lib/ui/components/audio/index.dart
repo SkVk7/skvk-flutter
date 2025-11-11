@@ -5,7 +5,6 @@ library;
 
 // Core player components
 export 'mini_player.dart';
-export 'fullscreen_player_sheet.dart';
 export 'lyrics_language_selector.dart';
 
 // Other components

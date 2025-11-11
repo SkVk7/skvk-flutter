@@ -4,14 +4,15 @@
 /// Supports different cache pools for different data types.
 library;
 
-/// Cache entry with access tracking for LRU
+/// Cache entry with access tracking for LRU and last-access-based TTL
 class _CacheEntry {
   final dynamic data;
-  final DateTime expiryTime;
+  DateTime expiryTime; // Mutable to support last-access-based TTL extension
   final DateTime lastAccessed;
   final String cacheType;
+  final Duration originalTtl; // Store original TTL duration for last-access-based expiry
 
-  _CacheEntry(this.data, this.expiryTime, this.lastAccessed, this.cacheType);
+  _CacheEntry(this.data, this.expiryTime, this.lastAccessed, this.cacheType, this.originalTtl);
 
   bool get isExpired => DateTime.now().isAfter(expiryTime);
 }
@@ -54,7 +55,8 @@ class CacheService {
     return _instance!;
   }
 
-  /// Get cached data (updates last accessed time)
+  /// Get cached data (updates last accessed time and extends expiry - last-access-based TTL)
+  /// When an item is accessed, its expiry is reset to "now + original TTL duration"
   Map<String, dynamic>? get(String key) {
     final entry = _cache[key];
     if (entry == null || entry.isExpired) {
@@ -64,12 +66,18 @@ class CacheService {
       return null;
     }
 
-    // Update last accessed time (LRU)
+    // Last-access-based TTL: reset expiry to "now + original TTL duration"
+    // This means frequently accessed items stay cached longer
+    final now = DateTime.now();
+    final newExpiryTime = now.add(entry.originalTtl);
+
+    // Update last accessed time and extend expiry (LRU + last-access-based TTL)
     _cache[key] = _CacheEntry(
       entry.data,
-      entry.expiryTime,
-      DateTime.now(),
+      newExpiryTime,
+      now,
       entry.cacheType,
+      entry.originalTtl,
     );
 
     return entry.data as Map<String, dynamic>?;
@@ -116,8 +124,9 @@ class CacheService {
     }
 
     // For user birth data and calendar - no threshold, cache indefinitely until expiry
-    final expiryTime = DateTime.now().add(duration);
-    _cache[key] = _CacheEntry(data, expiryTime, DateTime.now(), cacheType);
+    final now = DateTime.now();
+    final expiryTime = now.add(duration);
+    _cache[key] = _CacheEntry(data, expiryTime, now, cacheType, duration);
   }
 
   /// Enforce threshold limits using LRU eviction
@@ -135,12 +144,14 @@ class CacheService {
 
     // If under threshold, just add the new entry
     if (entriesOfType.length < maxEntries) {
-      final expiryTime = DateTime.now().add(duration);
+      final now = DateTime.now();
+      final expiryTime = now.add(duration);
       _cache[newKey] = _CacheEntry(
         newData,
         expiryTime,
-        DateTime.now(),
+        now,
         cacheType,
+        duration,
       );
       return;
     }
@@ -155,12 +166,14 @@ class CacheService {
     _cache.remove(oldestKey);
 
     // Add new entry
-    final expiryTime = DateTime.now().add(duration);
+    final now = DateTime.now();
+    final expiryTime = now.add(duration);
     _cache[newKey] = _CacheEntry(
       newData,
       expiryTime,
-      DateTime.now(),
+      now,
       cacheType,
+      duration,
     );
   }
 
