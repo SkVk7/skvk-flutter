@@ -208,7 +208,9 @@ class LoggingHelper {
       if (responseData != null) 'response_data': responseData,
     };
 
-    final level = statusCode != null && statusCode >= 400 ? LogLevel.error : LogLevel.info;
+    final level = statusCode != null && statusCode >= 400
+        ? LogLevel.error
+        : LogLevel.info;
 
     await _logger.log(
       level,

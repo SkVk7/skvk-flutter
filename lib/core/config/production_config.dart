@@ -23,7 +23,7 @@ class ProductionConfig {
   static const bool enableSlowAnimations = false;
 
   /// Logging configuration
-  static const bool enableLogging = kDebugMode;
+  static bool get enableLogging => kDebugMode;
   static const bool enableCrashReporting = true;
   static const bool enableAnalytics = true;
 
@@ -67,9 +67,9 @@ class ProductionConfig {
   static const bool enableRTLSupport = true;
 
   /// Development tools (only in debug mode)
-  static const bool enableDevTools = kDebugMode;
-  static const bool enableHotReload = kDebugMode;
-  static const bool enableInspector = kDebugMode;
+  static bool get enableDevTools => kDebugMode;
+  static bool get enableHotReload => kDebugMode;
+  static bool get enableInspector => kDebugMode;
 
   /// Get environment-specific configuration
   static Map<String, dynamic> getEnvironmentConfig() {
@@ -177,19 +177,19 @@ class ProductionConfig {
   static String get appIdentifier => 'com.skvk.astrology';
 
   /// Get supported locales
-  static const List<Locale> supportedLocales = [
-    Locale('en', 'US'),
-    Locale('hi', 'IN'),
-    Locale('ta', 'IN'),
-    Locale('te', 'IN'),
-    Locale('kn', 'IN'),
-    Locale('ml', 'IN'),
-    Locale('gu', 'IN'),
-    Locale('bn', 'IN'),
-    Locale('mr', 'IN'),
-    Locale('or', 'IN'),
-    Locale('pa', 'IN'),
-  ];
+  static List<Locale> get supportedLocales => [
+        const Locale('en', 'US'),
+        const Locale('hi', 'IN'),
+        const Locale('ta', 'IN'),
+        const Locale('te', 'IN'),
+        const Locale('kn', 'IN'),
+        const Locale('ml', 'IN'),
+        const Locale('gu', 'IN'),
+        const Locale('bn', 'IN'),
+        const Locale('mr', 'IN'),
+        const Locale('or', 'IN'),
+        const Locale('pa', 'IN'),
+      ];
 
   /// Get default locale
   static const Locale defaultLocale = Locale('en', 'US');

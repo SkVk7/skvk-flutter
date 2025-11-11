@@ -54,7 +54,8 @@ class AppConstants {
   // User-Friendly Success Messages
   static const String calculationSuccessMessage = 'Your horoscope is ready!';
   static const String dataSavedMessage = 'Your information has been saved.';
-  static const String profileUpdatedMessage = 'Your profile has been updated successfully.';
+  static const String profileUpdatedMessage =
+      'Your profile has been updated successfully.';
 
   // Hindu Traditional Colors
   static const int primarySaffron = 0xFFFF6B35;

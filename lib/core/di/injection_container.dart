@@ -11,16 +11,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../interfaces/user_repository_interface.dart';
 
 // User feature
-import '../../features/user/presentation/providers/user_provider.dart' as user_providers;
-import '../../features/user/data/repositories/user_repository_impl.dart';
+import '../features/user/providers/user_provider.dart'
+    as user_providers;
+import '../features/user/repositories/user_repository_impl.dart';
 
 // Matching feature
-import '../../features/matching/domain/repositories/matching_repository.dart';
-import '../../features/matching/data/repositories/matching_repository_impl.dart';
+import '../features/matching/repositories/matching_repository.dart';
+import '../features/matching/repositories/matching_repository_impl.dart';
 
 // Horoscope feature
-import '../../features/horoscope/domain/repositories/horoscope_repository.dart';
-import '../../features/horoscope/data/repositories/horoscope_repository_impl.dart';
+import '../features/horoscope/repositories/horoscope_repository.dart';
+import '../features/horoscope/repositories/horoscope_repository_impl.dart';
 
 /// Dependency injection container
 class InjectionContainer {
@@ -43,7 +44,8 @@ class InjectionContainer {
 
         // Override repository implementations
         userRepositoryProvider.overrideWith((ref) {
-          final userService = ref.watch(user_providers.userServiceProvider.notifier);
+          final userService =
+              ref.watch(user_providers.userServiceProvider.notifier);
           return UserRepositoryImpl(userService: userService);
         }),
 
