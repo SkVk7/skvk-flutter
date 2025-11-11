@@ -401,6 +401,8 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       if (state.currentTrack == null) return;
 
       if (state.isPlaying) {
+        // Save current position before pausing
+        await _savePersistedState();
         await _audioPlayer.pause();
         // Track analytics (non-blocking)
         Future.microtask(() {
@@ -409,6 +411,16 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
           });
         });
       } else {
+        // When resuming, ensure we're at the correct position
+        // Get the current position from the audio player to verify it matches our state
+        final currentPosition = await _audioPlayer.position;
+        final statePosition = state.position;
+        
+        // If positions don't match, seek to the state position before playing
+        if ((currentPosition - statePosition).abs() > const Duration(milliseconds: 500)) {
+          await _audioPlayer.seek(statePosition);
+        }
+        
         await _audioPlayer.play();
         // Track analytics (non-blocking)
         Future.microtask(() {
