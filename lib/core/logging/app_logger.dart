@@ -129,14 +129,15 @@ class AppLogger {
   static const int _retentionDays = 2; // Keep logs for 2 days
   static const int _compressionThreshold = 5; // Compress after 5 log files
 
-  late Directory _logDirectory;
-  late Directory _compressedDirectory;
-  late File _indexFile;
+  Directory? _logDirectory;
+  Directory? _compressedDirectory;
+  File? _indexFile;
   Timer? _cleanupTimer;
   Timer? _compressionTimer;
   final List<LogEntry> _currentLogBuffer = [];
   int _currentLogFileIndex = 0;
   int _currentLogFileSize = 0;
+  bool _isInitialized = false;
 
   /// Initialize the logging system
   Future<void> initialize() async {
@@ -147,20 +148,28 @@ class AppLogger {
       _compressedDirectory = Directory('${appDir.path}/$_compressedDirName');
 
       // Create directories if they don't exist
-      if (!await _logDirectory.exists()) {
-        await _logDirectory.create(recursive: true);
+      if (!await _logDirectory!.exists()) {
+        await _logDirectory!.create(recursive: true);
       }
-      if (!await _compressedDirectory.exists()) {
-        await _compressedDirectory.create(recursive: true);
+      if (!await _compressedDirectory!.exists()) {
+        await _compressedDirectory!.create(recursive: true);
       }
 
       // Initialize index file
-      _indexFile = File('${_logDirectory.path}/$_indexFileName');
+      _indexFile = File('${_logDirectory!.path}/$_indexFileName');
       await _loadLogIndex();
+
+      // Mark as initialized
+      _isInitialized = true;
 
       // Start cleanup and compression timers
       _startCleanupTimer();
       _startCompressionTimer();
+
+      // Flush any buffered logs that accumulated during initialization
+      if (_currentLogBuffer.isNotEmpty) {
+        await _flushLogBuffer();
+      }
 
       // Log initialization
       await _log(LogLevel.info, 'AppLogger initialized successfully',
@@ -226,10 +235,15 @@ class AppLogger {
   /// Flush current log buffer to file
   Future<void> _flushLogBuffer() async {
     if (_currentLogBuffer.isEmpty) return;
+    
+    // Don't flush if not initialized - logs will be buffered until initialization completes
+    if (!_isInitialized || _logDirectory == null) {
+      return;
+    }
 
     try {
       final logFile = File(
-          '${_logDirectory.path}/log_${_currentLogFileIndex.toString().padLeft(3, '0')}.json');
+          '${_logDirectory!.path}/log_${_currentLogFileIndex.toString().padLeft(3, '0')}.json');
 
       // Convert entries to JSON
       final jsonEntries =
@@ -259,6 +273,8 @@ class AppLogger {
   /// Update log index
   Future<void> _updateLogIndex(
       String filePath, int entryCount, int fileSize) async {
+    if (!_isInitialized || _indexFile == null) return;
+    
     try {
       final index = await _getLogIndex();
       index[filePath] = {
@@ -267,7 +283,7 @@ class AppLogger {
         'fileSize': fileSize,
         'compressed': false,
       };
-      await _indexFile.writeAsString(json.encode(index));
+      await _indexFile!.writeAsString(json.encode(index));
     } catch (e) {
       print('Failed to update log index: $e');
     }
@@ -275,9 +291,11 @@ class AppLogger {
 
   /// Get current log index
   Future<Map<String, dynamic>> _getLogIndex() async {
+    if (!_isInitialized || _indexFile == null) return {};
+    
     try {
-      if (await _indexFile.exists()) {
-        final content = await _indexFile.readAsString();
+      if (await _indexFile!.exists()) {
+        final content = await _indexFile!.readAsString();
         return Map<String, dynamic>.from(json.decode(content));
       }
     } catch (e) {
@@ -314,6 +332,8 @@ class AppLogger {
 
   /// Compress old log files
   Future<void> _compressOldLogs() async {
+    if (!_isInitialized || _compressedDirectory == null || _indexFile == null) return;
+    
     try {
       final index = await _getLogIndex();
       final filesToCompress = index.entries
@@ -337,7 +357,7 @@ class AppLogger {
           final compressedFileName =
               'compressed_${DateTime.now().millisecondsSinceEpoch}.json';
           final compressedFile =
-              File('${_compressedDirectory.path}/$compressedFileName');
+              File('${_compressedDirectory!.path}/$compressedFileName');
 
           // Simple compression: remove redundant data and format efficiently
           final compressedEntries = entries
@@ -372,7 +392,7 @@ class AppLogger {
         }
       }
 
-      await _indexFile.writeAsString(json.encode(index));
+      await _indexFile!.writeAsString(json.encode(index));
       await log(LogLevel.info, 'Compressed ${filesToCompress.length} log files',
           source: 'AppLogger');
     } catch (e) {
@@ -398,6 +418,8 @@ class AppLogger {
 
   /// Clean up old log files
   Future<void> _cleanupOldLogs() async {
+    if (!_isInitialized || _indexFile == null) return;
+    
     try {
       final cutoffDate =
           DateTime.now().subtract(Duration(days: _retentionDays));
@@ -430,7 +452,7 @@ class AppLogger {
       }
 
       if (filesToDelete.isNotEmpty) {
-        await _indexFile.writeAsString(json.encode(index));
+        await _indexFile!.writeAsString(json.encode(index));
         await log(
             LogLevel.info, 'Cleaned up ${filesToDelete.length} old log files',
             source: 'AppLogger');

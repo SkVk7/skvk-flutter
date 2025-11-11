@@ -8,7 +8,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
-import '../design_system/responsive/responsive_system.dart';
+import '../../ui/utils/responsive_system.dart';
+import '../../ui/utils/theme_helpers.dart';
 
 class HeroNavigation {
   /// Navigate with zoom-out animation from a specific widget
@@ -82,7 +83,7 @@ class HeroNavigationWithRipple {
         sourceSize: sourceSize,
         duration: duration,
         curve: curve,
-        rippleColor: rippleColor ?? Theme.of(context).colorScheme.primary,
+        rippleColor: rippleColor ?? ThemeHelpers.getPrimaryColor(context),
         rippleRadius:
             rippleRadius ?? ResponsiveSystem.spacing(context, baseSpacing: 100),
       ),

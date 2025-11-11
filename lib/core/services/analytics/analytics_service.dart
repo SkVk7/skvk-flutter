@@ -50,6 +50,34 @@ class AnalyticsService {
     );
   }
 
+  /// Track audio pause event
+  Future<void> trackAudioPause(String contentId) async {
+    await _trackEvent(
+      event: 'pause',
+      contentType: 'audio',
+      contentId: contentId,
+    );
+  }
+
+  /// Track audio seek event
+  Future<void> trackAudioSeek(String contentId, int positionSeconds) async {
+    await _trackEvent(
+      event: 'seek',
+      contentType: 'audio',
+      contentId: contentId,
+      metadata: {'position': positionSeconds},
+    );
+  }
+
+  /// Track audio complete event
+  Future<void> trackAudioComplete(String contentId) async {
+    await _trackEvent(
+      event: 'complete',
+      contentType: 'audio',
+      contentId: contentId,
+    );
+  }
+
   /// Track book view event
   Future<void> trackBookView(String contentId, {String? language}) async {
     await _trackEvent(
@@ -79,12 +107,49 @@ class AnalyticsService {
     );
   }
 
+  /// Track playlist create event
+  Future<void> trackPlaylistCreate(String playlistId) async {
+    await _trackEvent(
+      event: 'create',
+      contentType: 'playlist',
+      contentId: playlistId,
+    );
+  }
+
+  /// Track playlist delete event
+  Future<void> trackPlaylistDelete(String playlistId) async {
+    await _trackEvent(
+      event: 'delete',
+      contentType: 'playlist',
+      contentId: playlistId,
+    );
+  }
+
+  /// Track download start event
+  Future<void> trackDownloadStart(String contentId) async {
+    await _trackEvent(
+      event: 'download_start',
+      contentType: 'audio',
+      contentId: contentId,
+    );
+  }
+
+  /// Track download complete event
+  Future<void> trackDownloadComplete(String contentId) async {
+    await _trackEvent(
+      event: 'download_complete',
+      contentType: 'audio',
+      contentId: contentId,
+    );
+  }
+
   /// Internal method to track analytics events
   Future<void> _trackEvent({
     required String event,
     required String contentType,
     required String contentId,
     String? language,
+    Map<String, dynamic>? metadata,
   }) async {
     try {
       await _client
@@ -98,6 +163,7 @@ class AnalyticsService {
           'contentType': contentType,
           'contentId': contentId,
           if (language != null) 'language': language,
+          if (metadata != null) 'metadata': metadata,
         }),
       )
           .timeout(
