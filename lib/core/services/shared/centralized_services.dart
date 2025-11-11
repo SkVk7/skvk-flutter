@@ -180,14 +180,14 @@ class CentralizedErrorService {
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
             fontWeight: FontWeight.bold,
-            color: ThemeProperties.getErrorColor(context),
+            color: ThemeHelpers.getErrorColor(context),
           ),
         ),
         content: Text(
           message,
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-            color: ThemeProperties.getPrimaryTextColor(context),
+            color: ThemeHelpers.getPrimaryTextColor(context),
           ),
         ),
         actions: [
@@ -200,7 +200,7 @@ class CentralizedErrorService {
               child: Text(
                 'Retry',
                 style: TextStyle(
-                  color: ThemeProperties.getPrimaryColor(context),
+                  color: ThemeHelpers.getPrimaryColor(context),
                 ),
               ),
             ),
@@ -209,7 +209,7 @@ class CentralizedErrorService {
             child: Text(
               'OK',
               style: TextStyle(
-                color: ThemeProperties.getPrimaryColor(context),
+                color: ThemeHelpers.getPrimaryColor(context),
               ),
             ),
           ),
@@ -229,14 +229,14 @@ class CentralizedErrorService {
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
             fontWeight: FontWeight.bold,
-            color: ThemeProperties.getSecondaryColor(context),
+            color: ThemeHelpers.getSecondaryColor(context),
           ),
         ),
         content: Text(
           message,
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-            color: ThemeProperties.getPrimaryTextColor(context),
+            color: ThemeHelpers.getPrimaryTextColor(context),
           ),
         ),
         actions: [
@@ -248,7 +248,7 @@ class CentralizedErrorService {
             child: Text(
               'OK',
               style: TextStyle(
-                color: ThemeProperties.getPrimaryColor(context),
+                color: ThemeHelpers.getPrimaryColor(context),
               ),
             ),
           ),

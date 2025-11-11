@@ -8,8 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/design_system/tokens/design_tokens.dart';
-import '../../../core/design_system/theme/theme_provider.dart';
+import '../../../core/design_system/design_system.dart';
 
 /// Daily prediction notification service
 class DailyPredictionNotificationService {

@@ -123,13 +123,13 @@ class AstrologyProgressWidget extends ConsumerWidget {
       padding: ResponsiveSystem.all(context, baseSpacing: 16),
       decoration: BoxDecoration(
         color: hasError
-            ? ThemeProperties.getErrorColor(context).withValues(alpha: 0.1)
-            : ThemeProperties.getPrimaryColor(context).withValues(alpha: 0.1),
+            ? ThemeHelpers.getErrorColor(context).withValues(alpha: 0.1)
+            : ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
           color: hasError
-              ? ThemeProperties.getErrorColor(context).withValues(alpha: 0.3)
-              : ThemeProperties.getPrimaryColor(context).withValues(alpha: 0.3),
+              ? ThemeHelpers.getErrorColor(context).withValues(alpha: 0.3)
+              : ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.3),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
@@ -142,7 +142,7 @@ class AstrologyProgressWidget extends ConsumerWidget {
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
               fontWeight: FontWeight.bold,
-              color: ThemeProperties.getPrimaryTextColor(context),
+              color: ThemeHelpers.getPrimaryTextColor(context),
             ),
             textAlign: TextAlign.center,
           ),
@@ -154,21 +154,21 @@ class AstrologyProgressWidget extends ConsumerWidget {
             Icon(
               Icons.error_outline,
               size: ResponsiveSystem.iconSize(context, baseSize: 32),
-              color: ThemeProperties.getErrorColor(context),
+              color: ThemeHelpers.getErrorColor(context),
             )
           else if (isIndeterminate)
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                ThemeProperties.getPrimaryColor(context),
+                ThemeHelpers.getPrimaryColor(context),
               ),
             )
           else
             LinearProgressIndicator(
               value: progress,
-              backgroundColor: ThemeProperties.getSecondaryTextColor(context)
+              backgroundColor: ThemeHelpers.getSecondaryTextColor(context)
                   .withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
-                ThemeProperties.getPrimaryColor(context),
+                ThemeHelpers.getPrimaryColor(context),
               ),
             ),
 
@@ -180,8 +180,8 @@ class AstrologyProgressWidget extends ConsumerWidget {
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
               color: hasError
-                  ? ThemeProperties.getErrorColor(context)
-                  : ThemeProperties.getSecondaryTextColor(context),
+                  ? ThemeHelpers.getErrorColor(context)
+                  : ThemeHelpers.getSecondaryTextColor(context),
             ),
             textAlign: TextAlign.center,
           ),
@@ -193,7 +193,7 @@ class AstrologyProgressWidget extends ConsumerWidget {
               '${(progress * 100).toInt()}%',
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
-                color: ThemeProperties.getSecondaryTextColor(context),
+                color: ThemeHelpers.getSecondaryTextColor(context),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -210,7 +210,7 @@ class AstrologyProgressWidget extends ConsumerWidget {
               ),
               label: Text('Retry'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: ThemeProperties.getErrorColor(context),
+                backgroundColor: ThemeHelpers.getErrorColor(context),
                 foregroundColor: Theme.of(context).colorScheme.onError,
               ),
             ),
@@ -269,17 +269,17 @@ class AstrologyProgressOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      color: ThemeProperties.getShadowColor(context).withValues(alpha: 0.5),
+      color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.5),
       child: Center(
         child: Container(
           margin: ResponsiveSystem.all(context, baseSpacing: 32),
           padding: ResponsiveSystem.all(context, baseSpacing: 24),
           decoration: BoxDecoration(
-            color: ThemeProperties.getSurfaceColor(context),
+            color: ThemeHelpers.getSurfaceColor(context),
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
             boxShadow: [
               BoxShadow(
-                color: ThemeProperties.getShadowColor(context)
+                color: ThemeHelpers.getShadowColor(context)
                     .withValues(alpha: 0.2),
                 blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 10),
                 offset: Offset(
@@ -303,7 +303,7 @@ class AstrologyProgressOverlay extends ConsumerWidget {
                     style: TextStyle(
                       fontSize:
                           ResponsiveSystem.fontSize(context, baseSize: 16),
-                      color: ThemeProperties.getPrimaryColor(context),
+                      color: ThemeHelpers.getPrimaryColor(context),
                     ),
                   ),
                 ),
