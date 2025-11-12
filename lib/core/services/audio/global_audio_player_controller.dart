@@ -16,7 +16,7 @@ import '../../../core/logging/logging_helper.dart';
 import 'models/lyric_line.dart';
 import 'lyrics_parser.dart';
 import 'player_queue_service.dart';
-import 'models/track.dart';
+import '../../../core/models/audio/track.dart';
 import 'models/queue_state.dart';
 
 /// Repeat mode enum
@@ -413,7 +413,7 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       } else {
         // When resuming, ensure we're at the correct position
         // Get the current position from the audio player to verify it matches our state
-        final currentPosition = await _audioPlayer.position;
+        final currentPosition = _audioPlayer.position;
         final statePosition = state.position;
         
         // If positions don't match, seek to the state position before playing

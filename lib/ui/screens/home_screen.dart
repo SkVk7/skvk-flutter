@@ -22,11 +22,14 @@ import '../../core/utils/either.dart';
 import '../../core/services/language/translation_service.dart';
 import '../../core/navigation/animated_navigation.dart';
 import '../../core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
+import '../../core/logging/logging_helper.dart';
 // UI Components - Reusable components
 import '../components/cards/main_cta_card.dart';
 import '../components/home/index.dart';
 import '../components/common/index.dart';
 import '../components/dialogs/feature_access_dialog.dart';
+// Audio imports
+import '../../core/services/audio/audio_controller.dart';
 // Screen imports
 import 'calendar_screen.dart';
 import 'predictions_screen.dart';
@@ -81,6 +84,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   @override
   Widget build(BuildContext context) {
     final translationService = ref.watch(translationServiceProvider);
+    final playerState = ref.watch(audioControllerProvider);
+    
+    // Calculate bottom padding for mini player
+    final safeAreaBottom = MediaQuery.of(context).padding.bottom;
+    final miniPlayerHeight = ResponsiveSystem.responsive(
+      context,
+      mobile: ResponsiveSystem.spacing(context, baseSpacing: 88),
+      tablet: ResponsiveSystem.spacing(context, baseSpacing: 96),
+      desktop: ResponsiveSystem.spacing(context, baseSpacing: 104),
+      largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 112),
+    );
+    final totalPlayerHeight = miniPlayerHeight + safeAreaBottom;
+    final bottomPadding = (playerState.hasTrack && playerState.showMiniPlayer)
+        ? totalPlayerHeight + ResponsiveSystem.spacing(context, baseSpacing: 16)
+        : ResponsiveSystem.spacing(context, baseSpacing: 16);
 
     return Scaffold(
       backgroundColor: ThemeHelpers.getBackgroundColor(context),
@@ -236,7 +254,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
                   ResponsiveSystem.sizedBox(
                     context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 32),
+                    height: bottomPadding,
                   ),
                 ]),
               ),
@@ -261,7 +279,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   ) async {
     // Prevent multiple simultaneous navigation calls
     if (_isNavigating) {
-      print('🔍 DEBUG: Home screen navigation already in progress, skipping');
+      LoggingHelper.logDebug(
+        'Home screen navigation already in progress, skipping',
+        source: 'HomeScreen',
+      );
       return;
     }
 

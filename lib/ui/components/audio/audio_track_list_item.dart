@@ -13,6 +13,7 @@ import '../../utils/responsive_system.dart';
 import '../../../core/services/audio/audio_controller.dart';
 import '../../../core/services/audio/favorites_service.dart';
 import '../../../core/services/audio/recently_played_service.dart';
+import '../../../core/services/audio/player_queue_service.dart';
 import '../../../core/models/audio/track.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 
@@ -228,29 +229,85 @@ class AudioTrackListItem extends ConsumerWidget {
                 ),
               ),
             ],
-            onSelected: (value) {
+            onSelected: (value) async {
               final audioController = ref.read(audioControllerProvider.notifier);
+              final track = Track.fromMusicMap(music);
+              
               switch (value) {
                 case 'play':
                   if (isCurrentTrack) {
                     audioController.togglePlayPause();
                   } else {
-                    final track = Track.fromMusicMap(music);
                     // Play track and show mini player only (NOT full player)
                     audioController.playTrack(track);
                   }
                   break;
                 case 'add_to_queue':
-                  // TODO: Implement queue functionality
-                  onMoreTap?.call();
+                  // Add track to queue
+                  try {
+                    final queueService = ref.read(playerQueueServiceProvider.notifier);
+                    await queueService.appendTracks([track]);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Added "$title" to queue'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to add to queue'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
                   break;
                 case 'add_to_favorites':
-                  // TODO: Implement favorites functionality
-                  onMoreTap?.call();
+                  // Toggle favorite
+                  favoritesService.toggleFavorite(trackId);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          isFavorite
+                              ? 'Removed from favorites'
+                              : 'Added to favorites',
+                        ),
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  }
                   break;
                 case 'share':
-                  // TODO: Implement share functionality
-                  onMoreTap?.call();
+                  // Share track information
+                  try {
+                    final shareText = '$title${subtitle.isNotEmpty ? ' - $subtitle' : ''}';
+                    // Use Flutter's share functionality if available, otherwise show snackbar
+                    // For now, we'll use a simple approach with clipboard
+                    if (context.mounted) {
+                      // Copy to clipboard would require clipboard package
+                      // For now, show a message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Share: $shareText'),
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to share'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
                   break;
               }
             },

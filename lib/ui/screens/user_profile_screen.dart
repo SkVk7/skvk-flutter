@@ -11,7 +11,6 @@ import 'dart:async';
 import '../utils/theme_helpers.dart';
 import '../utils/responsive_system.dart';
 // Core imports
-import '../../core/utils/app_logger.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
 import '../utils/screen_handlers.dart';
@@ -90,22 +89,22 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
       // Check the provider state directly
       final userFromState = ref.read(userServiceProvider);
-      AppLogger.debug(
+      LoggingHelper.logDebug(
           'User from provider state: ${userFromState != null ? 'FOUND' : 'NULL'}',
-          'UserProfile');
+          source: 'UserProfile');
 
       if (userFromState != null) {
-        AppLogger.debug(
+        LoggingHelper.logDebug(
             'User details: ${userFromState.name}, DOB: ${userFromState.dateOfBirth}, TOB: ${userFromState.timeOfBirth}',
-            'UserProfile');
-        AppLogger.debug(
+            source: 'UserProfile');
+        LoggingHelper.logDebug(
             'Location: ${userFromState.latitude}, ${userFromState.longitude}',
-            'UserProfile');
-        AppLogger.debug(
+            source: 'UserProfile');
+        LoggingHelper.logDebug(
             'User name length: ${userFromState.name.length}, isEmpty: ${userFromState.name.isEmpty}',
-            'UserProfile');
+            source: 'UserProfile');
       } else {
-        AppLogger.debug('User from state is NULL', 'UserProfile');
+        LoggingHelper.logDebug('User from state is NULL', source: 'UserProfile');
       }
 
       // Also try the getCurrentUser method as fallback
@@ -122,20 +121,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           ? ResultHelper.getValue(result)
           : userFromState;
 
-      AppLogger.debug(
+      LoggingHelper.logDebug(
           'User loading result: ${ResultHelper.isSuccess(result) ? 'SUCCESS' : 'FAILURE'}',
-          'UserProfile');
+          source: 'UserProfile');
       if (user != null) {
-        AppLogger.debug(
+        LoggingHelper.logDebug(
             'Final user details: ${user.name}, DOB: ${user.dateOfBirth}, TOB: ${user.timeOfBirth}',
-            'UserProfile');
-        AppLogger.debug(
-            'Location: ${user.latitude}, ${user.longitude}', 'UserProfile');
-        AppLogger.debug(
+            source: 'UserProfile');
+        LoggingHelper.logDebug(
+            'Location: ${user.latitude}, ${user.longitude}', source: 'UserProfile');
+        LoggingHelper.logDebug(
             'User name length: ${user.name.length}, isEmpty: ${user.name.isEmpty}',
-            'UserProfile');
+            source: 'UserProfile');
       } else {
-        AppLogger.debug('No user data received', 'UserProfile');
+        LoggingHelper.logDebug('No user data received', source: 'UserProfile');
       }
 
       if (mounted) {
@@ -147,13 +146,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
         // Load astrology data if user exists
         if (user != null) {
-          AppLogger.debug(
-              'User loaded, starting astrology data load...', 'UserProfile');
+          LoggingHelper.logDebug(
+              'User loaded, starting astrology data load...', source: 'UserProfile');
           _loadAstrologyData();
           _startAstrologyRefreshTimer();
         } else {
-          AppLogger.debug(
-              'No user found, skipping astrology data load', 'UserProfile');
+          LoggingHelper.logDebug(
+              'No user found, skipping astrology data load', source: 'UserProfile');
         }
       }
     } catch (e) {
@@ -210,23 +209,23 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
       // Use the optimized user service method that handles caching
       final userService = ref.read(userServiceProvider.notifier);
-      AppLogger.debug('Loading astrology data for user: ${_currentUser!.name}',
-          'UserProfile');
-      AppLogger.debug(
+      LoggingHelper.logDebug('Loading astrology data for user: ${_currentUser!.name}',
+          source: 'UserProfile');
+      LoggingHelper.logDebug(
           'Birth details: ${_currentUser!.dateOfBirth} ${_currentUser!.timeOfBirth}',
-          'UserProfile');
-      AppLogger.debug(
+          source: 'UserProfile');
+      LoggingHelper.logDebug(
           'Location: ${_currentUser!.latitude}, ${_currentUser!.longitude}',
-          'UserProfile');
+          source: 'UserProfile');
 
       // Check if user service has the user data
       final userServiceState = ref.read(userServiceProvider);
-      AppLogger.debug(
+      LoggingHelper.logDebug(
           'User service state: ${userServiceState != null ? 'HAS_USER' : 'NO_USER'}',
-          'UserProfile');
+          source: 'UserProfile');
       if (userServiceState != null) {
-        AppLogger.debug(
-            'User service user: ${userServiceState.name}', 'UserProfile');
+        LoggingHelper.logDebug(
+            'User service user: ${userServiceState.name}', source: 'UserProfile');
       }
 
       final startTime = DateTime.now();
@@ -234,18 +233,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       final endTime = DateTime.now();
       final duration = endTime.difference(startTime);
 
-      AppLogger.debug('Astrology data loaded in: ${duration.inMilliseconds}ms',
-          'UserProfile');
-      AppLogger.debug(
+      LoggingHelper.logDebug('Astrology data loaded in: ${duration.inMilliseconds}ms',
+          source: 'UserProfile');
+      LoggingHelper.logDebug(
           'Data received: ${astrologyData != null ? 'SUCCESS' : 'NULL'}',
-          'UserProfile');
+          source: 'UserProfile');
       if (astrologyData != null) {
-        AppLogger.debug(
-            'Data keys: ${astrologyData.keys.toList()}', 'UserProfile');
+        LoggingHelper.logDebug(
+            'Data keys: ${astrologyData.keys.toList()}', source: 'UserProfile');
       } else {
-        AppLogger.debug(
+        LoggingHelper.logDebug(
             'Attempting fallback: calling astrology library directly...',
-            'UserProfile');
+            source: 'UserProfile');
         try {
           final bridge = AstrologyServiceBridge.instance;
 
@@ -282,7 +281,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 DateTime.now().toIso8601String(),
           };
 
-          AppLogger.debug('Fallback data created successfully', 'UserProfile');
+          LoggingHelper.logDebug('Fallback data created successfully', source: 'UserProfile');
           if (mounted) {
             setState(() {
               _astrologyData = fallbackData;
@@ -291,8 +290,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           }
           return;
         } catch (fallbackError) {
-          AppLogger.error('Fallback also failed: $fallbackError', fallbackError,
-              StackTrace.current, 'UserProfile');
+          LoggingHelper.logError('Fallback also failed: $fallbackError',
+              error: fallbackError, stackTrace: StackTrace.current, source: 'UserProfile');
         }
       }
 
@@ -303,8 +302,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         });
       }
     } catch (e) {
-      AppLogger.error('Error loading astrology data: $e', e, StackTrace.current,
-          'UserProfile');
+      LoggingHelper.logError('Error loading astrology data: $e',
+          error: e, stackTrace: StackTrace.current, source: 'UserProfile');
       if (mounted) {
         setState(() {
           _astrologyData = null;
@@ -639,9 +638,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                               context,
                                               user != null
                                                   ? () {
-                                                      AppLogger.debug(
+                                                      LoggingHelper.logDebug(
                                                           'Converting UserModel to UserEntity: name=${user.name}, length=${user.name.length}',
-                                                          'UserProfile');
+                                                          source: 'UserProfile');
                                                       return entity.UserEntity(
                                                         id: user.id,
                                                         username: user.name,
@@ -688,9 +687,9 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                               context,
                                               user != null
                                                   ? () {
-                                                      AppLogger.debug(
+                                                      LoggingHelper.logDebug(
                                                           'Converting UserModel to UserEntity for edit: name=${user.name}, length=${user.name.length}',
-                                                          'UserProfile');
+                                                          source: 'UserProfile');
                                                       return entity.UserEntity(
                                                         id: user.id,
                                                         username: user.name,

@@ -3,7 +3,7 @@
 /// Immutable snapshot of queue state
 library;
 
-import 'track.dart';
+import '../../../models/audio/track.dart';
 import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
 
 /// Queue state - immutable snapshot

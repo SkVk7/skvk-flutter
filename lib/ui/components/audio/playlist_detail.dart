@@ -10,7 +10,7 @@ import '../../utils/responsive_system.dart';
 import '../../../core/services/audio/playlist_service.dart';
 import '../../../core/services/audio/player_queue_service.dart';
 import '../../../core/services/audio/global_audio_player_controller.dart';
-import '../../../core/services/audio/models/track.dart';
+import '../../../core/models/audio/track.dart';
 import '../../../core/services/audio/models/playlist.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 
@@ -52,9 +52,8 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
       );
 
       // Load tracks from playlist
-      // TODO: Implement getTracksForPlaylist in PlaylistService
-      // For now, we'll use empty list
-      _tracks = [];
+      final playlistService = ref.read(playlistServiceProvider.notifier);
+      _tracks = await playlistService.getTracksForPlaylist(widget.playlistId);
     } catch (e) {
       // Handle error
     } finally {
@@ -282,15 +281,15 @@ class _PlaylistTrackItem extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
             color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.2),
-            image: track.coverUrl.isNotEmpty
+            image: (track.coverUrl?.isNotEmpty ?? false)
                 ? DecorationImage(
-                    image: NetworkImage(track.coverUrl),
+                    image: NetworkImage(track.coverUrl!),
                     fit: BoxFit.cover,
                     onError: (_, __) {},
                   )
                 : null,
           ),
-          child: track.coverUrl.isEmpty
+          child: (track.coverUrl?.isEmpty ?? true)
               ? Icon(
                   Icons.music_note,
                   color: ThemeHelpers.getPrimaryColor(context),
@@ -309,7 +308,7 @@ class _PlaylistTrackItem extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          track.subtitle,
+          track.subtitle ?? '',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(

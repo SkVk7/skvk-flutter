@@ -9,6 +9,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/design_system/design_system.dart';
+import '../../../core/logging/logging_helper.dart';
 
 /// Daily prediction notification service
 class DailyPredictionNotificationService {
@@ -56,9 +57,17 @@ class DailyPredictionNotificationService {
       await _requestPermissions();
 
       _isInitialized = true;
-      debugPrint('Daily prediction notification service initialized');
-    } catch (e) {
-      debugPrint('Error initializing notification service: $e');
+      LoggingHelper.logInfo(
+        'Daily prediction notification service initialized',
+        source: 'DailyPredictionNotificationService',
+      );
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error initializing notification service: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
     }
   }
 
@@ -83,8 +92,13 @@ class DailyPredictionNotificationService {
           );
         }
       }
-    } catch (e) {
-      debugPrint('Error requesting notification permissions: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error requesting notification permissions: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
     }
   }
 
@@ -183,9 +197,17 @@ class DailyPredictionNotificationService {
         payload: 'predictions', // Deep link payload
       );
 
-      debugPrint('Daily prediction notification shown');
-    } catch (e) {
-      debugPrint('Error showing daily prediction notification: $e');
+      LoggingHelper.logInfo(
+        'Daily prediction notification shown',
+        source: 'DailyPredictionNotificationService',
+      );
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error showing daily prediction notification: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
     }
   }
 
@@ -204,8 +226,13 @@ class DailyPredictionNotificationService {
       }
 
       return mode == AppThemeMode.dark;
-    } catch (e) {
-      debugPrint('Error getting theme mode: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting theme mode: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
       // Default to light mode on error
       return false;
     }
@@ -256,7 +283,10 @@ class DailyPredictionNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    debugPrint('Notification tapped: ${response.payload}');
+    LoggingHelper.logDebug(
+      'Notification tapped: ${response.payload}',
+      source: 'DailyPredictionNotificationService',
+    );
     _lastNotificationPayload = response.payload;
 
     // Navigation will be handled by the app's navigation system
@@ -271,8 +301,13 @@ class DailyPredictionNotificationService {
       if (_notifications != null) {
         await _notifications!.cancelAll();
       }
-    } catch (e) {
-      debugPrint('Error canceling notifications: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error canceling notifications: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
     }
   }
 
@@ -282,8 +317,13 @@ class DailyPredictionNotificationService {
       if (_notifications != null) {
         await _notifications!.cancel(id);
       }
-    } catch (e) {
-      debugPrint('Error canceling notification: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error canceling notification: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
     }
   }
 
@@ -350,9 +390,17 @@ class DailyPredictionNotificationService {
         payload: 'create_profile', // Deep link payload
       );
 
-      debugPrint('Create profile notification shown');
-    } catch (e) {
-      debugPrint('Error showing create profile notification: $e');
+      LoggingHelper.logInfo(
+        'Create profile notification shown',
+        source: 'DailyPredictionNotificationService',
+      );
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error showing create profile notification: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionNotificationService',
+      );
     }
   }
 }

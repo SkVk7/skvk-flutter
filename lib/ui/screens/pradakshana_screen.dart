@@ -19,6 +19,7 @@ import '../components/counter/index.dart';
 import '../components/app_bar/standard_app_bar.dart';
 import '../components/dialogs/index.dart';
 import '../../core/services/language/translation_service.dart';
+import '../../core/logging/logging_helper.dart';
 
 /// Pradakshana Counter Screen
 class PradakshanaScreen extends ConsumerStatefulWidget {
@@ -114,8 +115,13 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
       });
 
       _calculateAndApplyDynamicCooldown();
-    } catch (e) {
-      debugPrint('Failed to load persisted data: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Failed to load persisted data: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'PradakshanaScreen',
+      );
     }
   }
 
@@ -124,8 +130,13 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_countKey, _count);
-    } catch (e) {
-      debugPrint('Failed to save count: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Failed to save count: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'PradakshanaScreen',
+      );
     }
   }
 
@@ -134,8 +145,13 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_cooldownKey, _cooldownDuration.inSeconds);
-    } catch (e) {
-      debugPrint('Failed to save cooldown duration: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Failed to save cooldown duration: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'PradakshanaScreen',
+      );
     }
   }
 
@@ -146,8 +162,13 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
       if (_lastTriggerTime != null) {
         await prefs.setString(_lastTriggerKey, _lastTriggerTime!.toIso8601String());
       }
-    } catch (e) {
-      debugPrint('Failed to save last trigger time: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Failed to save last trigger time: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'PradakshanaScreen',
+      );
     }
   }
 

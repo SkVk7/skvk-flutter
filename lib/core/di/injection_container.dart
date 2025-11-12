@@ -102,8 +102,10 @@ ProviderSubscription<T> watchIt<T>(
 }
 
 // ============================================================================
-// PROVIDER DEFINITIONS
+// REPOSITORY PROVIDER DEFINITIONS
 // ============================================================================
+// These providers are defined here and exported via providers_registry.dart
+// for centralized access
 
 /// User repository provider
 final userRepositoryProvider = Provider<UserRepositoryInterface>((ref) {
@@ -123,6 +125,7 @@ final horoscopeRepositoryProvider = Provider<HoroscopeRepository>((ref) {
 });
 
 /// SharedPreferences provider
+/// Must be overridden in ProviderScope with actual SharedPreferences instance
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('SharedPreferences must be overridden');
+  throw UnimplementedError('SharedPreferences must be overridden in ProviderScope');
 });

@@ -8,9 +8,10 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/playlist.dart';
-import 'models/track.dart';
+import '../../models/audio/track.dart';
 import '../../../core/logging/logging_helper.dart';
 import '../../../core/services/analytics/analytics_service.dart';
+import '../../../core/services/content/content_api_service.dart';
 
 /// Playlist Service - Manages playlists with persistence
 class PlaylistService extends StateNotifier<List<Playlist>> {
@@ -233,6 +234,51 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
       return state.firstWhere((p) => p.id == id);
     } catch (e) {
       return null;
+    }
+  }
+
+  /// Get tracks for a playlist
+  /// Loads tracks from the API based on track IDs in the playlist
+  Future<List<Track>> getTracksForPlaylist(String playlistId) async {
+    final playlist = getPlaylist(playlistId);
+    if (playlist == null) return [];
+
+    if (playlist.trackIds.isEmpty) return [];
+
+    try {
+      // Load music list from API (uses cache)
+      final musicList = await ContentApiService.instance.getMusicList();
+      final allMusic = (musicList['music'] as List<dynamic>?)
+              ?.map((music) => music as Map<String, dynamic>)
+              .toList() ??
+          [];
+
+      // Create a map of track ID to music data for quick lookup
+      final musicMap = <String, Map<String, dynamic>>{};
+      for (final music in allMusic) {
+        final id = music['id'] as String?;
+        if (id != null) {
+          musicMap[id] = music;
+        }
+      }
+
+      // Get tracks in playlist order
+      final tracks = <Track>[];
+      for (final trackId in playlist.trackIds) {
+        final music = musicMap[trackId];
+        if (music != null) {
+          tracks.add(Track.fromMusicMap(music));
+        }
+      }
+
+      return tracks;
+    } catch (e) {
+      LoggingHelper.logError(
+        'Failed to load tracks for playlist $playlistId',
+        source: 'PlaylistService',
+        error: e,
+      );
+      return [];
     }
   }
 

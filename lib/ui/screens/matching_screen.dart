@@ -426,19 +426,17 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   }
 
   Future<void> _performMatching() async {
-    print('🔍 DEBUG: _performMatching called');
-    LoggingHelper.logInfo('Perform Matching button pressed!');
+    LoggingHelper.logInfo('Perform Matching button pressed!', source: 'MatchingScreen');
 
     // Validate that both persons have required data
     if (_groomNameController.text.trim().isEmpty ||
         _brideNameController.text.trim().isEmpty) {
-      print('🔍 DEBUG: Validation failed - missing names');
-      LoggingHelper.logWarning('Matching validation failed: Missing names');
+      LoggingHelper.logWarning('Matching validation failed: Missing names', source: 'MatchingScreen');
       _showErrorDialog('Please enter names for both groom and bride');
       return;
     }
 
-    print('🔍 DEBUG: Validation passed, proceeding with matching');
+    LoggingHelper.logDebug('Validation passed, proceeding with matching', source: 'MatchingScreen');
 
     try {
       LoggingHelper.logInfo('Starting kundali matching process - groom: ${_groomNameController.text.trim()}, bride: ${_brideNameController.text.trim()}');
@@ -508,17 +506,17 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       );
 
       // Perform matching through the use case with both persons
-      LoggingHelper.logInfo('Performing kundali matching calculations');
-      print(
-          '🔍 DEBUG: Calling matching provider with groom: ${groomData.name}, bride: ${brideData.name}');
+      LoggingHelper.logInfo(
+        'Performing kundali matching calculations - groom: ${groomData.name}, bride: ${brideData.name}',
+        source: 'MatchingScreen',
+      );
 
       // Pass current user to optimize cache usage
       await ref.read(matchingProvider.notifier).performMatching(
           groomData, brideData,
           ayanamsha: _selectedAyanamsha, houseSystem: _selectedHouseSystem);
 
-      print('🔍 DEBUG: Matching provider call completed');
-      LoggingHelper.logInfo('Kundali matching completed successfully');
+      LoggingHelper.logInfo('Kundali matching completed successfully', source: 'MatchingScreen');
 
       // Save form data for future sessions
       await _saveFormData();

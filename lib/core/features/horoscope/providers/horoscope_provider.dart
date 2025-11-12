@@ -9,6 +9,7 @@ import '../repositories/horoscope_repository.dart';
 import '../../../di/injection_container.dart';
 import '../usecases/generate_horoscope_usecase.dart';
 import '../../../utils/either.dart';
+import '../../../logging/logging_helper.dart';
 
 /// Horoscope state
 class HoroscopeState {
@@ -57,11 +58,13 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
 
   /// Generate horoscope
   Future<void> generateHoroscope() async {
+    LoggingHelper.logDebug('HoroscopeNotifier.generateHoroscope called', source: 'HoroscopeProvider');
     state = state.copyWith(
         isLoading: true, errorMessage: null, successMessage: null);
 
     try {
       final result = await _generateHoroscopeUseCase();
+      LoggingHelper.logDebug('Horoscope generation result: ${result.isSuccess}', source: 'HoroscopeProvider');
 
       if (result.isSuccess) {
         state = state.copyWith(
@@ -85,7 +88,9 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
           errorMessage: userFriendlyMessage,
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Exception in horoscope generation: $e',
+          error: e, stackTrace: stackTrace, source: 'HoroscopeProvider');
       // Convert technical error to user-friendly message
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(

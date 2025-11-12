@@ -15,6 +15,7 @@ import '../../../core/services/location/simple_location_service.dart';
 import '../../../core/utils/astrology/timezone_util.dart';
 import '../../../core/services/astrology/astrology_name_service.dart';
 import '../../../core/services/language/language_service.dart';
+import '../../../core/logging/logging_helper.dart';
 
 class CalendarMonthView extends ConsumerStatefulWidget {
   final DateTime currentMonth;
@@ -96,14 +97,18 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     // Find the day data from already cached month data
     Map<String, dynamic>? dayData;
 
-    print('🔍 DEBUG: _monthData is null: ${_monthData == null}');
-    print('🔍 DEBUG: _isMonthDataLoading: $_isMonthDataLoading');
+    LoggingHelper.logDebug(
+      '_monthData is null: ${_monthData == null}, _isMonthDataLoading: $_isMonthDataLoading',
+      source: 'CalendarMonthView',
+    );
 
     if (_monthData != null) {
       final daysRaw = _monthData!['days'];
       final days = _convertToListOfMaps(daysRaw);
-      print('🔍 DEBUG: Month data has ${days.length} days');
-      print('🔍 DEBUG: Looking for day ${date.day} in month ${date.month}');
+      LoggingHelper.logDebug(
+        'Month data has ${days.length} days, looking for day ${date.day} in month ${date.month}',
+        source: 'CalendarMonthView',
+      );
 
       try {
         final rawDayData = days.firstWhere(
@@ -116,13 +121,22 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         );
         // Transform nested API response to flat structure expected by DayViewPopup
         dayData = _flattenDayData(rawDayData);
-        print('🔍 DEBUG: Found day data: ${dayData['tithiName'] ?? 'N/A'}');
+        LoggingHelper.logDebug(
+          'Found day data: ${dayData['tithiName'] ?? 'N/A'}',
+          source: 'CalendarMonthView',
+        );
       } catch (e) {
-        print('🔍 DEBUG: Day not found in cached data: $e');
+        LoggingHelper.logWarning(
+          'Day not found in cached data: $e',
+          source: 'CalendarMonthView',
+        );
         dayData = null;
       }
     } else {
-      print('🔍 DEBUG: Month data is null, cannot extract day data');
+      LoggingHelper.logDebug(
+        'Month data is null, cannot extract day data',
+        source: 'CalendarMonthView',
+      );
     }
 
     showDialog(
@@ -202,13 +216,18 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
           _isMonthDataLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (mounted) {
         setState(() {
           _isMonthDataLoading = false;
         });
       }
-      debugPrint('Error loading month data: $e');
+      LoggingHelper.logError(
+        'Error loading month data: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'CalendarMonthView',
+      );
     }
   }
 
@@ -688,8 +707,13 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
           };
         }
       }
-    } catch (e) {
-      debugPrint('Error getting calendar info: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting calendar info: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'CalendarMonthView',
+      );
     }
 
     // Return empty data if not found

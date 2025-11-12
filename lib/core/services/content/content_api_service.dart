@@ -5,7 +5,7 @@
 library;
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:archive/archive_io.dart';
 import '../../../core/config/app_config.dart';
@@ -145,8 +145,13 @@ class ContentApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting music list: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting music list: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'ContentApiService',
+      );
       rethrow;
     }
   }
@@ -156,8 +161,13 @@ class ContentApiService {
     try {
       // The Worker now directly serves the file, so the URL is the endpoint itself
       return '$baseUrl/api/music/$musicId';
-    } catch (e) {
-      debugPrint('Error getting music URL: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting music URL: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'ContentApiService',
+      );
       rethrow;
     }
   }
@@ -222,8 +232,13 @@ class ContentApiService {
       );
 
       return lyrics;
-    } catch (e) {
-      debugPrint('Error getting lyrics: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting lyrics: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'ContentApiService',
+      );
       rethrow;
     }
   }
@@ -277,8 +292,13 @@ class ContentApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting books list: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting books list: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'ContentApiService',
+      );
       rethrow;
     }
   }
@@ -289,8 +309,13 @@ class ContentApiService {
       final lang = language ?? 'en';
       // The Worker now directly serves the file, so the URL is the endpoint itself
       return '$baseUrl/api/books/$bookId?lang=$lang';
-    } catch (e) {
-      debugPrint('Error getting book URL: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting book URL: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'ContentApiService',
+      );
       rethrow;
     }
   }
@@ -319,8 +344,13 @@ class ContentApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting available languages: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError(
+        'Error getting available languages: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'ContentApiService',
+      );
       rethrow;
     }
   }

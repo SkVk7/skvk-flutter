@@ -10,6 +10,7 @@ import '../../../services/user/user_service.dart';
 import '../../../utils/validation/profile_completion_checker.dart';
 import '../../../utils/astrology/timezone_util.dart';
 import '../../../utils/either.dart';
+import '../../../logging/logging_helper.dart';
 
 /// Daily predictions state
 class DailyPredictionsState {
@@ -50,6 +51,7 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
     required Map<String, dynamic> birthData,
     required DateTime date,
   }) async {
+    LoggingHelper.logDebug('DailyPredictionsNotifier.getDailyPredictions called', source: 'DailyPredictionsProvider');
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
@@ -101,13 +103,16 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
         }
       }
 
+      LoggingHelper.logDebug('Daily predictions retrieved: ${predictionData.length} items', source: 'DailyPredictionsProvider');
       state = state.copyWith(
         isLoading: false,
         predictions: predictionData.isNotEmpty ? predictionData : null,
         errorMessage:
             predictionData.isEmpty ? 'No predictions available' : null,
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Exception getting daily predictions: $e',
+          error: e, stackTrace: stackTrace, source: 'DailyPredictionsProvider');
       // Convert technical error to user-friendly message
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(

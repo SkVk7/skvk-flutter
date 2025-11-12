@@ -9,6 +9,7 @@ import '../../../di/injection_container.dart';
 import '../usecases/perform_matching_usecase.dart';
 import '../../../utils/either.dart';
 import '../../../utils/validation/error_message_helper.dart';
+import '../../../logging/logging_helper.dart';
 
 /// Matching state
 /// All data comes from the astrology-service API - no business logic here
@@ -79,16 +80,17 @@ class MatchingNotifier extends Notifier<MatchingState> {
   /// Perform matching with both persons' data
   Future<void> performMatching(PartnerData person1Data, PartnerData person2Data,
       {String? ayanamsha, String? houseSystem}) async {
-    print(
-        '🔍 DEBUG: MatchingNotifier.performMatching called with ${person1Data.name} and ${person2Data.name}');
+    LoggingHelper.logDebug(
+        'MatchingNotifier.performMatching called with ${person1Data.name} and ${person2Data.name}',
+        source: 'MatchingProvider');
     state = state.copyWith(
         isLoading: true, errorMessage: null, successMessage: null);
 
     try {
-      print('🔍 DEBUG: Calling _performMatchingUseCase');
-      final result = await _performMatchingUseCase(person1Data, person2Data,
+      LoggingHelper.logDebug('Calling _performMatchingUseCase', source: 'MatchingProvider');
+      final result = await _performMatchingUseCase.performMatching(person1Data, person2Data,
           ayanamsha: ayanamsha, houseSystem: houseSystem);
-      print('🔍 DEBUG: Use case result: ${result.isSuccess}');
+      LoggingHelper.logDebug('Use case result: ${result.isSuccess}', source: 'MatchingProvider');
 
       if (result.isSuccess) {
         final matchingResult = result.value!;

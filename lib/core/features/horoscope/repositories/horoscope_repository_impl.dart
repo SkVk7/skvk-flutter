@@ -1,6 +1,7 @@
 /// Horoscope Repository Implementation
 ///
 /// Concrete implementation of horoscope repository
+/// Uses BaseRepository for consistent error handling
 library;
 
 import '../repositories/horoscope_repository.dart';
@@ -8,10 +9,12 @@ import '../../../utils/either.dart';
 import '../../../errors/failures.dart';
 import '../../../interfaces/user_repository_interface.dart';
 import '../../../services/astrology/astrology_service_bridge.dart';
-import '../../../utils/validation/error_message_helper.dart';
+import '../../../base/base_repository.dart';
+import '../../../logging/logging_helper.dart';
 
 /// Horoscope repository implementation
-class HoroscopeRepositoryImpl implements HoroscopeRepository {
+/// Extends BaseRepository for consistent error handling
+class HoroscopeRepositoryImpl extends BaseRepository implements HoroscopeRepository {
   final UserRepositoryInterface _userRepository;
 
   HoroscopeRepositoryImpl({required UserRepositoryInterface userRepository})
@@ -82,19 +85,23 @@ class HoroscopeRepositoryImpl implements HoroscopeRepository {
       );
 
       return ResultHelper.success(horoscopeData);
-    } catch (e) {
-      // Convert technical error to user-friendly message
-      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
-      return ResultHelper.failure(
-        UnexpectedFailure(message: userFriendlyMessage),
-      );
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Exception caught in horoscope repository: $e',
+          error: e, stackTrace: stackTrace, source: 'HoroscopeRepository');
+      return handleException<HoroscopeData>(e, 'generateHoroscope');
     }
   }
 
   @override
   Future<Result<Map<String, dynamic>?>> getUserBirthData() async {
-    final result = await _userRepository.getCachedAstrologyData();
-    return ResultHelper.success(result);
+    try {
+      final result = await _userRepository.getCachedAstrologyData();
+      return ResultHelper.success(result);
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Exception getting user birth data: $e',
+          error: e, stackTrace: stackTrace, source: 'HoroscopeRepository');
+      return handleException<Map<String, dynamic>?>(e, 'getUserBirthData');
+    }
   }
 
   // Helper methods for predictions

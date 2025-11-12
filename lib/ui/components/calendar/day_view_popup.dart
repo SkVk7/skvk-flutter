@@ -12,6 +12,7 @@ import 'package:lucide_flutter/lucide_flutter.dart';
 import '../../../core/design_system/design_system.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/validation/error_message_helper.dart';
+import '../../../core/logging/logging_helper.dart';
 
 class DayViewPopup extends ConsumerStatefulWidget {
   final DateTime selectedDate;
@@ -73,14 +74,19 @@ class _DayViewPopupState extends ConsumerState<DayViewPopup>
 
     // Use pre-loaded data if available, otherwise try to load it
     if (widget.dayData != null) {
-      print(
-          '🔍 DEBUG: Using pre-loaded day data: ${widget.dayData?['tithiName'] ?? 'N/A'}');
+      LoggingHelper.logDebug(
+        'Using pre-loaded day data: ${widget.dayData?['tithiName'] ?? 'N/A'}',
+        source: 'DayViewPopup',
+      );
       setState(() {
         _dayData = _normalizeDayData(widget.dayData!);
         _isLoading = false;
       });
     } else {
-      print('🔍 DEBUG: No pre-loaded data, attempting to load...');
+      LoggingHelper.logDebug(
+        'No pre-loaded data, attempting to load...',
+        source: 'DayViewPopup',
+      );
       // Fallback: try to load data if not provided
       _loadDayData();
     }

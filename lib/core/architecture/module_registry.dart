@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../logging/logging_helper.dart';
 
 /// Base interface for all modules
 abstract class AppModule {
@@ -43,7 +44,10 @@ class ModuleRegistry {
     _initializationStatus[module.name] = false;
 
     if (kDebugMode) {
-      print('Module registered: ${module.name} v${module.version}');
+      LoggingHelper.logDebug(
+        'Module registered: ${module.name} v${module.version}',
+        source: 'ModuleRegistry',
+      );
     }
   }
 
@@ -74,7 +78,10 @@ class ModuleRegistry {
     _initializationStatus[moduleName] = true;
 
     if (kDebugMode) {
-      print('Module initialized: $moduleName');
+      LoggingHelper.logDebug(
+        'Module initialized: $moduleName',
+        source: 'ModuleRegistry',
+      );
     }
   }
 

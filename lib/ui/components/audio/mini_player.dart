@@ -13,6 +13,7 @@ import '../../utils/theme_helpers.dart';
 import '../../utils/responsive_system.dart';
 import '../../utils/animations.dart';
 import '../../../../main.dart' show navigatorKey;
+import '../../../core/logging/logging_helper.dart';
 
 /// Mini Player Widget
 ///
@@ -85,7 +86,10 @@ class MiniPlayer extends ConsumerWidget {
                   flex: 2,
                   child: InkWell(
                     onTap: () {
-                      debugPrint('Mini player tapped - expanding to full player');
+                      LoggingHelper.logDebug(
+                        'Mini player tapped - expanding to full player',
+                        source: 'MiniPlayer',
+                      );
                       _expandToNowPlaying(context, ref);
                     },
                     child: IntrinsicHeight(
@@ -369,13 +373,19 @@ class MiniPlayer extends ConsumerWidget {
   /// Expand to Now Playing screen with smooth expansion animation
   /// Makes it feel like the same player expanding from mini to full
   void _expandToNowPlaying(BuildContext context, WidgetRef ref) {
-    debugPrint('Navigating to NowPlayingScreen');
+    LoggingHelper.logDebug(
+      'Navigating to NowPlayingScreen',
+      source: 'MiniPlayer',
+    );
     
     // Use the global Navigator key to access Navigator from anywhere
     final navigator = navigatorKey.currentState;
     
     if (navigator != null) {
-      debugPrint('Found Navigator via navigatorKey, navigating...');
+      LoggingHelper.logDebug(
+        'Found Navigator via navigatorKey, navigating...',
+        source: 'MiniPlayer',
+      );
       navigator.push(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
@@ -415,7 +425,10 @@ class MiniPlayer extends ConsumerWidget {
         ),
       );
     } else {
-      debugPrint('Navigator key not available - MaterialApp may not be initialized yet');
+      LoggingHelper.logWarning(
+        'Navigator key not available - MaterialApp may not be initialized yet',
+        source: 'MiniPlayer',
+      );
     }
   }
 }

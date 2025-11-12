@@ -1,23 +1,26 @@
 /// Matching Repository Implementation
 ///
 /// Concrete implementation of matching repository
+/// Uses BaseRepository for consistent error handling
 library;
 
 import '../repositories/matching_repository.dart';
 import '../../../utils/either.dart';
 import '../../../errors/failures.dart';
 import '../../../services/astrology/astrology_service_bridge.dart';
-import '../../../utils/validation/error_message_helper.dart';
+import '../../../base/base_repository.dart';
+import '../../../logging/logging_helper.dart';
 
 /// Matching repository implementation
-class MatchingRepositoryImpl implements MatchingRepository {
+/// Extends BaseRepository for consistent error handling
+class MatchingRepositoryImpl extends BaseRepository implements MatchingRepository {
   @override
   Future<Result<MatchingResult>> performMatching(
       PartnerData person1Data, PartnerData person2Data,
       {String? ayanamsha, String? houseSystem}) async {
-    print('🔍 DEBUG: MatchingRepositoryImpl.performMatching called');
+    LoggingHelper.logDebug('MatchingRepositoryImpl.performMatching called', source: 'MatchingRepository');
     try {
-      print('🔍 DEBUG: Using AstrologyServiceBridge for API calls');
+      LoggingHelper.logDebug('Using AstrologyServiceBridge for API calls', source: 'MatchingRepository');
 
       // Use the local birth datetime (bridge will convert to UTC)
       final person1BirthDateTime = person1Data.dateOfBirth;
@@ -40,7 +43,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
       final person2TimezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
           person2Data.latitude, person2Data.longitude);
 
-      print('🔍 DEBUG: Calculating compatibility via API');
+      LoggingHelper.logDebug('Calculating compatibility via API', source: 'MatchingRepository');
       // Calculate compatibility using bridge (handles timezone conversion automatically)
       // The API internally handles birth chart fetching and caching
       final compatibilityResult = await bridge.calculateCompatibility(
@@ -55,20 +58,19 @@ class MatchingRepositoryImpl implements MatchingRepository {
         ayanamsha: selectedAyanamsha,
         houseSystem: selectedHouseSystem,
       );
-      print('🔍 DEBUG: Compatibility calculation completed');
+      LoggingHelper.logDebug('Compatibility calculation completed', source: 'MatchingRepository');
 
       // Extract result from API response (using camelCase)
       final result = compatibilityResult;
 
-      print('🔍 DEBUG: Creating matching result');
-      print('🔍 DEBUG: Result keys: ${result.keys.toList()}');
-      print('🔍 DEBUG: Full result: $result');
+      LoggingHelper.logDebug('Creating matching result', source: 'MatchingRepository');
+      LoggingHelper.logDebug('Result keys: ${result.keys.toList()}', source: 'MatchingRepository');
 
       // Check if API returned an error response
       if (result.containsKey('error') || result.containsKey('message')) {
         final errorMessage =
             result['error'] ?? result['message'] ?? 'Unknown API error';
-        print('🔍 DEBUG: API returned error: $errorMessage');
+        LoggingHelper.logWarning('API returned error: $errorMessage', source: 'MatchingRepository');
         return ResultHelper.failure(
           UnexpectedFailure(message: 'API error: $errorMessage'),
         );
@@ -90,15 +92,12 @@ class MatchingRepositoryImpl implements MatchingRepository {
       if (kootaScoresKey == null ||
           percentageKey == null ||
           totalScoreKey == null) {
-        print('🔍 DEBUG: API response missing required fields');
-        print(
-            '🔍 DEBUG: Has kootaScores: ${result.containsKey('kootaScores')}');
-        print(
-            '🔍 DEBUG: Has koota_scores: ${result.containsKey('koota_scores')}');
-        print('🔍 DEBUG: Has percentage: ${result.containsKey('percentage')}');
-        print('🔍 DEBUG: Has totalScore: ${result.containsKey('totalScore')}');
-        print(
-            '🔍 DEBUG: Has total_score: ${result.containsKey('total_score')}');
+        LoggingHelper.logWarning('API response missing required fields', source: 'MatchingRepository');
+        LoggingHelper.logDebug('Has kootaScores: ${result.containsKey('kootaScores')}', source: 'MatchingRepository');
+        LoggingHelper.logDebug('Has koota_scores: ${result.containsKey('koota_scores')}', source: 'MatchingRepository');
+        LoggingHelper.logDebug('Has percentage: ${result.containsKey('percentage')}', source: 'MatchingRepository');
+        LoggingHelper.logDebug('Has totalScore: ${result.containsKey('totalScore')}', source: 'MatchingRepository');
+        LoggingHelper.logDebug('Has total_score: ${result.containsKey('total_score')}', source: 'MatchingRepository');
         return ResultHelper.failure(
           ValidationFailure(
               message:
@@ -110,7 +109,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
       // API returns kootaScores as Map<String, KootaScore> where KootaScore has 'score' field
       final kootaScoresMap = result[kootaScoresKey] as Map<String, dynamic>?;
       if (kootaScoresMap == null || kootaScoresMap.isEmpty) {
-        print('🔍 DEBUG: API response has empty kootaScores');
+        LoggingHelper.logWarning('API response has empty kootaScores', source: 'MatchingRepository');
         return ResultHelper.failure(
           ValidationFailure(
               message: 'Invalid API response: kootaScores is empty'),
@@ -119,7 +118,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       final percentage = result[percentageKey] as double?;
       if (percentage == null) {
-        print('🔍 DEBUG: API response missing percentage');
+        LoggingHelper.logWarning('API response missing percentage', source: 'MatchingRepository');
         return ResultHelper.failure(
           ValidationFailure(
               message: 'Invalid API response: missing percentage'),
@@ -128,7 +127,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       final totalScore = result[totalScoreKey] as int?;
       if (totalScore == null) {
-        print('🔍 DEBUG: API response missing totalScore');
+        LoggingHelper.logWarning('API response missing totalScore', source: 'MatchingRepository');
         return ResultHelper.failure(
           ValidationFailure(
               message: 'Invalid API response: missing totalScore'),
@@ -145,12 +144,12 @@ class MatchingRepositoryImpl implements MatchingRepository {
         final kootaName = entry.key;
         final kootaScore = entry.value as Map<String, dynamic>?;
         if (kootaScore == null) {
-          print('🔍 DEBUG: Koota $kootaName has null score data');
+          LoggingHelper.logWarning('Koota $kootaName has null score data', source: 'MatchingRepository');
           continue; // Skip invalid koota scores instead of defaulting to 0
         }
         final score = kootaScore['score'] as int?;
         if (score == null) {
-          print('🔍 DEBUG: Koota $kootaName has null score value');
+          LoggingHelper.logDebug('Koota $kootaName has null score value', source: 'MatchingRepository');
           continue; // Skip invalid koota scores instead of defaulting to 0
         }
         kootaDetails[kootaName] = score.toString();
@@ -158,7 +157,7 @@ class MatchingRepositoryImpl implements MatchingRepository {
 
       // Validate that we have at least some koota scores
       if (kootaDetails.isEmpty) {
-        print('🔍 DEBUG: No valid koota scores found in API response');
+        LoggingHelper.logWarning('No valid koota scores found in API response', source: 'MatchingRepository');
         return ResultHelper.failure(
           ValidationFailure(
               message: 'Invalid API response: no valid koota scores found'),
@@ -320,17 +319,13 @@ class MatchingRepositoryImpl implements MatchingRepository {
         recommendation: recommendation,
         totalScore: totalScore,
       );
-      print(
-          '🔍 DEBUG: Matching result created successfully with ${displayKootaDetails.length} koota scores');
+      LoggingHelper.logDebug('Matching result created successfully with ${displayKootaDetails.length} koota scores', source: 'MatchingRepository');
 
       return ResultHelper.success(matchingResult);
-    } catch (e) {
-      print('🔍 DEBUG: Exception caught in repository: $e');
-      // Convert technical error to user-friendly message
-      final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
-      return ResultHelper.failure(
-        UnexpectedFailure(message: userFriendlyMessage),
-      );
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Exception caught in repository: $e',
+          error: e, stackTrace: stackTrace, source: 'MatchingRepository');
+      return handleException<MatchingResult>(e, 'performMatching');
     }
   }
 }

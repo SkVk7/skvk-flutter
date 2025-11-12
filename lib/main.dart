@@ -9,16 +9,8 @@ import 'core/architecture/module_registry.dart';
 import 'ui/themes/theme_provider.dart';
 import 'ui/themes/app_themes.dart';
 
-// Screen imports
-import 'ui/screens/home_screen.dart' as home_screen;
-import 'ui/screens/pradakshana_screen.dart' as pradakshana_screen;
-import 'ui/screens/user_profile_screen.dart' as user_screen;
-import 'ui/screens/user_edit_screen.dart' as edit_user_screen;
-import 'ui/screens/matching_screen.dart' as matching_screen;
-import 'ui/screens/horoscope_screen.dart' as horoscope_screen;
-import 'ui/screens/calendar_screen.dart' as calendar_screen;
-import 'ui/screens/predictions_screen.dart' as predictions_screen;
-import 'ui/screens/audio_screen.dart' as audio_screen;
+// Navigation
+import 'core/navigation/app_routes.dart';
 // Audio components
 import 'ui/components/audio/index.dart';
 
@@ -172,6 +164,52 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     ref.read(themeNotifierProvider.notifier).refreshSystemTheme();
   }
 
+  /// Build MaterialApp with common configuration
+  Widget _buildMaterialApp({
+    required ThemeData theme,
+    required ThemeData darkTheme,
+    required ThemeMode themeMode,
+  }) {
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      title: '🔮 ${ProductionConfig.appName}',
+      theme: theme,
+      darkTheme: darkTheme,
+      themeMode: themeMode,
+      initialRoute: AppRoutes.home,
+      routes: AppRoutes.getRoutes(),
+      builder: _buildAppBuilder,
+      debugShowMaterialGrid: false,
+      showPerformanceOverlay: ProductionConfig.enablePerformanceOverlay,
+      debugShowCheckedModeBanner: false,
+      supportedLocales: ProductionConfig.supportedLocales,
+      locale: ProductionConfig.defaultLocale,
+    );
+  }
+
+  /// Build app wrapper with MediaQuery and MiniPlayer
+  Widget _buildAppBuilder(BuildContext context, Widget? child) {
+    return MediaQuery(
+      data: MediaQuery.of(context).copyWith(
+        textScaler: TextScaler.linear(1.0),
+      ),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          child!,
+          // Mini Player - Bottom sticky (visible across whole app)
+          // Positioned at bottom, only captures touches within its bounds
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: const MiniPlayer(),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use the new theme provider to get the current theme
@@ -179,181 +217,26 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
     return themeState.when(
       data: (state) {
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          title: '🔮 ${ProductionConfig.appName}',
+        return _buildMaterialApp(
           theme: state.theme,
+          darkTheme: AppThemes.darkTheme,
           themeMode: state.themeMode,
-          initialRoute: '/',
-          routes: {
-            '/': (BuildContext context) => const home_screen.HomeScreen() as Widget,
-            '/pradakshana': (BuildContext context) =>
-                const pradakshana_screen.PradakshanaScreen() as Widget,
-            '/user': (BuildContext context) =>
-                const edit_user_screen.UserEditScreen() as Widget,
-            '/matching': (BuildContext context) =>
-                const matching_screen.MatchingScreen() as Widget,
-            '/horoscope': (BuildContext context) =>
-                const horoscope_screen.HoroscopeScreen() as Widget,
-            '/calendar': (BuildContext context) =>
-                const calendar_screen.CalendarScreen() as Widget,
-            '/predictions': (BuildContext context) =>
-                const predictions_screen.PredictionsScreen() as Widget,
-            '/audio': (BuildContext context) =>
-                const audio_screen.AudioScreen() as Widget,
-            '/edit-profile': (BuildContext context) =>
-                const edit_user_screen.UserEditScreen() as Widget,
-            '/profile': (BuildContext context) =>
-                const user_screen.UserProfileScreen() as Widget,
-            '/settings': (BuildContext context) =>
-                const user_screen.UserProfileScreen() as Widget,
-          },
-          builder: (context, child) {
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(1.0),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  child!,
-                  // Mini Player - Bottom sticky (visible across whole app)
-                  // Positioned at bottom, only captures touches within its bounds
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: const MiniPlayer(),
-                  ),
-                ],
-              ),
-            );
-          },
-          debugShowMaterialGrid: false,
-          showPerformanceOverlay: ProductionConfig.enablePerformanceOverlay,
-          debugShowCheckedModeBanner: false,
-          supportedLocales: ProductionConfig.supportedLocales,
-          locale: ProductionConfig.defaultLocale,
         );
       },
       loading: () {
         // Show loading with default theme
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          title: '🔮 ${ProductionConfig.appName}',
+        return _buildMaterialApp(
           theme: AppThemes.lightTheme,
           darkTheme: AppThemes.darkTheme,
           themeMode: ThemeMode.system,
-          initialRoute: '/',
-          routes: {
-            '/': (BuildContext context) => const home_screen.HomeScreen() as Widget,
-            '/pradakshana': (BuildContext context) =>
-                const pradakshana_screen.PradakshanaScreen() as Widget,
-            '/user': (BuildContext context) =>
-                const edit_user_screen.UserEditScreen() as Widget,
-            '/matching': (BuildContext context) =>
-                const matching_screen.MatchingScreen() as Widget,
-            '/horoscope': (BuildContext context) =>
-                const horoscope_screen.HoroscopeScreen() as Widget,
-            '/calendar': (BuildContext context) =>
-                const calendar_screen.CalendarScreen() as Widget,
-            '/predictions': (BuildContext context) =>
-                const predictions_screen.PredictionsScreen() as Widget,
-            '/audio': (BuildContext context) =>
-                const audio_screen.AudioScreen() as Widget,
-            '/edit-profile': (BuildContext context) =>
-                const edit_user_screen.UserEditScreen() as Widget,
-            '/profile': (BuildContext context) =>
-                const user_screen.UserProfileScreen() as Widget,
-            '/settings': (BuildContext context) =>
-                const user_screen.UserProfileScreen() as Widget,
-          },
-          builder: (context, child) {
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(1.0),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  child!,
-                  // Mini Player - Bottom sticky (visible across whole app)
-                  // Positioned at bottom, only captures touches within its bounds
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: const MiniPlayer(),
-                  ),
-                ],
-              ),
-            );
-          },
-          debugShowMaterialGrid: false,
-          showPerformanceOverlay: ProductionConfig.enablePerformanceOverlay,
-          debugShowCheckedModeBanner: false,
-          supportedLocales: ProductionConfig.supportedLocales,
-          locale: ProductionConfig.defaultLocale,
         );
       },
       error: (error, stack) {
         // Show error with default theme
-        return MaterialApp(
-          navigatorKey: navigatorKey,
-          title: '🔮 ${ProductionConfig.appName}',
+        return _buildMaterialApp(
           theme: AppThemes.lightTheme,
           darkTheme: AppThemes.darkTheme,
           themeMode: ThemeMode.system,
-          initialRoute: '/',
-          routes: {
-            '/': (BuildContext context) => const home_screen.HomeScreen() as Widget,
-            '/pradakshana': (BuildContext context) =>
-                const pradakshana_screen.PradakshanaScreen() as Widget,
-            '/user': (BuildContext context) =>
-                const edit_user_screen.UserEditScreen() as Widget,
-            '/matching': (BuildContext context) =>
-                const matching_screen.MatchingScreen() as Widget,
-            '/horoscope': (BuildContext context) =>
-                const horoscope_screen.HoroscopeScreen() as Widget,
-            '/calendar': (BuildContext context) =>
-                const calendar_screen.CalendarScreen() as Widget,
-            '/predictions': (BuildContext context) =>
-                const predictions_screen.PredictionsScreen() as Widget,
-            '/audio': (BuildContext context) =>
-                const audio_screen.AudioScreen() as Widget,
-            '/edit-profile': (BuildContext context) =>
-                const edit_user_screen.UserEditScreen() as Widget,
-            '/profile': (BuildContext context) =>
-                const user_screen.UserProfileScreen() as Widget,
-            '/settings': (BuildContext context) =>
-                const user_screen.UserProfileScreen() as Widget,
-          },
-          builder: (context, child) {
-            return MediaQuery(
-              data: MediaQuery.of(context).copyWith(
-                textScaler: TextScaler.linear(1.0),
-              ),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  child!,
-                  // Mini Player - Bottom sticky (visible across whole app)
-                  // Positioned at bottom, only captures touches within its bounds
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: const MiniPlayer(),
-                  ),
-                ],
-              ),
-            );
-          },
-          debugShowMaterialGrid: false,
-          showPerformanceOverlay: ProductionConfig.enablePerformanceOverlay,
-          debugShowCheckedModeBanner: false,
-          supportedLocales: ProductionConfig.supportedLocales,
-          locale: ProductionConfig.defaultLocale,
         );
       },
     );

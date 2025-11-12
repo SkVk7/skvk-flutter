@@ -9,6 +9,7 @@ import '../../utils/theme_helpers.dart';
 import '../../utils/responsive_system.dart';
 import '../../../core/services/audio/playlist_service.dart';
 import '../../../core/services/audio/models/playlist.dart';
+import 'playlist_detail.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 
 /// Playlist List - Shows all playlists
@@ -56,22 +57,204 @@ class PlaylistList extends ConsumerWidget {
         return _PlaylistItem(
           playlist: playlist,
           onTap: () {
-            // TODO: Navigate to playlist detail
+            // Navigate to playlist detail
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PlaylistDetail(playlistId: playlist.id),
+              ),
+            );
           },
           onRename: () async {
-            // TODO: Show rename dialog
+            // Show rename dialog
+            await PlaylistList._showRenameDialog(context, ref, playlist);
           },
           onDelete: () async {
             await playlistService.deletePlaylist(playlist.id);
           },
           onShare: () async {
-            // TODO: Share playlist
-            await playlistService.exportPlaylist(playlist.id);
-            // TODO: Implement share functionality
+            try {
+              // Export playlist as JSON (for future use with share_plus package)
+              await playlistService.exportPlaylist(playlist.id);
+              // For now, show a snackbar with the playlist name
+              // In a full implementation, this could use share_plus package
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Share playlist: ${playlist.name}'),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to share playlist'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            }
           },
         );
       },
     );
+  }
+
+  /// Show rename dialog for playlist
+  static Future<void> _showRenameDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Playlist playlist,
+  ) async {
+    final playlistService = ref.read(playlistServiceProvider.notifier);
+    final textController = TextEditingController(text: playlist.name);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: ResponsiveSystem.all(context, baseSpacing: 24),
+          decoration: BoxDecoration(
+            color: ThemeHelpers.getSurfaceColor(context),
+            borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Title
+              Text(
+                'Rename Playlist',
+                style: TextStyle(
+                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                  fontWeight: FontWeight.bold,
+                  color: ThemeHelpers.getPrimaryTextColor(context),
+                ),
+              ),
+              ResponsiveSystem.sizedBox(
+                context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+              ),
+              // Text field
+              TextField(
+                controller: textController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Enter playlist name',
+                  border: OutlineInputBorder(
+                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    borderSide: BorderSide(
+                      color: ThemeHelpers.getBorderColor(context),
+                      width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    borderSide: BorderSide(
+                      color: ThemeHelpers.getBorderColor(context),
+                      width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    borderSide: BorderSide(
+                      color: ThemeHelpers.getPrimaryColor(context),
+                      width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: ThemeHelpers.getBackgroundColor(context),
+                  contentPadding: ResponsiveSystem.all(context, baseSpacing: 16),
+                ),
+                style: TextStyle(
+                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                  color: ThemeHelpers.getPrimaryTextColor(context),
+                ),
+                onSubmitted: (value) {
+                  if (value.trim().isNotEmpty) {
+                    Navigator.of(dialogContext).pop(value.trim());
+                  }
+                },
+              ),
+              ResponsiveSystem.sizedBox(
+                context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+              ),
+              // Actions
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        color: ThemeHelpers.getSecondaryTextColor(context),
+                      ),
+                    ),
+                  ),
+                  ResponsiveSystem.sizedBox(
+                    context,
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      final newName = textController.text.trim();
+                      if (newName.isNotEmpty) {
+                        Navigator.of(dialogContext).pop(newName);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ThemeHelpers.getPrimaryColor(context),
+                      foregroundColor: ThemeHelpers.getPrimaryTextColor(context),
+                      padding: ResponsiveSystem.symmetric(
+                        context,
+                        horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                        vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                      ),
+                    ),
+                    child: Text(
+                      'Rename',
+                      style: TextStyle(
+                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    // Handle result
+    if (result != null && result.isNotEmpty && result != playlist.name) {
+      try {
+        await playlistService.renamePlaylist(playlist.id, result);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Playlist renamed to "$result"'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to rename playlist'),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    }
   }
 }
 

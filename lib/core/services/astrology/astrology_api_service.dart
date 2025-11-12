@@ -8,10 +8,10 @@
 library;
 
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
 import '../../../core/services/shared/cache_service.dart';
+import '../../../core/logging/logging_helper.dart';
 
 /// Astrology API Service
 ///
@@ -121,8 +121,8 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting birth data: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Error getting birth data: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
       rethrow;
     }
   }
@@ -203,7 +203,7 @@ class AstrologyApiService {
           // This is an error response wrapped in 200 status
           final errorMessage =
               data['userMessage'] ?? data['message'] ?? 'Unknown API error';
-          debugPrint('API returned error in 200 response: $errorMessage');
+          LoggingHelper.logWarning('API returned error in 200 response: $errorMessage', source: 'AstrologyApiService');
           throw Exception('API error: $errorMessage');
         }
 
@@ -230,8 +230,8 @@ class AstrologyApiService {
               'API error: ${response.statusCode} - ${response.body}');
         }
       }
-    } catch (e) {
-      debugPrint('Error calculating compatibility: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Error calculating compatibility: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
       rethrow;
     }
   }
@@ -314,8 +314,8 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting predictions: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Error getting predictions: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
       rethrow;
     }
   }
@@ -383,8 +383,8 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting calendar year: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Error getting calendar year: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
       rethrow;
     }
   }
@@ -454,8 +454,8 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e) {
-      debugPrint('Error getting calendar month: $e');
+    } catch (e, stackTrace) {
+      LoggingHelper.logError('Error getting calendar month: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
       rethrow;
     }
   }

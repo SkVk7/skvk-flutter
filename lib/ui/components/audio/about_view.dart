@@ -6,7 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import '../../utils/theme_helpers.dart';
 import '../../utils/responsive_system.dart';
-import '../../../core/services/audio/models/track.dart';
+import '../../../core/models/audio/track.dart';
 
 /// About View - Shows track metadata and description
 class AboutView extends StatelessWidget {
@@ -55,9 +55,9 @@ class AboutView extends StatelessWidget {
             height: ResponsiveSystem.spacing(context, baseSpacing: 8),
           ),
           // Subtitle/Artist
-          if (track!.subtitle.isNotEmpty)
+          if ((track!.subtitle?.isNotEmpty ?? false))
             Text(
-              track!.subtitle,
+              track!.subtitle!,
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                 color: ThemeHelpers.getSecondaryTextColor(context),
@@ -68,7 +68,7 @@ class AboutView extends StatelessWidget {
             height: ResponsiveSystem.spacing(context, baseSpacing: 16),
           ),
           // Album
-          if (track!.album.isNotEmpty) ...[
+          if ((track!.album?.isNotEmpty ?? false)) ...[
             Text(
               'Album',
               style: TextStyle(
@@ -82,7 +82,7 @@ class AboutView extends StatelessWidget {
               height: ResponsiveSystem.spacing(context, baseSpacing: 4),
             ),
             Text(
-              track!.album,
+              track!.album!,
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
                 color: ThemeHelpers.getPrimaryTextColor(context),
@@ -107,7 +107,7 @@ class AboutView extends StatelessWidget {
             height: ResponsiveSystem.spacing(context, baseSpacing: 4),
           ),
           Text(
-            _formatDuration(track!.duration),
+            _formatDuration(track!.duration ?? Duration.zero),
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
               color: ThemeHelpers.getPrimaryTextColor(context),

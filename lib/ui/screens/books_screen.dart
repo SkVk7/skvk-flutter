@@ -15,6 +15,8 @@ import '../../core/services/content/content_api_service.dart';
 import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
 import '../../core/services/analytics/analytics_service.dart';
 import '../../core/services/content/content_language_service.dart';
+import '../../core/services/books/book_favorites_service.dart';
+import '../../core/services/books/recently_viewed_books_service.dart';
 import '../utils/screen_handlers.dart';
 import '../../core/services/language/translation_service.dart';
 import '../../core/logging/logging_helper.dart';
@@ -22,6 +24,9 @@ import '../../core/utils/validation/error_message_helper.dart';
 // UI Components - Reusable components
 import '../components/common/index.dart';
 import '../components/content/book_reader_widget.dart';
+import '../components/content/horizontal_section.dart';
+import '../components/content/horizontal_skeleton_section.dart';
+import 'book_content_list_view_screen.dart';
 
 /// Books screen
 class BooksScreen extends ConsumerStatefulWidget {
@@ -40,11 +45,139 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
   String? _bookUrl; // Book URL for reader
   List<String> _availableLanguages =
       []; // Available languages for selected book
+  
+  // Analytics data
+  List<Map<String, dynamic>> _mostRead = [];
+  List<Map<String, dynamic>> _trending = [];
+  bool _isLoadingAnalytics = false;
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _filteredBooksList = [];
 
   @override
   void initState() {
     super.initState();
     _loadBooksList();
+    _loadAnalytics();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+  
+  /// Load analytics data (Most Read, Trending)
+  Future<void> _loadAnalytics() async {
+    if (_isLoadingAnalytics) return;
+    
+    setState(() {
+      _isLoadingAnalytics = true;
+    });
+    
+    try {
+      // Load most read and trending in parallel
+      final results = await Future.wait([
+        AnalyticsService.instance.getMostVisitedBooks(limit: 10),
+        AnalyticsService.instance.getTrending(limit: 10, type: 'book'),
+      ]);
+      
+      if (mounted) {
+        setState(() {
+          _mostRead = results[0];
+          _trending = results[1];
+          _isLoadingAnalytics = false;
+        });
+      }
+    } catch (e) {
+      LoggingHelper.logError('Failed to load book analytics', source: 'BooksScreen', error: e);
+      if (mounted) {
+        setState(() {
+          _isLoadingAnalytics = false;
+        });
+      }
+    }
+  }
+  
+  /// Get book by ID from books list
+  Map<String, dynamic>? _getBookById(String bookId) {
+    try {
+      return _booksList.firstWhere((book) => book['id'] == bookId);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  /// Extract category from ID (format: {category}-{content-id})
+  String _extractCategoryFromId(String fullId) {
+    final parts = fullId.split('-');
+    if (parts.length < 2) {
+      return 'Other';
+    }
+    // First part is category, capitalize it
+    final category = parts[0];
+    return category.isEmpty
+        ? 'Other'
+        : category[0].toUpperCase() + category.substring(1).toLowerCase();
+  }
+
+  /// Categorize books by parsing category from ID
+  Map<String, List<Map<String, dynamic>>> _categorizeBooks() {
+    final categories = <String, List<Map<String, dynamic>>>{};
+    
+    for (final book in _booksList) {
+      final bookId = book['id'] as String? ?? '';
+      final category = _extractCategoryFromId(bookId);
+      
+      if (!categories.containsKey(category)) {
+        categories[category] = [];
+      }
+      categories[category]!.add(book);
+    }
+    
+    // Sort categories alphabetically for consistent display
+    final sortedCategories = Map.fromEntries(
+      categories.entries.toList()..sort((a, b) => a.key.compareTo(b.key))
+    );
+    
+    return sortedCategories;
+  }
+  
+  /// Navigate to filtered list screen
+  void _navigateToFilteredBookList(String title, List<Map<String, dynamic>> books) {
+    if (!mounted || books.isEmpty) return;
+    
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => BookContentListViewScreen(
+          title: title,
+          books: books,
+          onBookSelected: (bookId) {
+            // Navigate back and load the selected book
+            Navigator.of(context).pop();
+            // Load the book after a short delay to allow navigation to complete
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) {
+                _loadBook(bookId);
+              }
+            });
+          },
+        ),
+      ),
+    );
+  }
+  
+  void _filterBooks(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredBooksList = _booksList;
+      } else {
+        _filteredBooksList = _booksList.where((book) {
+          final title = (book['title'] as String? ?? '').toLowerCase();
+          final searchQuery = query.toLowerCase();
+          return title.contains(searchQuery);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _loadBooksList() async {
@@ -68,6 +201,7 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
         );
         setState(() {
           _booksList = books;
+          _filteredBooksList = books;
           _isLoading = false;
           // Clear error message if books are loaded successfully
           if (books.isNotEmpty) {
@@ -278,6 +412,9 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
 
       // NON-BLOCKING: Track analytics (fire and forget)
       unawaited(_trackBookView(normalizedBookId));
+      
+      // Track recently viewed
+      ref.read(recentlyViewedBooksServiceProvider.notifier).addBook(bookId);
     } catch (e) {
       LoggingHelper.logError('Failed to load book: $normalizedBookId',
           source: 'BooksScreen', error: e);
@@ -457,46 +594,138 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
                 ),
               ),
 
-              // Content
+              // Search Bar (only show when not viewing a book)
+              if (_selectedBook == null)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: ResponsiveSystem.all(context, baseSpacing: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Books List
-                      if (_booksList.isNotEmpty && _selectedBook == null)
-                        ..._booksList.map(
-                            (book) => _buildBookCard(context, book, isDark)),
+                    padding: ResponsiveSystem.symmetric(
+                      context,
+                      horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                      vertical: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Search books...',
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: ThemeHelpers.getSecondaryTextColor(context),
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: ThemeHelpers.getSecondaryTextColor(context),
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _filterBooks('');
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: ThemeHelpers.getSurfaceColor(context)
+                            .withValues(alpha: 0.9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            ResponsiveSystem.spacing(context, baseSpacing: 12),
+                          ),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: ResponsiveSystem.symmetric(
+                          context,
+                          horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                          vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                        ),
+                      ),
+                      style: TextStyle(
+                        color: ThemeHelpers.getPrimaryTextColor(context),
+                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                      ),
+                      onChanged: _filterBooks,
+                    ),
+                  ),
+                ),
 
-                      // Book Reader
-                      if (_selectedBook != null && _bookUrl != null) ...[
-                        _buildBookReader(context, isDark),
+              // Book Reader (full screen when book is selected)
+              if (_selectedBook != null && _bookUrl != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildBookReader(context, isDark),
+                ),
+
+              // Loading indicator when book is being loaded
+              if (_selectedBook != null && _bookUrl == null && _isLoadingBook)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                        CircularProgressIndicator(
+                          color: ThemeHelpers.getPrimaryColor(context),
+                        ),
+                        ResponsiveSystem.sizedBox(
+                          context,
+                          height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                        ),
+                        Text(
+                          'Loading book...',
+                          style: TextStyle(
+                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                            color: ThemeHelpers.getSecondaryTextColor(context),
+                          ),
+                        ),
                       ],
+                    ),
+                  ),
+                ),
+
+              // Main Content (only show when no book is selected)
+              if (_selectedBook == null) ...[
+                // Recently Viewed Section
+                _buildRecentlyViewedSection(),
+
+                // Favorites Section
+                _buildFavoritesSection(),
+
+                // Most Read Section (Analytics)
+                _buildMostReadSection(),
+
+                // Trending Section (Analytics)
+                _buildTrendingSection(),
+
+                // Category Sections (show skeleton if loading)
+                if (_isLoading || _booksList.isEmpty)
+                  SliverToBoxAdapter(
+                    child: _buildCategorySectionSkeleton(),
+                  ),
+                if (!_isLoading && _booksList.isNotEmpty)
+                  ..._buildCategorySections(),
+
+                // All Books Section (or Search Results) - show skeleton if loading
+                if (_isLoading)
+                  SliverToBoxAdapter(
+                    child: _buildAllBooksSectionSkeleton(),
+                  )
+                else if (_searchController.text.isNotEmpty)
+                  _buildSearchResultsSection()
+                else
+                  _buildAllBooksSection(),
 
                       // Error Message
                       if (_errorMessage != null)
-                        ErrorDisplayWidget(
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: ResponsiveSystem.all(context, baseSpacing: 16),
+                      child: ErrorDisplayWidget(
                           message: _errorMessage!,
                           onRetry: _loadBooksList,
                           icon: Icons.error_outline,
                         ),
-
-                      // Loading Indicator
-                      if (_isLoading || _isLoadingBook)
-                        Center(
-                          child: Padding(
-                            padding:
-                                ResponsiveSystem.all(context, baseSpacing: 24),
-                            child: CircularProgressIndicator(
-                              color: ThemeHelpers.getPrimaryColor(context),
-                            ),
-                          ),
+                    ),
                         ),
-                    ],
-                  ),
-                ),
-              ),
+              ],
             ],
           ),
         ),
@@ -504,10 +733,642 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
     );
   }
 
+  /// Recently Viewed Section (Local Cache)
+  Widget _buildRecentlyViewedSection() {
+    final recentlyViewed = ref.watch(recentlyViewedBooksServiceProvider);
+    
+    if (recentlyViewed.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final recentlyViewedBooks = recentlyViewed
+        .map((bookId) => _getBookById(bookId))
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    if (recentlyViewedBooks.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final bookCards = recentlyViewedBooks
+        .take(5)
+        .map((book) => _buildHorizontalBookCard(book))
+        .toList();
+
+    return HorizontalSection(
+      config: HorizontalSectionConfig(
+        title: 'Recently Viewed',
+        icon: Icons.history,
+        items: bookCards,
+        totalCount: recentlyViewed.length,
+        displayLimit: 5,
+        onSeeAll: recentlyViewed.length > 5
+            ? () {
+                final allRecentlyViewed = recentlyViewed
+                    .map((bookId) => _getBookById(bookId))
+                    .whereType<Map<String, dynamic>>()
+                    .toList();
+                _navigateToFilteredBookList('Recently Viewed', allRecentlyViewed);
+              }
+            : null,
+      ),
+    );
+  }
+
+  /// Favorites Section (Local Cache)
+  Widget _buildFavoritesSection() {
+    final favorites = ref.watch(bookFavoritesServiceProvider);
+    
+    if (favorites.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final favoriteBooks = _booksList
+        .where((book) => favorites.contains(book['id']))
+        .take(5)
+        .toList();
+
+    if (favoriteBooks.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final bookCards = favoriteBooks
+        .map((book) => _buildHorizontalBookCard(book))
+        .toList();
+
+    return HorizontalSection(
+      config: HorizontalSectionConfig(
+        title: 'Favorites',
+        icon: Icons.favorite,
+        items: bookCards,
+        totalCount: favorites.length,
+        displayLimit: 5,
+        onSeeAll: favorites.length > 5
+            ? () {
+                final allFavorites = _booksList
+                    .where((book) => favorites.contains(book['id']))
+                    .toList();
+                _navigateToFilteredBookList('Favorites', allFavorites);
+              }
+            : null,
+      ),
+    );
+  }
+
+  /// Most Read Section (Analytics - Server)
+  Widget _buildMostReadSection() {
+    // Show loading skeleton while loading analytics OR books list
+    if (_isLoadingAnalytics || _isLoading) {
+      return HorizontalSkeletonSection(
+        title: 'Most Read',
+        icon: Icons.trending_up,
+      );
+    }
+
+    // Don't show if books list is empty (data not loaded yet)
+    if (_booksList.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    if (_mostRead.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final mostReadBooks = _mostRead
+        .map((item) {
+          final bookId = item['id'] as String? ?? '';
+          return _getBookById(bookId);
+        })
+        .whereType<Map<String, dynamic>>()
+        .take(5)
+        .toList();
+
+    if (mostReadBooks.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final bookCards = mostReadBooks.asMap().entries.map((entry) {
+      final book = entry.value;
+      final bookId = book['id'] as String? ?? '';
+      final viewCount = _mostRead.firstWhere(
+        (item) => item['id'] == bookId,
+        orElse: () => {'count': 0},
+      )['count'] as int? ?? 0;
+      
+      return Stack(
+        children: [
+          _buildHorizontalBookCard(book),
+          if (viewCount > 0)
+            Positioned(
+              top: 0,
+              left: 0,
+              child: Container(
+                padding: ResponsiveSystem.symmetric(
+                  context,
+                  horizontal: ResponsiveSystem.spacing(context, baseSpacing: 6),
+                  vertical: ResponsiveSystem.spacing(context, baseSpacing: 2),
+                ),
+                decoration: BoxDecoration(
+                  color: ThemeHelpers.getPrimaryColor(context),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(
+                      ResponsiveSystem.spacing(context, baseSpacing: 12),
+                    ),
+                    bottomRight: Radius.circular(
+                      ResponsiveSystem.spacing(context, baseSpacing: 12),
+                    ),
+                  ),
+                ),
+                child: Text(
+                  _formatViewCount(viewCount),
+                  style: TextStyle(
+                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 10),
+                    fontWeight: FontWeight.bold,
+                    color: ThemeHelpers.getAppBarTextColor(context),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    }).toList();
+
+    return HorizontalSection(
+      config: HorizontalSectionConfig(
+        title: 'Most Read',
+        icon: Icons.trending_up,
+        items: bookCards,
+        totalCount: _mostRead.length,
+        displayLimit: 5,
+        onSeeAll: _mostRead.length > 5
+            ? () {
+                final allMostRead = _mostRead
+                    .map((item) {
+                      final bookId = item['id'] as String? ?? '';
+                      final viewCount = item['count'] as int? ?? 0;
+                      final book = _getBookById(bookId);
+                      if (book != null) {
+                        book['viewCount'] = viewCount;
+                      }
+                      return book;
+                    })
+                    .whereType<Map<String, dynamic>>()
+                    .toList();
+                _navigateToFilteredBookList('Most Read', allMostRead);
+              }
+            : null,
+      ),
+    );
+  }
+
+  /// Trending Section (Analytics - Server)
+  Widget _buildTrendingSection() {
+    // Show loading skeleton while loading analytics OR books list
+    if (_isLoadingAnalytics || _isLoading) {
+      return HorizontalSkeletonSection(
+        title: 'Trending Now',
+        icon: Icons.local_fire_department,
+      );
+    }
+
+    // Don't show if books list is empty (data not loaded yet)
+    if (_booksList.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    if (_trending.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final trendingBooks = _trending
+        .map((item) {
+          final bookId = item['id'] as String? ?? '';
+          return _getBookById(bookId);
+        })
+        .whereType<Map<String, dynamic>>()
+        .take(5)
+        .toList();
+
+    if (trendingBooks.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    final bookCards = trendingBooks
+        .map((book) => _buildHorizontalBookCard(book))
+        .toList();
+
+    return HorizontalSection(
+      config: HorizontalSectionConfig(
+        title: 'Trending Now',
+        icon: Icons.local_fire_department,
+        items: bookCards,
+        totalCount: _trending.length,
+        displayLimit: 5,
+        onSeeAll: _trending.length > 5
+            ? () {
+                final allTrending = _trending
+                    .map((item) {
+                      final bookId = item['id'] as String? ?? '';
+                      return _getBookById(bookId);
+                    })
+                    .whereType<Map<String, dynamic>>()
+                    .toList();
+                _navigateToFilteredBookList('Trending Now', allTrending);
+              }
+            : null,
+      ),
+    );
+  }
+
+  /// Build category sections
+  List<Widget> _buildCategorySections() {
+    final categories = _categorizeBooks();
+    final widgets = <Widget>[];
+
+    for (final entry in categories.entries) {
+      final categoryName = entry.key;
+      final books = entry.value;
+
+      if (books.isEmpty) continue;
+
+      final bookCards = books
+          .take(5)
+          .map((book) => _buildHorizontalBookCard(book))
+          .toList();
+
+      widgets.add(
+        HorizontalSection(
+          config: HorizontalSectionConfig(
+            title: categoryName,
+            icon: Icons.category,
+            items: bookCards,
+            totalCount: books.length,
+            displayLimit: 5,
+            onSeeAll: books.length > 5
+                ? () => _navigateToFilteredBookList(categoryName, books)
+                : null,
+          ),
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  /// All Books Section
+  Widget _buildAllBooksSection() {
+    if (_booksList.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          return Padding(
+            padding: ResponsiveSystem.symmetric(
+              context,
+              horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+              vertical: ResponsiveSystem.spacing(context, baseSpacing: 8),
+            ),
+            child: _buildBookCard(context, _booksList[index], false),
+          );
+        },
+        childCount: _booksList.length,
+      ),
+    );
+  }
+
+  /// Search Results Section
+  Widget _buildSearchResultsSection() {
+    if (_filteredBooksList.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Center(
+                          child: Padding(
+            padding: ResponsiveSystem.all(context, baseSpacing: 32),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.search_off,
+                  size: ResponsiveSystem.iconSize(context, baseSize: 64),
+                  color: ThemeHelpers.getSecondaryTextColor(context),
+                ),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
+                Text(
+                  'No books found',
+                  style: TextStyle(
+                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                    color: ThemeHelpers.getSecondaryTextColor(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          return Padding(
+            padding: ResponsiveSystem.symmetric(
+              context,
+              horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+              vertical: ResponsiveSystem.spacing(context, baseSpacing: 8),
+            ),
+            child: _buildBookCard(context, _filteredBooksList[index], false),
+          );
+        },
+        childCount: _filteredBooksList.length,
+      ),
+    );
+  }
+
+
+  /// Category Section Skeleton
+  Widget _buildCategorySectionSkeleton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: ResponsiveSystem.symmetric(
+            context,
+            horizontal: ResponsiveSystem.spacing(context, baseSpacing: 20),
+            vertical: ResponsiveSystem.spacing(context, baseSpacing: 16),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: ResponsiveSystem.spacing(context, baseSpacing: 120),
+                height: ResponsiveSystem.fontSize(context, baseSize: 20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: ThemeHelpers.getSecondaryTextColor(context)
+                      .withValues(alpha: 0.2),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: ResponsiveSystem.spacing(context, baseSpacing: 180),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: ResponsiveSystem.symmetric(
+              context,
+              horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                ),
+                child: _buildHorizontalSkeletonCard(),
+              );
+            },
+          ),
+        ),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+        ),
+      ],
+    );
+  }
+
+  /// All Books Section Skeleton
+  Widget _buildAllBooksSectionSkeleton() {
+    return Padding(
+      padding: ResponsiveSystem.symmetric(
+        context,
+        horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
+        vertical: ResponsiveSystem.spacing(context, baseSpacing: 8),
+      ),
+      child: Column(
+        children: List.generate(
+          5,
+          (index) => Padding(
+            padding: EdgeInsets.only(
+              bottom: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
+            child: Container(
+              height: ResponsiveSystem.spacing(context, baseSpacing: 80),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(
+                  ResponsiveSystem.spacing(context, baseSpacing: 12),
+                ),
+                color: ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Horizontal Skeleton Card (for loading state)
+  Widget _buildHorizontalSkeletonCard() {
+    return Container(
+      width: ResponsiveSystem.spacing(context, baseSpacing: 140),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(
+          ResponsiveSystem.spacing(context, baseSpacing: 12),
+        ),
+        color: ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.9),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 140),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(
+                  ResponsiveSystem.spacing(context, baseSpacing: 12),
+                ),
+                topRight: Radius.circular(
+                  ResponsiveSystem.spacing(context, baseSpacing: 12),
+                ),
+              ),
+              color: ThemeHelpers.getSecondaryTextColor(context)
+                  .withValues(alpha: 0.1),
+            ),
+          ),
+          Padding(
+            padding: ResponsiveSystem.all(context, baseSpacing: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveSystem.spacing(context, baseSpacing: 4),
+                    ),
+                    color: ThemeHelpers.getSecondaryTextColor(context)
+                        .withValues(alpha: 0.1),
+                  ),
+                ),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                ),
+                Container(
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 80),
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveSystem.spacing(context, baseSpacing: 4),
+                    ),
+                    color: ThemeHelpers.getSecondaryTextColor(context)
+                        .withValues(alpha: 0.1),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Format view count for display
+  String _formatViewCount(int count) {
+    if (count >= 1000000) {
+      return '${(count / 1000000).toStringAsFixed(1)}M';
+    } else if (count >= 1000) {
+      return '${(count / 1000).toStringAsFixed(1)}K';
+    }
+    return count.toString();
+  }
+
+  /// Horizontal Book Card (for sections)
+  Widget _buildHorizontalBookCard(Map<String, dynamic> book) {
+    final favorites = ref.watch(bookFavoritesServiceProvider);
+    final bookId = book['id'] as String? ?? '';
+    final title = book['title'] as String? ?? book['id'] as String? ?? '';
+    final isFavorite = favorites.contains(bookId);
+
+    return GestureDetector(
+      onTap: () {
+        if (!mounted) return;
+        _loadBook(bookId);
+      },
+      child: Container(
+        width: ResponsiveSystem.spacing(context, baseSpacing: 140),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(
+            ResponsiveSystem.spacing(context, baseSpacing: 12),
+          ),
+          color: ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.9),
+          boxShadow: [
+            BoxShadow(
+              color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.1),
+              blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
+              offset: Offset(
+                0,
+                ResponsiveSystem.spacing(context, baseSpacing: 2),
+              ),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Book Cover
+            Stack(
+              children: [
+                Container(
+                  width: double.infinity,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 140),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(
+                        ResponsiveSystem.spacing(context, baseSpacing: 12),
+                      ),
+                      topRight: Radius.circular(
+                        ResponsiveSystem.spacing(context, baseSpacing: 12),
+                      ),
+                    ),
+                    color: ThemeHelpers.getPrimaryColor(context)
+                        .withValues(alpha: 0.2),
+                  ),
+                  child: Icon(
+                    Icons.menu_book,
+                    color: ThemeHelpers.getPrimaryColor(context),
+                    size: ResponsiveSystem.iconSize(context, baseSize: 40),
+                  ),
+                ),
+                // Favorite Star Button (top right corner)
+                Positioned(
+                  top: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                  right: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      if (!mounted) return;
+                      ref.read(bookFavoritesServiceProvider.notifier).toggleFavorite(bookId);
+                    },
+                    child: Container(
+                      padding: ResponsiveSystem.all(context, baseSpacing: 4),
+                      decoration: BoxDecoration(
+                        color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.7),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isFavorite ? Icons.star : Icons.star_border,
+                        color: isFavorite 
+                            ? ThemeHelpers.getPrimaryColor(context)
+                            : ThemeHelpers.getAppBarTextColor(context),
+                        size: ResponsiveSystem.iconSize(context, baseSize: 18),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            // Book Info
+            Flexible(
+              child: Padding(
+                padding: ResponsiveSystem.all(context, baseSpacing: 8),
+                child: Tooltip(
+                  message: title,
+                  preferBelow: false,
+                  waitDuration: const Duration(milliseconds: 500),
+                  child: Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      fontWeight: FontWeight.w600,
+                      color: ThemeHelpers.getPrimaryTextColor(context),
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBookCard(
       BuildContext context, Map<String, dynamic> book, bool isDark) {
+    final favorites = ref.watch(bookFavoritesServiceProvider);
     final availableLanguages =
         List<String>.from(book['availableLanguages'] ?? []);
+    final bookId = book['id'] as String? ?? '';
+    final isFavorite = favorites.contains(bookId);
 
     return Card(
       margin: ResponsiveSystem.only(
@@ -525,12 +1386,19 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
           color: ThemeHelpers.getPrimaryColor(context),
           size: ResponsiveSystem.iconSize(context, baseSize: 32),
         ),
-        title: Text(
+        title: Tooltip(
+          message: book['title'] ?? book['id'],
+          preferBelow: false,
+          waitDuration: const Duration(milliseconds: 500),
+          child: Text(
           book['title'] ?? book['id'],
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
             fontWeight: FontWeight.bold,
             color: ThemeHelpers.getPrimaryTextColor(context),
+            ),
           ),
         ),
         subtitle: Column(
@@ -553,10 +1421,29 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
               ),
           ],
         ),
-        trailing: Icon(
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: Icon(
+                isFavorite ? Icons.star : Icons.star_border,
+                color: isFavorite
+                    ? ThemeHelpers.getPrimaryColor(context)
+                    : ThemeHelpers.getSecondaryTextColor(context),
+                size: ResponsiveSystem.iconSize(context, baseSize: 24),
+              ),
+              onPressed: () {
+                if (!mounted) return;
+                ref.read(bookFavoritesServiceProvider.notifier).toggleFavorite(bookId);
+              },
+              tooltip: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+            ),
+            Icon(
           Icons.arrow_forward_ios,
           color: ThemeHelpers.getSecondaryTextColor(context),
           size: ResponsiveSystem.iconSize(context, baseSize: 16),
+            ),
+          ],
         ),
         onTap: () {
           final bookId = book['id'] as String;
@@ -643,5 +1530,4 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
       ),
     );
   }
-
 }

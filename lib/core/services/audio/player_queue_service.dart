@@ -8,7 +8,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'models/track.dart';
+import '../../models/audio/track.dart';
 import 'models/queue_state.dart';
 import 'global_audio_player_controller.dart';
 import '../../../core/logging/logging_helper.dart';
