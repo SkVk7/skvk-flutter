@@ -4,17 +4,19 @@
 /// Used across all screens to avoid code duplication
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../themes/theme_provider.dart';
-import '../../core/services/language/language_service.dart';
-import '../../core/services/user/user_service.dart';
-import '../../core/utils/either.dart';
-import '../../core/utils/validation/profile_completion_checker.dart';
-import '../components/dialogs/profile_completion_dialog.dart';
-import '../../core/services/language/translation_service.dart';
-import '../../core/navigation/hero_navigation.dart';
-import '../screens/user_edit_screen.dart';
+import 'package:skvk_application/core/navigation/hero_navigation.dart';
+import 'package:skvk_application/core/services/language/language_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/profile_completion_checker.dart';
+import 'package:skvk_application/ui/components/dialogs/profile_completion_dialog.dart';
+import 'package:skvk_application/ui/screens/user_edit_screen.dart';
+import 'package:skvk_application/ui/themes/theme_provider.dart';
 
 /// Screen Handlers - Common handlers for screens
 class ScreenHandlers {
@@ -62,6 +64,7 @@ class ScreenHandlers {
     String? profileRoute,
     String? editProfileRoute,
   }) async {
+    if (!context.mounted) return;
     final currentContext = context;
     final profileNavRoute = profileRoute ?? '/profile';
     final editNavRoute = editProfileRoute ?? '/edit-profile';
@@ -69,20 +72,27 @@ class ScreenHandlers {
     try {
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
+      if (!currentContext.mounted) return;
       final user =
           ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Use ProfileCompletionChecker to determine if user has real profile data
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
-        // Show "Complete Your Profile" popup instead of directly navigating
-        showProfileCompletionPopup(currentContext, translationService, editNavRoute);
+        if (currentContext.mounted) {
+          showProfileCompletionPopup(
+              currentContext, translationService, editNavRoute,);
+        }
       } else {
-        // Navigate to profile view screen
-        Navigator.pushNamed(currentContext, profileNavRoute);
+        if (currentContext.mounted) {
+          unawaited(Navigator.pushNamed(currentContext, profileNavRoute));
+        }
       }
-    } catch (e) {
+    } on Exception {
       // On error, show profile completion popup
-      showProfileCompletionPopup(currentContext, translationService, editNavRoute);
+      if (currentContext.mounted) {
+        showProfileCompletionPopup(
+            currentContext, translationService, editNavRoute,);
+      }
     }
   }
 
@@ -97,7 +107,8 @@ class ScreenHandlers {
       context,
       translationService,
       onCompleteProfile: () {
-        Navigator.pushNamed(context, editProfileRoute); // Navigate to edit screen
+        Navigator.pushNamed(
+            context, editProfileRoute,); // Navigate to edit screen
       },
       onSkip: () {
         // Skip action - dialog closes automatically
@@ -118,11 +129,8 @@ class ScreenHandlers {
       const UserEditScreen(),
       sourcePosition,
       sourceSize,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
       rippleColor: Theme.of(context).colorScheme.primary,
-      rippleRadius: 100.0,
+      rippleRadius: 100,
     );
   }
 }
-

@@ -3,29 +3,32 @@
 /// Provides base classes for use cases following Clean Architecture
 library;
 
-import '../utils/either.dart';
-import '../errors/failures.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// Base use case interface
 /// All use cases should implement this interface
-abstract class UseCase<Type, Params> {
+// ignore: one_member_abstracts
+abstract class UseCase<TResult, Params> {
   /// Execute the use case
-  Future<Result<Type>> call(Params params);
+  Future<Result<TResult>> call(Params params);
 }
 
 /// Use case with no parameters
-abstract class NoParamsUseCase<Type> {
+// ignore: one_member_abstracts
+abstract class NoParamsUseCase<TResult> {
   /// Execute the use case
-  Future<Result<Type>> call();
+  Future<Result<TResult>> call();
 }
 
 /// Base use case implementation
-abstract class BaseUseCase<Type, Params> implements UseCase<Type, Params> {
+abstract class BaseUseCase<TResult, Params>
+    implements UseCase<TResult, Params> {
   @override
-  Future<Result<Type>> call(Params params) async {
+  Future<Result<TResult>> call(Params params) async {
     try {
       return await execute(params);
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return ResultHelper.failure(
         UnexpectedFailure(
           message: e.toString(),
@@ -36,16 +39,17 @@ abstract class BaseUseCase<Type, Params> implements UseCase<Type, Params> {
   }
 
   /// Execute the use case logic
-  Future<Result<Type>> execute(Params params);
+  Future<Result<TResult>> execute(Params params);
 }
 
 /// Base use case with no parameters
-abstract class BaseNoParamsUseCase<Type> implements NoParamsUseCase<Type> {
+abstract class BaseNoParamsUseCase<TResult>
+    implements NoParamsUseCase<TResult> {
   @override
-  Future<Result<Type>> call() async {
+  Future<Result<TResult>> call() async {
     try {
       return await execute();
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       return ResultHelper.failure(
         UnexpectedFailure(
           message: e.toString(),
@@ -56,11 +60,10 @@ abstract class BaseNoParamsUseCase<Type> implements NoParamsUseCase<Type> {
   }
 
   /// Execute the use case logic
-  Future<Result<Type>> execute();
+  Future<Result<TResult>> execute();
 }
 
 /// Parameters for use cases that don't need any
 class NoParams {
   const NoParams();
 }
-

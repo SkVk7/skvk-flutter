@@ -3,27 +3,19 @@
 /// Proper state management for matching feature following Flutter best practices
 library;
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../repositories/matching_repository.dart';
-import '../../../di/injection_container.dart';
-import '../usecases/perform_matching_usecase.dart';
-import '../../../utils/either.dart';
-import '../../../utils/validation/error_message_helper.dart';
-import '../../../logging/logging_helper.dart';
+import 'package:skvk_application/core/di/injection_container.dart';
+import 'package:skvk_application/core/features/matching/repositories/matching_repository.dart';
+import 'package:skvk_application/core/features/matching/usecases/perform_matching_usecase.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/error_message_helper.dart';
 
 /// Matching state
 /// All data comes from the astrology-service API - no business logic here
 class MatchingState {
-  final bool isLoading;
-  final bool showResults;
-  final double? compatibilityScore; // Percentage from API
-  final Map<String, String>? kootaDetails; // Koota scores from API
-  final String? level; // Compatibility level from API
-  final String? recommendation; // Recommendation text from API
-  final int? totalScore; // Total score out of 36 from API
-  final String? errorMessage;
-  final String? successMessage;
-
   const MatchingState({
     this.isLoading = false,
     this.showResults = false,
@@ -35,6 +27,15 @@ class MatchingState {
     this.errorMessage,
     this.successMessage,
   });
+  final bool isLoading;
+  final bool showResults;
+  final double? compatibilityScore; // Percentage from API
+  final Map<String, String>? kootaDetails; // Koota scores from API
+  final String? level; // Compatibility level from API
+  final String? recommendation; // Recommendation text from API
+  final int? totalScore; // Total score out of 36 from API
+  final String? errorMessage;
+  final String? successMessage;
 
   MatchingState copyWith({
     bool? isLoading,
@@ -78,19 +79,31 @@ class MatchingNotifier extends Notifier<MatchingState> {
   }
 
   /// Perform matching with both persons' data
-  Future<void> performMatching(PartnerData person1Data, PartnerData person2Data,
-      {String? ayanamsha, String? houseSystem}) async {
-    LoggingHelper.logDebug(
-        'MatchingNotifier.performMatching called with ${person1Data.name} and ${person2Data.name}',
-        source: 'MatchingProvider');
+  Future<void> performMatching(
+    PartnerData person1Data,
+    PartnerData person2Data, {
+    String? ayanamsha,
+    String? houseSystem,
+  }) async {
+    await LoggingHelper.logDebug(
+      'MatchingNotifier.performMatching called with ${person1Data.name} and ${person2Data.name}',
+      source: 'MatchingProvider',
+    );
     state = state.copyWith(
-        isLoading: true, errorMessage: null, successMessage: null);
+      isLoading: true,
+    );
 
     try {
-      LoggingHelper.logDebug('Calling _performMatchingUseCase', source: 'MatchingProvider');
-      final result = await _performMatchingUseCase.performMatching(person1Data, person2Data,
-          ayanamsha: ayanamsha, houseSystem: houseSystem);
-      LoggingHelper.logDebug('Use case result: ${result.isSuccess}', source: 'MatchingProvider');
+      await LoggingHelper.logDebug('Calling _performMatchingUseCase',
+          source: 'MatchingProvider',);
+      final result = await _performMatchingUseCase.performMatching(
+        person1Data,
+        person2Data,
+        ayanamsha: ayanamsha,
+        houseSystem: houseSystem,
+      );
+      await LoggingHelper.logDebug('Use case result: ${result.isSuccess}',
+          source: 'MatchingProvider',);
 
       if (result.isSuccess) {
         final matchingResult = result.value!;
@@ -105,12 +118,12 @@ class MatchingNotifier extends Notifier<MatchingState> {
           successMessage: 'Matching completed successfully!',
         );
 
-        // Clear success message after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          state = state.copyWith(successMessage: null);
-        });
+        unawaited(
+          Future.delayed(const Duration(seconds: 3), () {
+            state = state.copyWith();
+          }),
+        );
       } else {
-        // Convert technical error to user-friendly message
         final errorMessage = result.failure?.message ?? 'Matching failed';
         final userFriendlyMessage =
             ErrorMessageHelper.getUserFriendlyMessage(errorMessage);
@@ -119,8 +132,7 @@ class MatchingNotifier extends Notifier<MatchingState> {
           errorMessage: userFriendlyMessage,
         );
       }
-    } catch (e) {
-      // Convert technical error to user-friendly message
+    } on Exception catch (e) {
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
@@ -133,19 +145,17 @@ class MatchingNotifier extends Notifier<MatchingState> {
   void editPartnerDetails() {
     state = state.copyWith(
       showResults: false,
-      errorMessage: null,
-      successMessage: null,
     );
   }
 
   /// Clear error message
   void clearError() {
-    state = state.copyWith(errorMessage: null);
+    state = state.copyWith();
   }
 
   /// Clear success message
   void clearSuccess() {
-    state = state.copyWith(successMessage: null);
+    state = state.copyWith();
   }
 
   /// Reset state to initial values

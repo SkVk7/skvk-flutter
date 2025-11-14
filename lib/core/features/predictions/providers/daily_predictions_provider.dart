@@ -4,25 +4,24 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../utils/validation/error_message_helper.dart';
-import '../../../services/astrology/astrology_service_bridge.dart';
-import '../../../services/user/user_service.dart';
-import '../../../utils/validation/profile_completion_checker.dart';
-import '../../../utils/astrology/timezone_util.dart';
-import '../../../utils/either.dart';
-import '../../../logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/astrology/astrology_service_bridge.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/astrology/timezone_util.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/error_message_helper.dart';
+import 'package:skvk_application/core/utils/validation/profile_completion_checker.dart';
 
 /// Daily predictions state
 class DailyPredictionsState {
-  final bool isLoading;
-  final Map<String, String>? predictions;
-  final String? errorMessage;
-
   const DailyPredictionsState({
     this.isLoading = false,
     this.predictions,
     this.errorMessage,
   });
+  final bool isLoading;
+  final Map<String, String>? predictions;
+  final String? errorMessage;
 
   DailyPredictionsState copyWith({
     bool? isLoading,
@@ -42,26 +41,25 @@ class DailyPredictionsState {
 
 /// Daily predictions notifier
 class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
-  final Ref _ref;
-
   DailyPredictionsNotifier(this._ref) : super(const DailyPredictionsState());
+  final Ref _ref;
 
   /// Get daily predictions using AstrologyServiceBridge.getPredictions directly
   Future<void> getDailyPredictions({
     required Map<String, dynamic> birthData,
     required DateTime date,
   }) async {
-    LoggingHelper.logDebug('DailyPredictionsNotifier.getDailyPredictions called', source: 'DailyPredictionsProvider');
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    await LoggingHelper.logDebug(
+        'DailyPredictionsNotifier.getDailyPredictions called',
+        source: 'DailyPredictionsProvider',);
+    state = state.copyWith(isLoading: true);
 
     try {
-      // Get user data from UserService via provider
       final userService = _ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
       final user =
           ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
-      // Check if user exists and profile is complete
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
         state = state.copyWith(
           isLoading: false,
@@ -70,7 +68,6 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
         return;
       }
 
-      // Get timezone from user's location
       await TimezoneUtil.initialize();
       final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
         user.latitude,
@@ -78,7 +75,7 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
       );
 
       // Use AstrologyServiceBridge for predictions
-      final bridge = AstrologyServiceBridge.instance;
+      final bridge = AstrologyServiceBridge.instance();
       final predictions = await bridge.getPredictions(
         localBirthDateTime: user.localBirthDateTime,
         birthTimezoneId: timezoneId,
@@ -103,17 +100,22 @@ class DailyPredictionsNotifier extends StateNotifier<DailyPredictionsState> {
         }
       }
 
-      LoggingHelper.logDebug('Daily predictions retrieved: ${predictionData.length} items', source: 'DailyPredictionsProvider');
+      await LoggingHelper.logDebug(
+          'Daily predictions retrieved: ${predictionData.length} items',
+          source: 'DailyPredictionsProvider',);
       state = state.copyWith(
         isLoading: false,
         predictions: predictionData.isNotEmpty ? predictionData : null,
         errorMessage:
             predictionData.isEmpty ? 'No predictions available' : null,
       );
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Exception getting daily predictions: $e',
-          error: e, stackTrace: stackTrace, source: 'DailyPredictionsProvider');
-      // Convert technical error to user-friendly message
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
+        'Exception getting daily predictions: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'DailyPredictionsProvider',
+      );
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,

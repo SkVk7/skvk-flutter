@@ -5,17 +5,14 @@
 library;
 
 import 'dart:developer' as developer;
-import 'astrology_api_service.dart';
-import '../../utils/astrology/timezone_util.dart';
+import 'package:skvk_application/core/services/astrology/astrology_api_service.dart';
+import 'package:skvk_application/core/utils/astrology/timezone_util.dart';
 
 /// Astrology Service Bridge
 ///
 /// Single entry point for all astrology API calls.
 /// Handles timezone conversions (local ↔ UTC) automatically.
 class AstrologyServiceBridge {
-  static AstrologyServiceBridge? _instance;
-  final AstrologyApiService _apiService;
-
   AstrologyServiceBridge._(this._apiService);
 
   /// Factory constructor
@@ -23,15 +20,16 @@ class AstrologyServiceBridge {
     AstrologyApiService? apiService,
   }) {
     return AstrologyServiceBridge._(
-      apiService ?? AstrologyApiService.instance,
+      apiService ?? AstrologyApiService.instance(),
     );
   }
 
   /// Get singleton instance
-  static AstrologyServiceBridge get instance {
-    _instance ??= AstrologyServiceBridge.create();
-    return _instance!;
+  factory AstrologyServiceBridge.instance() {
+    return _instance ??= AstrologyServiceBridge.create();
   }
+  static AstrologyServiceBridge? _instance;
+  final AstrologyApiService _apiService;
 
   /// Get full birth chart from API
   ///
@@ -44,16 +42,14 @@ class AstrologyServiceBridge {
     required String timezoneId,
     required double latitude,
     required double longitude,
-    String ayanamsha = "lahiri",
-    String houseSystem = "placidus",
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) async {
     try {
-      // Validate timezone
       if (!TimezoneUtil.isValidTimezone(timezoneId)) {
         throw ArgumentError('Invalid timezone: $timezoneId');
       }
 
-      // Convert local datetime to UTC
       final utcBirthDateTime = TimezoneUtil.convertLocalToUTC(
         localBirthDateTime,
         timezoneId,
@@ -69,11 +65,12 @@ class AstrologyServiceBridge {
         houseSystem: houseSystem,
       );
 
-      // Convert UTC timestamps in response to local
       return _convertResponseToLocal(response, timezoneId);
-    } catch (e) {
-      developer.log('Error in getBirthData: $e',
-          name: 'AstrologyServiceBridge');
+    } on Exception catch (e) {
+      developer.log(
+        'Error in getBirthData: $e',
+        name: 'AstrologyServiceBridge',
+      );
       rethrow;
     }
   }
@@ -92,11 +89,10 @@ class AstrologyServiceBridge {
     required String person2TimezoneId,
     required double person2Latitude,
     required double person2Longitude,
-    String ayanamsha = "lahiri",
-    String houseSystem = "placidus",
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) async {
     try {
-      // Validate timezones
       if (!TimezoneUtil.isValidTimezone(person1TimezoneId)) {
         throw ArgumentError('Invalid person1 timezone: $person1TimezoneId');
       }
@@ -104,7 +100,6 @@ class AstrologyServiceBridge {
         throw ArgumentError('Invalid person2 timezone: $person2TimezoneId');
       }
 
-      // Convert local datetimes to UTC for API call
       final utcPerson1BirthDateTime = TimezoneUtil.convertLocalToUTC(
         localPerson1BirthDateTime,
         person1TimezoneId,
@@ -140,13 +135,17 @@ class AstrologyServiceBridge {
         houseSystem: houseSystem,
       );
 
-      // Convert UTC timestamps in response to local
       // Groom birth data should use groom's timezone, bride birth data should use bride's timezone
       return _convertCompatibilityResponseToLocal(
-          response, person1TimezoneId, person2TimezoneId);
-    } catch (e) {
-      developer.log('Error in calculateCompatibility: $e',
-          name: 'AstrologyServiceBridge');
+        response,
+        person1TimezoneId,
+        person2TimezoneId,
+      );
+    } on Exception catch (e) {
+      developer.log(
+        'Error in calculateCompatibility: $e',
+        name: 'AstrologyServiceBridge',
+      );
       rethrow;
     }
   }
@@ -165,11 +164,10 @@ class AstrologyServiceBridge {
     required double currentLatitude,
     required double currentLongitude,
     required String predictionType,
-    String ayanamsha = "lahiri",
-    String houseSystem = "placidus",
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) async {
     try {
-      // Validate timezones
       if (!TimezoneUtil.isValidTimezone(birthTimezoneId)) {
         throw ArgumentError('Invalid birth timezone: $birthTimezoneId');
       }
@@ -177,14 +175,12 @@ class AstrologyServiceBridge {
         throw ArgumentError('Invalid target timezone: $targetTimezoneId');
       }
 
-      // Convert local birth datetime to UTC
       final utcBirthDateTime = TimezoneUtil.convertLocalToUTC(
         localBirthDateTime,
         birthTimezoneId,
       );
       final birthDateTime = utcBirthDateTime.toIso8601String();
 
-      // Convert local target datetime to UTC for targetDate
       final utcTargetDateTime = TimezoneUtil.convertLocalToUTC(
         localTargetDateTime,
         targetTimezoneId,
@@ -204,11 +200,12 @@ class AstrologyServiceBridge {
         houseSystem: houseSystem,
       );
 
-      // Convert UTC timestamps in response to local
       return _convertResponseToLocal(response, targetTimezoneId);
-    } catch (e) {
-      developer.log('Error in getPredictions: $e',
-          name: 'AstrologyServiceBridge');
+    } on Exception catch (e) {
+      developer.log(
+        'Error in getPredictions: $e',
+        name: 'AstrologyServiceBridge',
+      );
       rethrow;
     }
   }
@@ -224,10 +221,9 @@ class AstrologyServiceBridge {
     required double latitude,
     required double longitude,
     required String timezoneId,
-    String ayanamsha = "lahiri",
+    String ayanamsha = 'lahiri',
   }) async {
     try {
-      // Validate timezone
       if (!TimezoneUtil.isValidTimezone(timezoneId)) {
         throw ArgumentError('Invalid timezone: $timezoneId');
       }
@@ -242,11 +238,12 @@ class AstrologyServiceBridge {
         ayanamsha: ayanamsha,
       );
 
-      // Convert UTC timestamps in response to local
       return _convertResponseToLocal(response, timezoneId);
-    } catch (e) {
-      developer.log('Error in getCalendarYear: $e',
-          name: 'AstrologyServiceBridge');
+    } on Exception catch (e) {
+      developer.log(
+        'Error in getCalendarYear: $e',
+        name: 'AstrologyServiceBridge',
+      );
       rethrow;
     }
   }
@@ -263,10 +260,9 @@ class AstrologyServiceBridge {
     required double latitude,
     required double longitude,
     required String timezoneId,
-    String ayanamsha = "lahiri",
+    String ayanamsha = 'lahiri',
   }) async {
     try {
-      // Validate timezone
       if (!TimezoneUtil.isValidTimezone(timezoneId)) {
         throw ArgumentError('Invalid timezone: $timezoneId');
       }
@@ -282,11 +278,12 @@ class AstrologyServiceBridge {
         ayanamsha: ayanamsha,
       );
 
-      // Convert UTC timestamps in response to local
       return _convertResponseToLocal(response, timezoneId);
-    } catch (e) {
-      developer.log('Error in getCalendarMonth: $e',
-          name: 'AstrologyServiceBridge');
+    } on Exception catch (e) {
+      developer.log(
+        'Error in getCalendarMonth: $e',
+        name: 'AstrologyServiceBridge',
+      );
       rethrow;
     }
   }
@@ -305,7 +302,6 @@ class AstrologyServiceBridge {
   ) {
     final converted = Map<String, dynamic>.from(response);
 
-    // Convert groom birth data to groom's timezone
     if (converted.containsKey('groomBirthData')) {
       final groomBirthData =
           converted['groomBirthData'] as Map<String, dynamic>?;
@@ -315,7 +311,6 @@ class AstrologyServiceBridge {
       }
     }
 
-    // Convert bride birth data to bride's timezone
     if (converted.containsKey('brideBirthData')) {
       final brideBirthData =
           converted['brideBirthData'] as Map<String, dynamic>?;
@@ -325,7 +320,6 @@ class AstrologyServiceBridge {
       }
     }
 
-    // Convert other timestamps (calculatedAt, etc.) to groom's timezone (default)
     if (converted.containsKey('calculatedAt')) {
       final utcString = converted['calculatedAt'] as String?;
       if (utcString != null) {
@@ -334,9 +328,11 @@ class AstrologyServiceBridge {
           final localDateTime =
               TimezoneUtil.convertUTCToLocal(utcDateTime, groomTimezoneId);
           converted['calculatedAt'] = localDateTime.toIso8601String();
-        } catch (e) {
-          developer.log('Error converting calculatedAt: $e',
-              name: 'AstrologyServiceBridge');
+        } on Exception catch (e) {
+          developer.log(
+            'Error converting calculatedAt: $e',
+            name: 'AstrologyServiceBridge',
+          );
         }
       }
     }
@@ -351,7 +347,6 @@ class AstrologyServiceBridge {
   ) {
     final converted = Map<String, dynamic>.from(response);
 
-    // Convert birthDateTime if present
     if (converted.containsKey('birthDateTime')) {
       final utcString = converted['birthDateTime'] as String;
       try {
@@ -359,13 +354,14 @@ class AstrologyServiceBridge {
         final localDateTime =
             TimezoneUtil.convertUTCToLocal(utcDateTime, timezoneId);
         converted['birthDateTime'] = localDateTime.toIso8601String();
-      } catch (e) {
-        developer.log('Error converting birthDateTime: $e',
-            name: 'AstrologyServiceBridge');
+      } on Exception catch (e) {
+        developer.log(
+          'Error converting birthDateTime: $e',
+          name: 'AstrologyServiceBridge',
+        );
       }
     }
 
-    // Convert calculatedAt if present
     if (converted.containsKey('calculatedAt')) {
       final utcString = converted['calculatedAt'] as String?;
       if (utcString != null) {
@@ -374,14 +370,15 @@ class AstrologyServiceBridge {
           final localDateTime =
               TimezoneUtil.convertUTCToLocal(utcDateTime, timezoneId);
           converted['calculatedAt'] = localDateTime.toIso8601String();
-        } catch (e) {
-          developer.log('Error converting calculatedAt: $e',
-              name: 'AstrologyServiceBridge');
+        } on Exception catch (e) {
+          developer.log(
+            'Error converting calculatedAt: $e',
+            name: 'AstrologyServiceBridge',
+          );
         }
       }
     }
 
-    // Convert calendar-specific date/time fields
     _convertCalendarDateFields(converted, timezoneId);
 
     // Recursively convert nested objects
@@ -404,7 +401,9 @@ class AstrologyServiceBridge {
   /// Convert calendar-specific date fields from UTC to local timezone
   /// Handles: date, sunrise, sunset, moonrise, moonset, and other time fields
   void _convertCalendarDateFields(
-      Map<String, dynamic> data, String timezoneId) {
+    Map<String, dynamic> data,
+    String timezoneId,
+  ) {
     // List of calendar date/time fields that need conversion
     final dateTimeFields = [
       'date',
@@ -430,8 +429,7 @@ class AstrologyServiceBridge {
             final localDateTime =
                 TimezoneUtil.convertUTCToLocal(utcDateTime, timezoneId);
             data[field] = localDateTime.toIso8601String();
-          } catch (e) {
-            // If parsing fails, it might not be a datetime field - skip silently
+          } on Exception {
             // (could be a date string like "2024-01-15" which doesn't need conversion)
           }
         } else if (value is DateTime) {
@@ -439,9 +437,11 @@ class AstrologyServiceBridge {
             final localDateTime =
                 TimezoneUtil.convertUTCToLocal(value, timezoneId);
             data[field] = localDateTime.toIso8601String();
-          } catch (e) {
-            developer.log('Error converting $field DateTime: $e',
-                name: 'AstrologyServiceBridge');
+          } on Exception catch (e) {
+            developer.log(
+              'Error converting $field DateTime: $e',
+              name: 'AstrologyServiceBridge',
+            );
           }
         }
       }

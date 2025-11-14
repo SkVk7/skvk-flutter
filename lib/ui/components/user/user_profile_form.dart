@@ -4,19 +4,16 @@
 /// Implements proper separation of concerns and validation
 library;
 
-import '../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/models/user/user_model.dart';
-// UI Components - Reusable components
-import '../../components/common/index.dart';
-import '../../components/matching/date_field.dart';
-import '../../components/matching/time_field.dart';
-// UI Components - Dropdown widgets
-import '../../components/dropdowns/dropdown_widgets.dart';
-import '../../components/dropdowns/dropdown_info_adapters.dart';
-// Core imports
-import '../../../core/utils/astrology/ayanamsha_info.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/utils/astrology/ayanamsha_info.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/dropdowns/dropdown_info_adapters.dart';
+import 'package:skvk_application/ui/components/dropdowns/dropdown_widgets.dart';
+import 'package:skvk_application/ui/components/matching/date_field.dart';
+import 'package:skvk_application/ui/components/matching/time_field.dart';
 
 /// Form field types for validation
 enum UserProfileFieldType {
@@ -30,27 +27,18 @@ enum UserProfileFieldType {
 
 /// Form validation result
 class FormValidationResult {
-  final bool isValid;
-  final Map<UserProfileFieldType, String> errors;
-
   const FormValidationResult({
     required this.isValid,
     required this.errors,
   });
+  final bool isValid;
+  final Map<UserProfileFieldType, String> errors;
 
   String? getError(UserProfileFieldType field) => errors[field];
 }
 
 /// User profile form data model
 class UserProfileFormData {
-  final String name;
-  final DateTime dateOfBirth;
-  final TimeOfDay timeOfBirth;
-  final String placeOfBirth;
-  final double latitude;
-  final double longitude;
-  final String ayanamsha;
-
   const UserProfileFormData({
     required this.name,
     required this.dateOfBirth,
@@ -60,6 +48,13 @@ class UserProfileFormData {
     required this.longitude,
     required this.ayanamsha,
   });
+  final String name;
+  final DateTime dateOfBirth;
+  final TimeOfDay timeOfBirth;
+  final String placeOfBirth;
+  final double latitude;
+  final double longitude;
+  final String ayanamsha;
 
   UserProfileFormData copyWith({
     String? name,
@@ -142,22 +137,21 @@ class UserProfileFormData {
 
 /// User Profile Form Widget
 class UserProfileForm extends ConsumerStatefulWidget {
-  final UserProfileFormData initialData;
-  final bool isEditing;
-  final Function(UserProfileFormData) onDataChanged;
-  final Function(UserProfileFormData) onSave;
-  final VoidCallback onCancel;
-  final bool isLoading;
-
   const UserProfileForm({
-    super.key,
     required this.initialData,
     required this.isEditing,
     required this.onDataChanged,
     required this.onSave,
     required this.onCancel,
     required this.isLoading,
+    super.key,
   });
+  final UserProfileFormData initialData;
+  final bool isEditing;
+  final Function(UserProfileFormData) onDataChanged;
+  final Function(UserProfileFormData) onSave;
+  final VoidCallback onCancel;
+  final bool isLoading;
 
   @override
   ConsumerState<UserProfileForm> createState() => _UserProfileFormState();
@@ -208,8 +202,9 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
   void _validateAndSave() {
     final validation = _formData.validate();
     setState(() {
-      _fieldErrors.clear();
-      _fieldErrors.addAll(validation.errors);
+      _fieldErrors
+        ..clear()
+        ..addAll(validation.errors);
     });
 
     if (validation.isValid) {
@@ -255,7 +250,7 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
         controller: _nameController,
         enabled: widget.isEditing,
         onChanged: (value) => _updateFormData(_formData.copyWith(name: value)),
-        decoration: InputDecoration(
+        decoration: const InputDecoration(
           prefixIcon: Icon(Icons.face),
           hintText: 'Enter your full name',
         ),
@@ -301,11 +296,11 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
         onChanged: (value) =>
             _updateFormData(_formData.copyWith(placeOfBirth: value)),
         decoration: InputDecoration(
-          prefixIcon: Icon(Icons.location_on),
+          prefixIcon: const Icon(Icons.location_on),
           hintText: 'Enter place of birth',
           suffixIcon: widget.isEditing
               ? IconButton(
-                  icon: Icon(Icons.my_location),
+                  icon: const Icon(Icons.my_location),
                   onPressed: _selectCoordinates,
                 )
               : null,
@@ -334,8 +329,10 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
           isLoading: widget.isLoading,
           width: ResponsiveSystem.screenWidth(context),
         ),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+        ),
         ModernButton(
           text: 'Cancel',
           onPressed: widget.isLoading ? null : widget.onCancel,
@@ -349,7 +346,6 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
 
   void _selectCoordinates() {
     // Implementation for coordinate selection
-    // This would typically open a location picker or coordinate input dialog
   }
 
   void _showAyanamshaSelector() {
@@ -367,21 +363,20 @@ class _UserProfileFormState extends ConsumerState<UserProfileForm> {
 
 /// Form field wrapper with consistent styling and error handling
 class _FormFieldWrapper extends ConsumerWidget {
-  final String label;
-  final String? error;
-  final Widget child;
-
   const _FormFieldWrapper({
     required this.label,
     required this.child,
     this.error,
   });
+  final String label;
+  final String? error;
+  final Widget child;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDarkMode = ref.watch(isDarkModeProvider);
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -401,13 +396,15 @@ class _FormFieldWrapper extends ConsumerWidget {
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
         boxShadow: [
           BoxShadow(
-            color: ThemeHelpers.getShadowColor(context).withAlpha(76),
+            color: ThemeHelpers.getShadowColor(context)
+                .withValues(alpha: 76 / 255),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 16),
             offset:
                 Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 8)),
           ),
           BoxShadow(
-            color: ThemeHelpers.getShadowColor(context).withAlpha(38),
+            color: ThemeHelpers.getShadowColor(context)
+                .withValues(alpha: 38 / 255),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
             offset:
                 Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
@@ -430,7 +427,8 @@ class _FormFieldWrapper extends ConsumerWidget {
             ),
             if (error != null) ...[
               SizedBox(
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+              ),
               Text(
                 error!,
                 style: TextStyle(
@@ -441,7 +439,8 @@ class _FormFieldWrapper extends ConsumerWidget {
               ),
             ],
             SizedBox(
-                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             child,
           ],
         ),
@@ -452,13 +451,12 @@ class _FormFieldWrapper extends ConsumerWidget {
 
 /// Ayanamsha selector widget
 class _AyanamshaSelector extends ConsumerWidget {
-  final String selectedAyanamsha;
-  final VoidCallback? onTap;
-
   const _AyanamshaSelector({
     required this.selectedAyanamsha,
     required this.onTap,
   });
+  final String selectedAyanamsha;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -479,10 +477,14 @@ class _AyanamshaSelector extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.star,
-                color: primaryColor,
-                size: ResponsiveSystem.spacing(context, baseSpacing: 20)),
-            SizedBox(width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            Icon(
+              Icons.star,
+              color: primaryColor,
+              size: ResponsiveSystem.spacing(context, baseSpacing: 20),
+            ),
+            SizedBox(
+              width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -503,13 +505,18 @@ class _AyanamshaSelector extends ConsumerWidget {
                       if (description.isEmpty) return const SizedBox.shrink();
                       return Padding(
                         padding: EdgeInsets.only(
-                            top: ResponsiveSystem.spacing(context,
-                                baseSpacing: 4)),
+                          top: ResponsiveSystem.spacing(
+                            context,
+                            baseSpacing: 4,
+                          ),
+                        ),
                         child: Text(
                           description,
                           style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context,
-                                baseSize: 12),
+                            fontSize: ResponsiveSystem.fontSize(
+                              context,
+                              baseSize: 12,
+                            ),
                             color: secondaryTextColor,
                           ),
                         ),
@@ -520,9 +527,11 @@ class _AyanamshaSelector extends ConsumerWidget {
               ),
             ),
             if (onTap != null)
-              Icon(Icons.arrow_drop_down,
-                  color: primaryColor,
-                  size: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+              Icon(
+                Icons.arrow_drop_down,
+                color: primaryColor,
+                size: ResponsiveSystem.spacing(context, baseSpacing: 24),
+              ),
           ],
         ),
       ),
@@ -532,13 +541,12 @@ class _AyanamshaSelector extends ConsumerWidget {
 
 /// Ayanamsha selection dialog
 class _AyanamshaSelectionDialog extends ConsumerWidget {
-  final String selectedAyanamsha;
-  final Function(String) onAyanamshaSelected;
-
   const _AyanamshaSelectionDialog({
     required this.selectedAyanamsha,
     required this.onAyanamshaSelected,
   });
+  final String selectedAyanamsha;
+  final Function(String) onAyanamshaSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -569,18 +577,18 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
             final isSelected = ayanamsha == selectedAyanamsha;
 
             return Card(
-              color: isSelected
-                  ? primaryColor.withAlpha((0.1 * 255).round())
-                  : null,
+              color: isSelected ? primaryColor.withValues(alpha: 0.1) : null,
               margin: EdgeInsets.symmetric(
-                  vertical: ResponsiveSystem.spacing(context, baseSpacing: 2)),
+                vertical: ResponsiveSystem.spacing(context, baseSpacing: 2),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
                 side: isSelected
                     ? BorderSide(
                         color: primaryColor,
                         width:
-                            ResponsiveSystem.borderWidth(context, baseWidth: 2))
+                            ResponsiveSystem.borderWidth(context, baseWidth: 2),
+                      )
                     : BorderSide.none,
               ),
               child: Builder(
@@ -606,7 +614,8 @@ class _AyanamshaSelectionDialog extends ConsumerWidget {
                   }
                   final finalInfo = info ??
                       AyanamshaInfoAdapter(
-                          AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha)!);
+                        AyanamshaInfoHelper.getAyanamshaInfo(ayanamsha)!,
+                      );
                   return DropdownListTile<String>(
                     value: ayanamsha,
                     info: finalInfo,

@@ -4,32 +4,30 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/errors/failures.dart';
-import 'modern_button.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/ui/components/common/modern_button.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Error Widget - Displays error from Failure type
 @immutable
 class ErrorWidget extends StatelessWidget {
+  const ErrorWidget({
+    required this.failure,
+    super.key,
+    this.onRetry,
+    this.icon,
+    this.customMessage,
+  });
   final Failure failure;
   final VoidCallback? onRetry;
   final IconData? icon;
   final String? customMessage;
 
-  const ErrorWidget({
-    super.key,
-    required this.failure,
-    this.onRetry,
-    this.icon,
-    this.customMessage,
-  });
-
   /// Get user-friendly error message
   String get _errorMessage {
     if (customMessage != null) return customMessage!;
-    
-    // Return user-friendly message based on failure type
+
     if (failure is NetworkFailure) {
       return 'Unable to connect. Please check your internet connection and try again.';
     }
@@ -42,7 +40,7 @@ class ErrorWidget extends StatelessWidget {
     if (failure is CacheFailure) {
       return 'Data loading error. Please try again.';
     }
-    
+
     return failure.message;
   }
 
@@ -86,16 +84,15 @@ class ErrorWidget extends StatelessWidget {
 /// Error Display Widget - Legacy support for string messages
 @immutable
 class ErrorDisplayWidget extends StatelessWidget {
-  final String message;
-  final VoidCallback? onRetry;
-  final IconData? icon;
-
   const ErrorDisplayWidget({
-    super.key,
     required this.message,
+    super.key,
     this.onRetry,
     this.icon,
   });
+  final String message;
+  final VoidCallback? onRetry;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {

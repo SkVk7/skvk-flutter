@@ -5,25 +5,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../core/design_system/design_system.dart';
-// UI Components - Reusable components
-import '../../components/common/index.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
 
 class ProfileActionButton extends StatelessWidget {
+  const ProfileActionButton({
+    required this.title,
+    required this.icon,
+    required this.onTap,
+    super.key,
+    this.backgroundColor,
+    this.textColor,
+  });
   final String title;
   final IconData icon;
   final VoidCallback onTap;
   final Color? backgroundColor;
   final Color? textColor;
-
-  const ProfileActionButton({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.onTap,
-    this.backgroundColor,
-    this.textColor,
-  });
 
   @override
   Widget build(BuildContext context) {

@@ -4,31 +4,31 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/responsive_system.dart';
-import '../cards/pill_action_card.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/cards/pill_action_card.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
 
 /// Quick Actions Section - Two pill action cards with responsive layout
 class QuickActionsSection extends StatelessWidget {
+  const QuickActionsSection({
+    required this.translationService,
+    required this.onBirthChartTap,
+    required this.onCalendarTap,
+    super.key,
+    this.birthChartTitle,
+    this.calendarTitle,
+  });
   final TranslationService translationService;
   final VoidCallback onBirthChartTap;
   final VoidCallback onCalendarTap;
   final String? birthChartTitle;
   final String? calendarTitle;
 
-  const QuickActionsSection({
-    super.key,
-    required this.translationService,
-    required this.onBirthChartTap,
-    required this.onCalendarTap,
-    this.birthChartTitle,
-    this.calendarTitle,
-  });
-
   @override
   Widget build(BuildContext context) {
     return ResponsiveLayoutBuilder(
-      builder: (context, screenSize, screenDimensions, aspectRatio, orientation) {
+      builder:
+          (context, screenSize, screenDimensions, aspectRatio, orientation) {
         final isVerySmall = screenDimensions.width < 400;
 
         if (isVerySmall) {
@@ -104,4 +104,3 @@ class QuickActionsSection extends StatelessWidget {
     );
   }
 }
-

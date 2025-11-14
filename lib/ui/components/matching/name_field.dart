@@ -4,26 +4,25 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Name Field - Reusable text field for names
 @immutable
 class NameField extends StatelessWidget {
+  const NameField({
+    required this.controller,
+    required this.label,
+    required this.icon,
+    required this.hintText,
+    super.key,
+    this.onChanged,
+  });
   final TextEditingController controller;
   final String label;
   final IconData icon;
   final String hintText;
   final ValueChanged<String>? onChanged;
-
-  const NameField({
-    super.key,
-    required this.controller,
-    required this.label,
-    required this.icon,
-    required this.hintText,
-    this.onChanged,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -51,31 +50,31 @@ class NameField extends StatelessWidget {
                 size: ResponsiveSystem.iconSize(context, baseSize: 20),
                 color: ThemeHelpers.getSecondaryTextColor(context),
               ),
-            border: OutlineInputBorder(
-              borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-              borderSide: BorderSide(
-                color: ThemeHelpers.getBorderColor(context),
-                width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+              border: OutlineInputBorder(
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                borderSide: BorderSide(
+                  color: ThemeHelpers.getBorderColor(context),
+                  width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                ),
               ),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-              borderSide: BorderSide(
-                color: ThemeHelpers.getBorderColor(context),
-                width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                borderSide: BorderSide(
+                  color: ThemeHelpers.getBorderColor(context),
+                  width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                ),
               ),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-              borderSide: BorderSide(
-                color: ThemeHelpers.getPrimaryColor(context),
-                width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                borderSide: BorderSide(
+                  color: ThemeHelpers.getPrimaryColor(context),
+                  width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
+                ),
               ),
+              filled: true,
+              fillColor: ThemeHelpers.getSurfaceColor(context),
+              contentPadding: ResponsiveSystem.all(context, baseSpacing: 16),
             ),
-            filled: true,
-            fillColor: ThemeHelpers.getSurfaceColor(context),
-            contentPadding: ResponsiveSystem.all(context, baseSpacing: 16),
-          ),
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
               color: ThemeHelpers.getPrimaryTextColor(context),
@@ -87,4 +86,3 @@ class NameField extends StatelessWidget {
     );
   }
 }
-

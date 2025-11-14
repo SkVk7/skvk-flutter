@@ -3,21 +3,17 @@
 /// Proper state management following Flutter best practices
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../services/user/user_service.dart';
-import '../../../utils/either.dart';
-import '../../../utils/validation/error_message_helper.dart';
-import '../../../../ui/components/user/user_profile_form.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/error_message_helper.dart';
+import 'package:skvk_application/ui/components/user/user_profile_form.dart';
 
 /// User profile state
 class UserProfileState {
-  final UserProfileFormData? formData;
-  final bool isLoading;
-  final bool isEditing;
-  final String? errorMessage;
-  final String? successMessage;
-
   const UserProfileState({
     this.formData,
     this.isLoading = false,
@@ -25,6 +21,11 @@ class UserProfileState {
     this.errorMessage,
     this.successMessage,
   });
+  final UserProfileFormData? formData;
+  final bool isLoading;
+  final bool isEditing;
+  final String? errorMessage;
+  final String? successMessage;
 
   UserProfileState copyWith({
     UserProfileFormData? formData,
@@ -59,7 +60,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   /// Load user data from service
   Future<void> _loadUserData() async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final result = await _userService.getCurrentUser();
@@ -85,7 +86,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           isEditing: false,
         );
       } else {
-        // Convert technical error to user-friendly message
         final errorMessage =
             result.failure?.message ?? 'Failed to load user data';
         final userFriendlyMessage =
@@ -95,8 +95,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           errorMessage: userFriendlyMessage,
         );
       }
-    } catch (e) {
-      // Convert technical error to user-friendly message
+    } on Exception catch (e) {
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
@@ -108,13 +107,13 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   /// Start editing mode
   void startEditing() {
     if (state.canEdit) {
-      state = state.copyWith(isEditing: true, errorMessage: null);
+      state = state.copyWith(isEditing: true);
     }
   }
 
   /// Cancel editing mode
   void cancelEditing() {
-    state = state.copyWith(isEditing: false, errorMessage: null);
+    state = state.copyWith(isEditing: false);
     // Reload data to reset any changes
     _loadUserData();
   }
@@ -127,7 +126,8 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   /// Save user data
   Future<void> saveUser(UserProfileFormData formData) async {
     state = state.copyWith(
-        isLoading: true, errorMessage: null, successMessage: null);
+      isLoading: true,
+    );
 
     try {
       final userModel = formData.toUserModel();
@@ -141,12 +141,12 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           successMessage: 'Profile saved successfully!',
         );
 
-        // Clear success message after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          state = state.copyWith(successMessage: null);
-        });
+        unawaited(
+          Future.delayed(const Duration(seconds: 3), () {
+            state = state.copyWith();
+          }),
+        );
       } else {
-        // Convert technical error to user-friendly message
         final errorMessage =
             result.failure?.message ?? 'Failed to save profile';
         final userFriendlyMessage =
@@ -156,8 +156,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           errorMessage: userFriendlyMessage,
         );
       }
-    } catch (e) {
-      // Convert technical error to user-friendly message
+    } on Exception catch (e) {
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
@@ -168,7 +167,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   /// Delete user data
   Future<void> deleteUser() async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    state = state.copyWith(isLoading: true);
 
     try {
       final result = await _userService.deleteUser();
@@ -178,7 +177,6 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           successMessage: 'Profile deleted successfully!',
         );
       } else {
-        // Convert technical error to user-friendly message
         final errorMessage =
             result.failure?.message ?? 'Failed to delete profile';
         final userFriendlyMessage =
@@ -188,8 +186,7 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
           errorMessage: userFriendlyMessage,
         );
       }
-    } catch (e) {
-      // Convert technical error to user-friendly message
+    } on Exception catch (e) {
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
@@ -200,12 +197,12 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
 
   /// Clear error message
   void clearError() {
-    state = state.copyWith(errorMessage: null);
+    state = state.copyWith();
   }
 
   /// Clear success message
   void clearSuccess() {
-    state = state.copyWith(successMessage: null);
+    state = state.copyWith();
   }
 
   /// Refresh user data

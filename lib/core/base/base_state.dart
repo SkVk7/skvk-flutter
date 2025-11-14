@@ -5,7 +5,7 @@
 library;
 
 import 'package:equatable/equatable.dart';
-import '../errors/failures.dart';
+import 'package:skvk_application/core/errors/failures.dart';
 
 /// Base state class for all feature states
 abstract class BaseState extends Equatable {
@@ -17,9 +17,8 @@ abstract class BaseState extends Equatable {
 
 /// Base state with loading indicator
 class LoadingState extends BaseState {
-  final String? message;
-
   const LoadingState({this.message});
+  final String? message;
 
   @override
   List<Object?> get props => [message];
@@ -27,13 +26,12 @@ class LoadingState extends BaseState {
 
 /// Base state with error
 class ErrorState extends BaseState {
-  final Failure failure;
-  final String? userMessage;
-
   const ErrorState({
     required this.failure,
     this.userMessage,
   });
+  final Failure failure;
+  final String? userMessage;
 
   @override
   List<Object?> get props => [failure, userMessage];
@@ -41,9 +39,8 @@ class ErrorState extends BaseState {
 
 /// Base state with success
 class SuccessState<T> extends BaseState {
-  final T data;
-
   const SuccessState(this.data);
+  final T data;
 
   @override
   List<Object?> get props => [data];
@@ -56,11 +53,6 @@ class InitialState extends BaseState {
 
 /// Generic state wrapper that can represent any state
 class AsyncState<T> extends BaseState {
-  final T? data;
-  final bool isLoading;
-  final Failure? failure;
-  final String? message;
-
   const AsyncState({
     this.data,
     this.isLoading = false,
@@ -96,6 +88,10 @@ class AsyncState<T> extends BaseState {
   factory AsyncState.initial() {
     return AsyncState<T>();
   }
+  final T? data;
+  final bool isLoading;
+  final Failure? failure;
+  final String? message;
 
   /// Check if state is loading
   bool get isLoaded => !isLoading && data != null;
@@ -109,4 +105,3 @@ class AsyncState<T> extends BaseState {
   @override
   List<Object?> get props => [data, isLoading, failure, message];
 }
-

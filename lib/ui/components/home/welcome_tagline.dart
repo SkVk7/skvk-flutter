@@ -4,20 +4,19 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Welcome Tagline - Responsive tagline text with overflow handling
 class WelcomeTagline extends StatelessWidget {
-  final TranslationService translationService;
-  final String? customText;
-
   const WelcomeTagline({
-    super.key,
     required this.translationService,
+    super.key,
     this.customText,
   });
+  final TranslationService translationService;
+  final String? customText;
 
   @override
   Widget build(BuildContext context) {
@@ -52,4 +51,3 @@ class WelcomeTagline extends StatelessWidget {
     );
   }
 }
-

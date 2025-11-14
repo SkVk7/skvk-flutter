@@ -40,7 +40,7 @@ extension DateTimeExtensions on DateTime {
 
   /// Get start of month
   DateTime get startOfMonth {
-    return DateTime(year, month, 1);
+    return DateTime(year, month);
   }
 
   /// Get end of month
@@ -50,7 +50,7 @@ extension DateTimeExtensions on DateTime {
 
   /// Get start of year
   DateTime get startOfYear {
-    return DateTime(year, 1, 1);
+    return DateTime(year);
   }
 
   /// Get end of year
@@ -157,8 +157,11 @@ extension BuildContextExtensions on BuildContext {
   ColorScheme get colorScheme => Theme.of(this).colorScheme;
 
   /// Show snackbar
-  void showSnackBar(String message,
-      {Color? backgroundColor, Duration? duration}) {
+  void showSnackBar(
+    String message, {
+    Color? backgroundColor,
+    Duration? duration,
+  }) {
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -239,11 +242,8 @@ extension DoubleExtensions on double {
 
 /// Int extensions
 extension IntExtensions on int {
-  /// Check if number is even
-  bool get isEven => this % 2 == 0;
-
   /// Check if number is odd
-  bool get isOdd => this % 2 != 0;
+  bool get isOdd => !isEven;
 
   /// Get ordinal string (1st, 2nd, 3rd, etc.)
   String get ordinal {

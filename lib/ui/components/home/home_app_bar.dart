@@ -5,26 +5,25 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../common/index.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/services/language/translation_service.dart';
-import '../../../core/logging/logging_helper.dart';
-import '../../utils/screen_handlers.dart';
+import 'package:skvk_application/core/constants/app_constants.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Home App Bar - SliverAppBar with title, icon, and action buttons
 class HomeAppBar extends ConsumerWidget {
-  final VoidCallback? onProfileTap;
-  final Function(String)? onLanguageChanged;
-  final Function(String)? onThemeChanged;
-
   const HomeAppBar({
     super.key,
     this.onProfileTap,
     this.onLanguageChanged,
     this.onThemeChanged,
   });
+  final VoidCallback? onProfileTap;
+  final Function(String)? onLanguageChanged;
+  final Function(String)? onThemeChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,7 +68,8 @@ class HomeAppBar extends ConsumerWidget {
                   mobile: ResponsiveSystem.fontSize(context, baseSize: 20),
                   tablet: ResponsiveSystem.fontSize(context, baseSize: 22),
                   desktop: ResponsiveSystem.fontSize(context, baseSize: 24),
-                  largeDesktop: ResponsiveSystem.fontSize(context, baseSize: 26),
+                  largeDesktop:
+                      ResponsiveSystem.fontSize(context, baseSize: 26),
                 ),
                 fontWeight: FontWeight.w600,
               ),
@@ -80,8 +80,8 @@ class HomeAppBar extends ConsumerWidget {
       actions: [
         // Language Dropdown Widget
         LanguageDropdown(
-          onLanguageChanged: (value) {
-            LoggingHelper.logInfo('Language changed to: $value');
+          onLanguageChanged: (value) async {
+            await LoggingHelper.logInfo('Language changed to: $value');
             if (onLanguageChanged != null) {
               onLanguageChanged!(value);
             } else {
@@ -91,8 +91,8 @@ class HomeAppBar extends ConsumerWidget {
         ),
         // Theme Dropdown Widget
         ThemeDropdown(
-          onThemeChanged: (value) {
-            LoggingHelper.logInfo('Theme changed to: $value');
+          onThemeChanged: (value) async {
+            await LoggingHelper.logInfo('Theme changed to: $value');
             if (onThemeChanged != null) {
               onThemeChanged!(value);
             } else {
@@ -121,6 +121,4 @@ class HomeAppBar extends ConsumerWidget {
       ],
     );
   }
-
 }
-

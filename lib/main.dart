@@ -1,31 +1,26 @@
-// Core imports
+import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'core/config/production_config.dart';
-import 'core/architecture/module_registry.dart';
-import 'ui/themes/theme_provider.dart';
-import 'ui/themes/app_themes.dart';
-
-// Navigation
-import 'core/navigation/app_routes.dart';
-// Audio components
-import 'ui/components/audio/index.dart';
-
-// Service imports
-import 'core/utils/astrology/timezone_util.dart';
-
-// Logging system
-import 'core/logging/app_logger.dart';
-import 'core/services/notification/daily_prediction_scheduler.dart';
-import 'core/services/notification/daily_prediction_notification_service.dart';
+import 'package:skvk_application/core/architecture/module_registry.dart';
+import 'package:skvk_application/core/config/environment_config.dart';
+import 'package:skvk_application/core/config/production_config.dart';
+import 'package:skvk_application/core/errors/error_boundary.dart';
+import 'package:skvk_application/core/logging/app_logger.dart';
+import 'package:skvk_application/core/navigation/app_routes.dart';
+import 'package:skvk_application/core/services/notification/daily_prediction_notification_service.dart';
+import 'package:skvk_application/core/services/notification/daily_prediction_scheduler.dart';
+import 'package:skvk_application/core/utils/astrology/timezone_util.dart';
+import 'package:skvk_application/ui/components/audio/index.dart';
+import 'package:skvk_application/ui/themes/app_themes.dart';
+import 'package:skvk_application/ui/themes/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI overlay style for production-ready appearance
+  GlobalErrorHandler.initialize();
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -35,71 +30,80 @@ Future<void> main() async {
     ),
   );
 
-  // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize logging system first (non-blocking - run in background)
-  AppLogger().initialize().catchError((e) {
-    developer.log('Failed to initialize logging system: $e', name: 'main');
-  });
+  unawaited(
+    AppLogger().initialize().catchError((e) {
+      developer.log('Failed to initialize logging system: $e', name: 'main');
+    }),
+  );
 
-  // Initialize module registry (lightweight - just registration)
+  if (EnvironmentConfig.isDevelopment) {
+    developer.log(
+      'Running in ${EnvironmentConfig.environmentName} mode',
+      name: 'main',
+    );
+  }
+
   try {
-    final moduleRegistry = ModuleRegistry();
+    final moduleRegistry = ModuleRegistry()
+      ..registerModule(CoreModule())
+      ..registerModule(UserModule())
+      ..registerModule(AstrologyModule())
+      ..registerModule(HoroscopeModule())
+      ..registerModule(MatchingModule())
+      ..registerModule(CalendarModule())
+      ..registerModule(PredictionsModule());
 
-    // Register all modules (synchronous - fast)
-    moduleRegistry.registerModule(CoreModule());
-    moduleRegistry.registerModule(UserModule());
-    moduleRegistry.registerModule(AstrologyModule());
-    moduleRegistry.registerModule(HoroscopeModule());
-    moduleRegistry.registerModule(MatchingModule());
-    moduleRegistry.registerModule(CalendarModule());
-    moduleRegistry.registerModule(PredictionsModule());
-
-    // Initialize all modules in background (non-blocking)
-    moduleRegistry.initializeAll().catchError((e) {
-      developer.log('Failed to initialize modules: $e', name: 'main');
-    });
-  } catch (e) {
+    unawaited(
+      moduleRegistry.initializeAll().catchError((e) {
+        developer.log('Failed to initialize modules: $e', name: 'main');
+      }),
+    );
+  } on Exception catch (e) {
     developer.log('Failed to register modules: $e', name: 'main');
   }
 
-  // Initialize timezone utility in background (non-blocking)
-  TimezoneUtil.initialize().catchError((e) {
-    developer.log('Failed to initialize timezone utility: $e', name: 'main');
-  });
+  unawaited(
+    TimezoneUtil.initialize().catchError((e) {
+      developer.log('Failed to initialize timezone utility: $e', name: 'main');
+    }),
+  );
 
-  // Initialize daily prediction services in background (non-blocking)
-  // These are not critical for app startup
-  Future.microtask(() async {
-    try {
-      final scheduler = DailyPredictionScheduler.instance;
-      await scheduler.initialize();
+  unawaited(
+    Future.microtask(() async {
+      try {
+        final scheduler = DailyPredictionScheduler.instance();
+        await scheduler.initialize();
 
-      final notificationService = DailyPredictionNotificationService.instance;
-      await notificationService.initialize();
-    } catch (e) {
-      developer.log('Failed to initialize daily prediction services: $e',
-          name: 'main');
-      // Don't throw - app should still work without notifications
-    }
-  });
-
-  // Log production configuration (non-blocking)
-  Future.microtask(() async {
-    try {
-      if (ProductionConfig.isProduction) {
-        await AppLogger().info('Running in production mode', source: 'main');
-      } else {
-        await AppLogger().info('Running in development mode', source: 'main');
+        final notificationService =
+            DailyPredictionNotificationService.instance();
+        await notificationService.initialize();
+      } on Exception catch (e) {
+        developer.log(
+          'Failed to initialize daily prediction services: $e',
+          name: 'main',
+        );
       }
-    } catch (e) {
-      developer.log('Failed to log production config: $e', name: 'main');
-    }
-  });
+    }),
+  );
+
+  unawaited(
+    Future.microtask(() async {
+      try {
+        if (ProductionConfig.isProduction) {
+          await AppLogger().info('Running in production mode', source: 'main');
+        } else {
+          await AppLogger().info('Running in development mode', source: 'main');
+        }
+      } on Exception catch (e) {
+        developer.log('Failed to log production config: $e', name: 'main');
+      }
+    }),
+  );
 
   runApp(
     const ProviderScope(
@@ -108,7 +112,6 @@ Future<void> main() async {
   );
 }
 
-// Global Navigator key for accessing Navigator from anywhere in the app
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class MyApp extends ConsumerStatefulWidget {
@@ -128,25 +131,24 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
   /// Check if app was opened from notification
   void _checkNotificationNavigation() {
-    // Check if app was opened from notification
     final payload = DailyPredictionNotificationService.lastNotificationPayload;
     if (payload == 'predictions') {
-      // Navigate to predictions screen after a short delay
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.of(context).pushNamed('/predictions');
-        }
-      });
-      // Clear the payload
+      unawaited(
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.of(context).pushNamed('/predictions');
+          }
+        }),
+      );
       DailyPredictionNotificationService.clearLastNotificationPayload();
     } else if (payload == 'create_profile') {
-      // Navigate to profile creation screen after a short delay
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          Navigator.of(context).pushNamed('/edit-profile');
-        }
-      });
-      // Clear the payload
+      unawaited(
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.of(context).pushNamed('/edit-profile');
+          }
+        }),
+      );
       DailyPredictionNotificationService.clearLastNotificationPayload();
     }
   }
@@ -160,7 +162,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   @override
   void didChangePlatformBrightness() {
     super.didChangePlatformBrightness();
-    // Refresh theme when system theme changes
     ref.read(themeNotifierProvider.notifier).refreshSystemTheme();
   }
 
@@ -179,8 +180,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       initialRoute: AppRoutes.home,
       routes: AppRoutes.getRoutes(),
       builder: _buildAppBuilder,
-      debugShowMaterialGrid: false,
-      showPerformanceOverlay: ProductionConfig.enablePerformanceOverlay,
       debugShowCheckedModeBanner: false,
       supportedLocales: ProductionConfig.supportedLocales,
       locale: ProductionConfig.defaultLocale,
@@ -189,30 +188,30 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
 
   /// Build app wrapper with MediaQuery and MiniPlayer
   Widget _buildAppBuilder(BuildContext context, Widget? child) {
-    return MediaQuery(
-      data: MediaQuery.of(context).copyWith(
-        textScaler: TextScaler.linear(1.0),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          child!,
-          // Mini Player - Bottom sticky (visible across whole app)
-          // Positioned at bottom, only captures touches within its bounds
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: const MiniPlayer(),
-          ),
-        ],
+    return ErrorBoundary(
+      onError: (error, stackTrace) {},
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.noScaling,
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            child!,
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: MiniPlayer(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Use the new theme provider to get the current theme
     final themeState = ref.watch(themeNotifierProvider);
 
     return themeState.when(
@@ -224,7 +223,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         );
       },
       loading: () {
-        // Show loading with default theme
         return _buildMaterialApp(
           theme: AppThemes.lightTheme,
           darkTheme: AppThemes.darkTheme,
@@ -232,7 +230,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         );
       },
       error: (error, stack) {
-        // Show error with default theme
         return _buildMaterialApp(
           theme: AppThemes.lightTheme,
           darkTheme: AppThemes.darkTheme,

@@ -6,7 +6,7 @@ library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Supported content languages (ISO 639-1 codes)
 enum ContentLanguage {
@@ -26,10 +26,10 @@ enum ContentLanguage {
   urdu('ur', 'اردو'),
   sanskrit('sa', 'संस्कृतम्');
 
+  const ContentLanguage(this.code, this.displayName);
+
   final String code;
   final String displayName;
-
-  const ContentLanguage(this.code, this.displayName);
 
   static ContentLanguage fromCode(String code) {
     return ContentLanguage.values.firstWhere(
@@ -41,11 +41,10 @@ enum ContentLanguage {
 
 /// Content language preferences state
 class ContentLanguagePreferences {
-  final ContentLanguage selectedLanguage;
-
   const ContentLanguagePreferences({
     this.selectedLanguage = ContentLanguage.english,
   });
+  final ContentLanguage selectedLanguage;
 
   ContentLanguagePreferences copyWith({
     ContentLanguage? selectedLanguage,
@@ -69,9 +68,7 @@ class ContentLanguageService extends Notifier<ContentLanguagePreferences> {
   @override
   ContentLanguagePreferences build() {
     _loadPreferences();
-    return const ContentLanguagePreferences(
-      selectedLanguage: ContentLanguage.english,
-    );
+    return const ContentLanguagePreferences();
   }
 
   Future<void> _loadPreferences() async {
@@ -81,9 +78,12 @@ class ContentLanguageService extends Notifier<ContentLanguagePreferences> {
       final language = ContentLanguage.fromCode(languageCode);
 
       state = ContentLanguagePreferences(selectedLanguage: language);
-    } catch (e) {
-      LoggingHelper.logError('Failed to load content language preference',
-          source: 'ContentLanguageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to load content language preference',
+        source: 'ContentLanguageService',
+        error: e,
+      );
       // Keep default value
     }
   }
@@ -93,14 +93,17 @@ class ContentLanguageService extends Notifier<ContentLanguagePreferences> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_contentLanguageKey, language.code);
 
-      // Update state synchronously before saving to preferences
       state = state.copyWith(selectedLanguage: language);
-      LoggingHelper.logInfo(
-          'Content language set to: ${language.displayName} (${language.code})',
-          source: 'ContentLanguageService');
-    } catch (e) {
-      LoggingHelper.logError('Failed to save content language preference',
-          source: 'ContentLanguageService', error: e);
+      await LoggingHelper.logInfo(
+        'Content language set to: ${language.displayName} (${language.code})',
+        source: 'ContentLanguageService',
+      );
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to save content language preference',
+        source: 'ContentLanguageService',
+        error: e,
+      );
     }
   }
 

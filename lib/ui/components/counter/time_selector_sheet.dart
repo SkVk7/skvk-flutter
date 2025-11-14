@@ -4,18 +4,17 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 class TimeSelectorSheet extends StatefulWidget {
-  final Duration initialDuration;
-  final Function(Duration) onDurationSelected;
-
   const TimeSelectorSheet({
-    super.key,
     required this.initialDuration,
     required this.onDurationSelected,
+    super.key,
   });
+  final Duration initialDuration;
+  final Function(Duration) onDurationSelected;
 
   @override
   State<TimeSelectorSheet> createState() => _TimeSelectorSheetState();
@@ -70,7 +69,6 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Handle bar
           Container(
             width: ResponsiveSystem.spacing(context, baseSpacing: 40),
             height: ResponsiveSystem.spacing(context, baseSpacing: 4),
@@ -123,7 +121,8 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
                       ),
                       ResponsiveSystem.sizedBox(
                         context,
-                        height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                        height:
+                            ResponsiveSystem.spacing(context, baseSpacing: 8),
                       ),
                       Flexible(
                         child: Container(
@@ -179,8 +178,10 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
                                           ? FontWeight.bold
                                           : FontWeight.normal,
                                       color: isSelected
-                                          ? ThemeHelpers.getPrimaryColor(context)
-                                          : ThemeHelpers.getPrimaryTextColor(context),
+                                          ? ThemeHelpers.getPrimaryColor(
+                                              context,)
+                                          : ThemeHelpers.getPrimaryTextColor(
+                                              context,),
                                     ),
                                   ),
                                 );
@@ -217,7 +218,8 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
                       ),
                       ResponsiveSystem.sizedBox(
                         context,
-                        height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                        height:
+                            ResponsiveSystem.spacing(context, baseSpacing: 8),
                       ),
                       Flexible(
                         child: Container(
@@ -273,8 +275,10 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
                                           ? FontWeight.bold
                                           : FontWeight.normal,
                                       color: isSelected
-                                          ? ThemeHelpers.getPrimaryColor(context)
-                                          : ThemeHelpers.getPrimaryTextColor(context),
+                                          ? ThemeHelpers.getPrimaryColor(
+                                              context,)
+                                          : ThemeHelpers.getPrimaryTextColor(
+                                              context,),
                                     ),
                                   ),
                                 );
@@ -291,7 +295,6 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
             ),
           ),
 
-          // Save button
           Padding(
             padding: ResponsiveSystem.all(context, baseSpacing: 20),
             child: SizedBox(
@@ -306,7 +309,8 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
                   foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: ResponsiveSystem.symmetric(
                     context,
-                    vertical: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                    vertical:
+                        ResponsiveSystem.spacing(context, baseSpacing: 16),
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: ResponsiveSystem.circular(
@@ -336,4 +340,3 @@ class _TimeSelectorSheetState extends State<TimeSelectorSheet> {
     );
   }
 }
-

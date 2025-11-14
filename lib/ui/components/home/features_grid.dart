@@ -4,42 +4,40 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/responsive_system.dart';
-import '../cards/feature_card.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/cards/feature_card.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
 
 /// Feature Grid Item
-/// 
+///
 /// Immutable data class for feature grid items
 @immutable
 class FeatureGridItem {
-  final String titleKey;
-  final String fallbackTitle;
-  final IconData icon;
-  final VoidCallback onTap;
-
   const FeatureGridItem({
     required this.titleKey,
     required this.fallbackTitle,
     required this.icon,
     required this.onTap,
   });
+  final String titleKey;
+  final String fallbackTitle;
+  final IconData icon;
+  final VoidCallback onTap;
 }
 
 /// Features Grid - Responsive grid that adapts to screen size and zoom
 class FeaturesGrid extends StatelessWidget {
+  const FeaturesGrid({
+    required this.translationService,
+    required this.items,
+    super.key,
+    this.crossAxisCount,
+    this.baseAspectRatio,
+  });
   final TranslationService translationService;
   final List<FeatureGridItem> items;
   final int? crossAxisCount;
   final double? baseAspectRatio;
-
-  const FeaturesGrid({
-    super.key,
-    required this.translationService,
-    required this.items,
-    this.crossAxisCount,
-    this.baseAspectRatio,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,14 +51,13 @@ class FeaturesGrid extends StatelessWidget {
           largeDesktop: 4,
         );
 
-    // Get text scale factor to adjust aspect ratio for zoom
-    final textScaleFactor = MediaQuery.of(context).textScaler.scale(1.0);
+    final textScaleFactor = MediaQuery.of(context).textScaler.scale(1);
 
     // Base aspect ratios - taller cards to accommodate text and zoom
     final double gridBaseAspectRatio = baseAspectRatio ??
         ResponsiveSystem.responsive(
           context,
-          mobile: 1.0, // Taller cards to accommodate zoomed text
+          mobile: 1, // Taller cards to accommodate zoomed text
           tablet: 1.1,
           desktop: 1.2,
           largeDesktop: 1.3,
@@ -69,7 +66,10 @@ class FeaturesGrid extends StatelessWidget {
     // Adjust aspect ratio based on zoom level - make cards taller when zoomed in
     // Lower aspect ratio = taller cards (more vertical space)
     final double adjustedAspectRatio = textScaleFactor > 1.0
-        ? gridBaseAspectRatio / (1 + (textScaleFactor - 1.0) * 0.5) // More aggressive adjustment for zoom
+        ? gridBaseAspectRatio /
+            (1 +
+                (textScaleFactor - 1.0) *
+                    0.5) // More aggressive adjustment for zoom
         : gridBaseAspectRatio;
 
     return GridView.count(
@@ -97,4 +97,3 @@ class FeaturesGrid extends StatelessWidget {
     );
   }
 }
-

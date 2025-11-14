@@ -6,37 +6,30 @@ library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-// Core services
-import '../interfaces/user_repository_interface.dart';
-
-// User feature
-import '../features/user/providers/user_provider.dart'
-    as user_providers;
-import '../features/user/repositories/user_repository_impl.dart';
-
-// Matching feature
-import '../features/matching/repositories/matching_repository.dart';
-import '../features/matching/repositories/matching_repository_impl.dart';
-
 // Horoscope feature
-import '../features/horoscope/repositories/horoscope_repository.dart';
-import '../features/horoscope/repositories/horoscope_repository_impl.dart';
+import 'package:skvk_application/core/features/horoscope/repositories/horoscope_repository.dart';
+import 'package:skvk_application/core/features/horoscope/repositories/horoscope_repository_impl.dart';
+// Matching feature
+import 'package:skvk_application/core/features/matching/repositories/matching_repository.dart';
+import 'package:skvk_application/core/features/matching/repositories/matching_repository_impl.dart';
+// User feature
+import 'package:skvk_application/core/features/user/providers/user_provider.dart'
+    as user_providers;
+import 'package:skvk_application/core/features/user/repositories/user_repository_impl.dart';
+import 'package:skvk_application/core/interfaces/user_repository_interface.dart';
 
 /// Dependency injection container
 class InjectionContainer {
-  static final InjectionContainer _instance = InjectionContainer._internal();
   factory InjectionContainer() => _instance;
   InjectionContainer._internal();
+  static final InjectionContainer _instance = InjectionContainer._internal();
 
   late final ProviderContainer _container;
 
   /// Initialize the dependency injection container
   Future<void> initialize() async {
-    // Initialize SharedPreferences
     final prefs = await SharedPreferences.getInstance();
 
-    // Create the provider container with overrides
     _container = ProviderContainer(
       overrides: [
         // Override SharedPreferences provider
@@ -102,9 +95,7 @@ ProviderSubscription<T> watchIt<T>(
 }
 
 // ============================================================================
-// REPOSITORY PROVIDER DEFINITIONS
 // ============================================================================
-// These providers are defined here and exported via providers_registry.dart
 // for centralized access
 
 /// User repository provider
@@ -127,5 +118,6 @@ final horoscopeRepositoryProvider = Provider<HoroscopeRepository>((ref) {
 /// SharedPreferences provider
 /// Must be overridden in ProviderScope with actual SharedPreferences instance
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
-  throw UnimplementedError('SharedPreferences must be overridden in ProviderScope');
+  throw UnimplementedError(
+      'SharedPreferences must be overridden in ProviderScope',);
 });

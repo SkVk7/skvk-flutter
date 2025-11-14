@@ -5,23 +5,22 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import 'koota_info_helper.dart';
-import '../common/index.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/matching/koota_info_helper.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Koota Card - Displays koota analysis with score, description, and significance
 class KootaCard extends StatelessWidget {
-  final String kootaName;
-  final String score;
-  final Map<String, dynamic> kootaInfo;
-
   const KootaCard({
-    super.key,
     required this.kootaName,
     required this.score,
     required this.kootaInfo,
+    super.key,
   });
+  final String kootaName;
+  final String score;
+  final Map<String, dynamic> kootaInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +50,11 @@ class KootaCard extends StatelessWidget {
               InfoCard(
                 backgroundColor: scoreColor.withAlpha(25),
                 borderRadius: ResponsiveSystem.circular(context, baseRadius: 6),
-                padding: ResponsiveSystem.symmetric(context,
-                    horizontal: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                    vertical: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                padding: ResponsiveSystem.symmetric(
+                  context,
+                  horizontal: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                  vertical: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                ),
                 child: Text(
                   '$score/$maxScore',
                   style: TextStyle(
@@ -65,17 +66,20 @@ class KootaCard extends StatelessWidget {
               ),
             ],
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+          ),
 
           // Progress Bar
           LinearProgressIndicator(
             value: scoreValue / maxScore,
-            backgroundColor: scoreColor.withAlpha((0.2 * 255).round()),
-            valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
+            backgroundColor: scoreColor.withValues(alpha: 0.2),
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+          ),
 
           // Description
           Text(
@@ -86,16 +90,20 @@ class KootaCard extends StatelessWidget {
               height: ResponsiveSystem.lineHeight(context, baseHeight: 1.4),
             ),
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+          ),
 
           // Significance
           InfoCard(
-            backgroundColor: ThemeHelpers.getPrimaryColor(context)
-                .withAlpha((0.05 * 255).round()),
+            backgroundColor:
+                ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.05),
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
-            padding: ResponsiveSystem.all(context,
-                baseSpacing: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            padding: ResponsiveSystem.all(
+              context,
+              baseSpacing: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -106,26 +114,32 @@ class KootaCard extends StatelessWidget {
                       size: ResponsiveSystem.iconSize(context, baseSize: 16),
                       color: ThemeHelpers.getPrimaryColor(context),
                     ),
-                    ResponsiveSystem.sizedBox(context,
-                        width: ResponsiveSystem.spacing(context, baseSpacing: 6)),
+                    ResponsiveSystem.sizedBox(
+                      context,
+                      width: ResponsiveSystem.spacing(context, baseSpacing: 6),
+                    ),
                     Text(
                       'Significance:',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         fontWeight: FontWeight.w600,
                         color: ThemeHelpers.getPrimaryColor(context),
                       ),
                     ),
                   ],
                 ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                ),
                 Text(
                   kootaInfo['significance'] as String,
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 13),
                     color: secondaryTextColor,
-                    height: ResponsiveSystem.lineHeight(context, baseHeight: 1.3),
+                    height:
+                        ResponsiveSystem.lineHeight(context, baseHeight: 1.3),
                   ),
                 ),
               ],
@@ -136,4 +150,3 @@ class KootaCard extends StatelessWidget {
     );
   }
 }
-

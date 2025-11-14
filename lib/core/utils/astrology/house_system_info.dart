@@ -6,15 +6,6 @@ library;
 
 /// Information about house systems
 class HouseSystemInfo {
-  final String system;
-  final String name;
-  final String description;
-  final List<String> regions;
-  final List<String> traditions;
-  final String usage;
-  final bool isRecommended;
-  final String calculationMethod;
-
   const HouseSystemInfo({
     required this.system,
     required this.name,
@@ -25,6 +16,14 @@ class HouseSystemInfo {
     required this.calculationMethod,
     this.isRecommended = false,
   });
+  final String system;
+  final String name;
+  final String description;
+  final List<String> regions;
+  final List<String> traditions;
+  final String usage;
+  final bool isRecommended;
+  final String calculationMethod;
 }
 
 /// Helper class for house system information
@@ -63,12 +62,12 @@ class HouseSystemInfoHelper {
         'USA',
         'Europe',
         'Australia',
-        'Modern India'
+        'Modern India',
       ],
       traditions: [
         'Western Astrology',
         'Modern Vedic',
-        'Psychological Astrology'
+        'Psychological Astrology',
       ],
       usage:
           'Standard for most Western astrologers and modern Vedic practitioners',
@@ -147,7 +146,7 @@ class HouseSystemInfoHelper {
       traditions: [
         'Medieval Astrology',
         'Arabic Astrology',
-        'Traditional Western'
+        'Traditional Western',
       ],
       usage: 'Used in medieval Arabic and European astrology',
       calculationMethod: 'Prime vertical-based system with specific formula',
@@ -279,7 +278,7 @@ class HouseSystemInfoHelper {
     try {
       return _houseSystemInfo
           .firstWhere((info) => info.system == system.toLowerCase());
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -292,16 +291,20 @@ class HouseSystemInfoHelper {
   /// Get house systems by region
   static List<HouseSystemInfo> getHouseSystemsByRegion(String region) {
     return _houseSystemInfo
-        .where((info) => info.regions
-            .any((r) => r.toLowerCase().contains(region.toLowerCase())))
+        .where(
+          (info) => info.regions
+              .any((r) => r.toLowerCase().contains(region.toLowerCase())),
+        )
         .toList();
   }
 
   /// Get house systems by tradition
   static List<HouseSystemInfo> getHouseSystemsByTradition(String tradition) {
     return _houseSystemInfo
-        .where((info) => info.traditions
-            .any((t) => t.toLowerCase().contains(tradition.toLowerCase())))
+        .where(
+          (info) => info.traditions
+              .any((t) => t.toLowerCase().contains(tradition.toLowerCase())),
+        )
         .toList();
   }
 

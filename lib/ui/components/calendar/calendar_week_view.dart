@@ -3,28 +3,24 @@
 /// A week view widget for the calendar with Hindu traditional styling
 library;
 
-import '../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
 
 class CalendarWeekView extends StatelessWidget {
+  const CalendarWeekView({
+    required this.selectedDate,
+    required this.onDateSelected,
+    super.key,
+    this.showFestivals = true,
+    this.showAuspiciousTimes = true,
+  });
   final DateTime selectedDate;
   final Function(DateTime) onDateSelected;
   final bool showFestivals;
   final bool showAuspiciousTimes;
 
-  const CalendarWeekView({
-    super.key,
-    required this.selectedDate,
-    required this.onDateSelected,
-    this.showFestivals = true,
-    this.showAuspiciousTimes = true,
-  });
-
   @override
   Widget build(BuildContext context) {
-    // Get location from user profile for calendar data
-
-    // Calculate the start of the week (Monday)
     final startOfWeek = _getStartOfWeek(selectedDate);
     final weekDays =
         List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
@@ -45,7 +41,7 @@ class CalendarWeekView extends StatelessWidget {
               itemBuilder: (context, index) {
                 final day = weekDays[index];
                 // Use astrology library for calendar data
-                final dayData = null;
+                const dayData = null;
                 final isSelected = day.day == selectedDate.day &&
                     day.month == selectedDate.month &&
                     day.year == selectedDate.year;
@@ -54,7 +50,12 @@ class CalendarWeekView extends StatelessWidget {
                     day.year == DateTime.now().year;
 
                 return _buildWeekDayCard(
-                    context, day, dayData, isSelected, isToday);
+                  context,
+                  day,
+                  dayData,
+                  isSelected,
+                  isToday,
+                );
               },
             ),
           ),
@@ -114,18 +115,17 @@ class CalendarWeekView extends StatelessWidget {
         padding: ResponsiveSystem.all(context, baseSpacing: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? ThemeHelpers.getPrimaryColor(context)
-                  .withAlpha((0.1 * 255).round())
+              ? ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1)
               : ThemeHelpers.getSurfaceColor(context),
           borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           border: Border.all(
             color: isSelected
                 ? ThemeHelpers.getPrimaryColor(context)
-                : isToday
+                : (isToday
                     ? ThemeHelpers.getPrimaryColor(context)
-                        .withAlpha((0.5 * 255).round())
+                        .withValues(alpha: 0.5)
                     : ThemeHelpers.getPrimaryColor(context)
-                        .withAlpha((0.1 * 255).round()),
+                        .withValues(alpha: 0.1)),
             width: isSelected
                 ? ResponsiveSystem.borderWidth(context, baseWidth: 2)
                 : ResponsiveSystem.borderWidth(context, baseWidth: 1),
@@ -168,13 +168,22 @@ class CalendarWeekView extends StatelessWidget {
                   if (dayData != null) ...[
                     _buildInfoRow(context, 'Tithi', '${dayData['tithi']}'),
                     _buildInfoRow(
-                        context, 'Nakshatra', '${dayData['nakshatra']}'),
+                      context,
+                      'Nakshatra',
+                      '${dayData['nakshatra']}',
+                    ),
                     if (showFestivals && dayData['festival'] != null)
                       _buildInfoRow(
-                          context, 'Festival', '${dayData['festival']}'),
+                        context,
+                        'Festival',
+                        '${dayData['festival']}',
+                      ),
                     if (showAuspiciousTimes && dayData['auspicious'] != null)
                       _buildInfoRow(
-                          context, 'Auspicious', '${dayData['auspicious']}'),
+                        context,
+                        'Auspicious',
+                        '${dayData['auspicious']}',
+                      ),
                   ] else ...[
                     Text(
                       'No data available',
@@ -195,17 +204,16 @@ class CalendarWeekView extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isToday
                     ? ThemeHelpers.getPrimaryColor(context)
-                    : isSelected
+                    : (isSelected
                         ? ThemeHelpers.getPrimaryColor(context)
-                            .withAlpha((0.7 * 255).round())
-                        : Colors.transparent,
+                            .withValues(alpha: 0.7)
+                        : Colors.transparent),
                 shape: BoxShape.circle,
                 border: isToday || isSelected
                     ? null
                     : Border.all(
                         color: ThemeHelpers.getSecondaryTextColor(context)
-                            .withAlpha((0.3 * 255).round()),
-                        width: 1,
+                            .withValues(alpha: 0.3),
                       ),
               ),
             ),
@@ -268,7 +276,7 @@ class CalendarWeekView extends StatelessWidget {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return monthNames[month - 1];
   }

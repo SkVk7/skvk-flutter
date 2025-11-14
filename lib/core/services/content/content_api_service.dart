@@ -5,44 +5,43 @@
 library;
 
 import 'dart:convert';
+
+import 'package:archive/archive_io.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
-import 'package:archive/archive_io.dart';
-import '../../../core/config/app_config.dart';
-import '../../../core/services/shared/cache_service.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/config/app_config.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 // Conditional import for HttpClient (mobile only)
-import 'content_api_service_stub.dart'
+import 'package:skvk_application/core/services/content/content_api_service_stub.dart'
     if (dart.library.io) 'content_api_service_mobile.dart';
+import 'package:skvk_application/core/services/shared/cache_service.dart';
 
 /// Common utility for handling gzip decompression from HTTP responses
-/// 
+///
 /// Handles both web (browser auto-decompression) and mobile (manual decompression) cases
 /// Works for both lyrics and books
 class ContentDecompressionHelper {
   /// Extract and decompress content from HTTP response
-  /// 
+  ///
   /// Handles:
   /// - Browser auto-decompression (web)
   /// - Manual decompression fallback (if browser didn't decompress)
   /// - Direct usage if not compressed
-  /// 
+  ///
   /// Returns the decompressed string content
-  static String extractContent(http.Response response, {String source = 'ContentApiService'}) {
-    // Check if response body is empty
+  static Future<String> extractContent(http.Response response,
+      {String source = 'ContentApiService',}) async {
     if (response.bodyBytes.isEmpty) {
       throw Exception('Response body is empty');
     }
 
-    // Check if browser didn't decompress (shouldn't happen, but just in case)
     // Gzip files start with magic bytes 0x1f 0x8b
     final bodyBytes = response.bodyBytes;
-    final isStillCompressed = bodyBytes.length >= 2 &&
-        bodyBytes[0] == 0x1f &&
-        bodyBytes[1] == 0x8b;
+    final isStillCompressed =
+        bodyBytes.length >= 2 && bodyBytes[0] == 0x1f && bodyBytes[1] == 0x8b;
 
     if (isStillCompressed) {
-      LoggingHelper.logWarning(
+      await LoggingHelper.logWarning(
         'Response is still compressed - browser did not auto-decompress. Manual decompression needed.',
         source: source,
       );
@@ -50,13 +49,13 @@ class ContentDecompressionHelper {
       try {
         final decompressedBytes = GZipDecoder().decodeBytes(bodyBytes);
         final content = utf8.decode(decompressedBytes);
-        LoggingHelper.logInfo(
+        await LoggingHelper.logInfo(
           'Manually decompressed gzip content (${bodyBytes.length} bytes -> ${decompressedBytes.length} bytes)',
           source: source,
         );
         return content;
-      } catch (e) {
-        LoggingHelper.logError(
+      } on Exception catch (e) {
+        await LoggingHelper.logError(
           'Failed to manually decompress gzip content',
           source: source,
           error: e,
@@ -75,11 +74,6 @@ class ContentDecompressionHelper {
 /// Provides methods to call content API endpoints.
 /// All methods return Map<String, dynamic> (raw JSON).
 class ContentApiService {
-  static ContentApiService? _instance;
-  final String baseUrl;
-  final http.Client _httpClient; // For web platform
-  final CacheService _cache;
-
   ContentApiService._({
     required this.baseUrl,
     required http.Client httpClient,
@@ -93,27 +87,28 @@ class ContentApiService {
     http.Client? client,
     CacheService? cache,
   }) {
-    // Get Workers URL from config
     final workersUrl = baseUrl ?? AppConfig.current.workersBaseUrl;
     return ContentApiService._(
       baseUrl: workersUrl,
       httpClient: client ?? http.Client(),
-      cache: cache ?? CacheService.instance,
+      cache: cache ?? CacheService.instance(),
     );
   }
 
   /// Get singleton instance
-  static ContentApiService get instance {
-    _instance ??= ContentApiService.create();
-    return _instance!;
+  factory ContentApiService.instance() {
+    return _instance ??= ContentApiService.create();
   }
+  static ContentApiService? _instance;
+  final String baseUrl;
+  final http.Client _httpClient; // For web platform
+  final CacheService _cache;
 
   /// Get list of all music files
   Future<Map<String, dynamic>> getMusicList() async {
     try {
       const cacheKey = 'music_list';
 
-      // Check cache (cache for 7 days, TTL based on last access)
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -145,8 +140,8 @@ class ContentApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting music list: $e',
         error: e,
         stackTrace: stackTrace,
@@ -161,8 +156,8 @@ class ContentApiService {
     try {
       // The Worker now directly serves the file, so the URL is the endpoint itself
       return '$baseUrl/api/music/$musicId';
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting music URL: $e',
         error: e,
         stackTrace: stackTrace,
@@ -173,14 +168,16 @@ class ContentApiService {
   }
 
   /// Get lyrics for a music file
-  Future<String> getLyrics(String musicId,
-      {String? language, bool forceRefresh = false}) async {
+  Future<String> getLyrics(
+    String musicId, {
+    String? language,
+    bool forceRefresh = false,
+  }) async {
     try {
       final lang = language ?? 'en';
       const cacheKeyPrefix = 'lyrics_';
       final cacheKey = '$cacheKeyPrefix${musicId}_$lang';
 
-      // Check cache only if not forcing refresh
       if (!forceRefresh) {
         final cachedData = _cache.get(cacheKey);
         if (cachedData != null) {
@@ -194,7 +191,6 @@ class ContentApiService {
       if (kIsWeb) {
         // Web: Browser's fetch API automatically decompresses gzip responses
         // Just use response.body - it's already decompressed by the browser
-        // This is much faster than manual decompression (native C code)
         final response = await _httpClient.get(
           Uri.parse('$baseUrl/api/lyrics/$musicId?lang=$lang'),
           headers: {
@@ -210,13 +206,13 @@ class ContentApiService {
 
         if (response.statusCode != 200) {
           throw Exception(
-              'API error: ${response.statusCode} - ${response.body}');
+            'API error: ${response.statusCode} - ${response.body}',
+          );
         }
 
         // Use common decompression helper (same as books)
-        lyrics = ContentDecompressionHelper.extractContent(
+        lyrics = await ContentDecompressionHelper.extractContent(
           response,
-          source: 'ContentApiService',
         );
       } else {
         // Mobile: Use HttpClient with automatic decompression
@@ -232,8 +228,8 @@ class ContentApiService {
       );
 
       return lyrics;
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting lyrics: $e',
         error: e,
         stackTrace: stackTrace,
@@ -254,7 +250,6 @@ class ContentApiService {
       final lang = language ?? 'en';
       final cacheKey = 'books_list_$lang';
 
-      // Check cache (cache for 7 days, TTL based on last access)
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -284,16 +279,18 @@ class ContentApiService {
 
         return data;
       } else if (response.statusCode == 404) {
-        throw Exception('Books not found. Please check your connection and try again.');
+        throw Exception(
+            'Books not found. Please check your connection and try again.',);
       } else if (response.statusCode >= 400 && response.statusCode < 500) {
         throw Exception('Invalid request. Please try again later.');
       } else if (response.statusCode >= 500) {
-        throw Exception('Server error: ${response.statusCode}. Please try again later.');
+        throw Exception(
+            'Server error: ${response.statusCode}. Please try again later.',);
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting books list: $e',
         error: e,
         stackTrace: stackTrace,
@@ -309,8 +306,8 @@ class ContentApiService {
       final lang = language ?? 'en';
       // The Worker now directly serves the file, so the URL is the endpoint itself
       return '$baseUrl/api/books/$bookId?lang=$lang';
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting book URL: $e',
         error: e,
         stackTrace: stackTrace,
@@ -328,7 +325,8 @@ class ContentApiService {
     try {
       final response = await _httpClient.get(
         Uri.parse(
-            '$baseUrl/api/languages?contentId=$contentId&type=$contentType'),
+          '$baseUrl/api/languages?contentId=$contentId&type=$contentType',
+        ),
         headers: {
           'Accept': 'application/json',
         },
@@ -344,8 +342,8 @@ class ContentApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting available languages: $e',
         error: e,
         stackTrace: stackTrace,

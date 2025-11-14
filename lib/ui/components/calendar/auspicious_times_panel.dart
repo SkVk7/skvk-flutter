@@ -6,17 +6,15 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../../core/design_system/design_system.dart';
-// UI Components - Reusable components
-import '../../components/common/index.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
 
 class AuspiciousTimesPanel extends ConsumerWidget {
-  final DateTime selectedDate;
-
   const AuspiciousTimesPanel({
-    super.key,
     required this.selectedDate,
+    super.key,
   });
+  final DateTime selectedDate;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +33,10 @@ class AuspiciousTimesPanel extends ConsumerWidget {
   }
 
   Widget _buildSunTimes(
-      BuildContext context, Color primaryColor, WidgetRef ref) {
+    BuildContext context,
+    Color primaryColor,
+    WidgetRef ref,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -87,7 +88,10 @@ class AuspiciousTimesPanel extends ConsumerWidget {
   }
 
   Widget _buildAuspiciousPeriods(
-      BuildContext context, Color primaryColor, WidgetRef ref) {
+    BuildContext context,
+    Color primaryColor,
+    WidgetRef ref,
+  ) {
     final auspiciousPeriods = _getAuspiciousPeriods();
 
     return Column(
@@ -111,14 +115,19 @@ class AuspiciousTimesPanel extends ConsumerWidget {
           ],
         ),
         ResponsiveSystem.sizedBox(context, height: 8),
-        ...auspiciousPeriods.map((period) =>
-            _buildPeriodItem(context, period, true, primaryColor, ref)),
+        ...auspiciousPeriods.map(
+          (period) =>
+              _buildPeriodItem(context, period, true, primaryColor, ref),
+        ),
       ],
     );
   }
 
   Widget _buildInauspiciousPeriods(
-      BuildContext context, Color primaryColor, WidgetRef ref) {
+    BuildContext context,
+    Color primaryColor,
+    WidgetRef ref,
+  ) {
     final inauspiciousPeriods = _getInauspiciousPeriods();
 
     return Column(
@@ -128,7 +137,7 @@ class AuspiciousTimesPanel extends ConsumerWidget {
           children: [
             Icon(
               Icons.warning,
-              color: primaryColor.withAlpha((0.7 * 255).round()),
+              color: primaryColor.withValues(alpha: 0.7),
               size: ResponsiveSystem.iconSize(context, baseSize: 16),
             ),
             ResponsiveSystem.sizedBox(context, width: 8),
@@ -142,8 +151,10 @@ class AuspiciousTimesPanel extends ConsumerWidget {
           ],
         ),
         ResponsiveSystem.sizedBox(context, height: 8),
-        ...inauspiciousPeriods.map((period) =>
-            _buildPeriodItem(context, period, false, primaryColor, ref)),
+        ...inauspiciousPeriods.map(
+          (period) =>
+              _buildPeriodItem(context, period, false, primaryColor, ref),
+        ),
       ],
     );
   }
@@ -160,10 +171,10 @@ class AuspiciousTimesPanel extends ConsumerWidget {
       padding:
           EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
       decoration: BoxDecoration(
-        color: color.withAlpha((0.1 * 255).round()),
+        color: color.withValues(alpha: 0.1),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: color.withAlpha((0.3 * 255).round()),
+          color: color.withValues(alpha: 0.3),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),
@@ -195,16 +206,21 @@ class AuspiciousTimesPanel extends ConsumerWidget {
     );
   }
 
-  Widget _buildPeriodItem(BuildContext context, Map<String, dynamic> period,
-      bool isAuspicious, Color primaryColor, WidgetRef ref) {
-    final color = isAuspicious
-        ? primaryColor
-        : primaryColor.withAlpha((0.7 * 255).round());
+  Widget _buildPeriodItem(
+    BuildContext context,
+    Map<String, dynamic> period,
+    bool isAuspicious,
+    Color primaryColor,
+    WidgetRef ref,
+  ) {
+    final color =
+        isAuspicious ? primaryColor : primaryColor.withValues(alpha: 0.7);
     final icon = isAuspicious ? LucideIcons.check : LucideIcons.x;
 
     return Container(
       margin: EdgeInsets.only(
-          bottom: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+        bottom: ResponsiveSystem.spacing(context, baseSpacing: 8),
+      ),
       padding:
           EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 12)),
       decoration: BoxDecoration(
@@ -264,7 +280,6 @@ class AuspiciousTimesPanel extends ConsumerWidget {
   }
 
   List<Map<String, dynamic>> _getAuspiciousPeriods() {
-    // This would typically be calculated based on astrological data
     // For now, returning sample data
     return [
       {
@@ -286,7 +301,6 @@ class AuspiciousTimesPanel extends ConsumerWidget {
   }
 
   List<Map<String, dynamic>> _getInauspiciousPeriods() {
-    // This would typically be calculated based on astrological data
     // For now, returning sample data
     return [
       {

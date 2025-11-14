@@ -5,11 +5,13 @@
 /// - Zoom-in: Screen contracts back to a specific widget (like back button)
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 import 'package:vector_math/vector_math_64.dart' show Vector3;
-import '../../ui/utils/responsive_system.dart';
-import '../../ui/utils/theme_helpers.dart';
 
 class HeroNavigation {
   /// Navigate with zoom-out animation from a specific widget
@@ -72,8 +74,7 @@ class HeroNavigationWithRipple {
     Color? rippleColor,
     double? rippleRadius,
   }) async {
-    // Add haptic feedback
-    HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
 
     return Navigator.push<T>(
       context,
@@ -93,13 +94,6 @@ class HeroNavigationWithRipple {
 
 /// Custom Page Route for Zoom-Out Animation
 class _ZoomOutPageRoute<T> extends PageRoute<T> {
-  final Widget destination;
-  final Offset sourcePosition;
-  final Size sourceSize;
-  final Duration duration;
-  final Curve curve;
-  final String? heroTag;
-
   _ZoomOutPageRoute({
     required this.destination,
     required this.sourcePosition,
@@ -108,6 +102,12 @@ class _ZoomOutPageRoute<T> extends PageRoute<T> {
     required this.curve,
     this.heroTag,
   });
+  final Widget destination;
+  final Offset sourcePosition;
+  final Size sourceSize;
+  final Duration duration;
+  final Curve curve;
+  final String? heroTag;
 
   @override
   Color? get barrierColor => null;
@@ -159,13 +159,6 @@ class _ZoomOutPageRoute<T> extends PageRoute<T> {
 
 /// Custom Page Route for Zoom-In Animation
 class _ZoomInPageRoute<T> extends PageRoute<T> {
-  final Widget destination;
-  final Offset targetPosition;
-  final Size targetSize;
-  final Duration duration;
-  final Curve curve;
-  final String? heroTag;
-
   _ZoomInPageRoute({
     required this.destination,
     required this.targetPosition,
@@ -174,6 +167,12 @@ class _ZoomInPageRoute<T> extends PageRoute<T> {
     required this.curve,
     this.heroTag,
   });
+  final Widget destination;
+  final Offset targetPosition;
+  final Size targetSize;
+  final Duration duration;
+  final Curve curve;
+  final String? heroTag;
 
   @override
   Color? get barrierColor => null;
@@ -225,14 +224,6 @@ class _ZoomInPageRoute<T> extends PageRoute<T> {
 
 /// Ripple Page Route
 class _RipplePageRoute<T> extends PageRoute<T> {
-  final Widget destination;
-  final Offset sourcePosition;
-  final Size sourceSize;
-  final Duration duration;
-  final Curve curve;
-  final Color rippleColor;
-  final double rippleRadius;
-
   _RipplePageRoute({
     required this.destination,
     required this.sourcePosition,
@@ -242,6 +233,13 @@ class _RipplePageRoute<T> extends PageRoute<T> {
     required this.rippleColor,
     required this.rippleRadius,
   });
+  final Widget destination;
+  final Offset sourcePosition;
+  final Size sourceSize;
+  final Duration duration;
+  final Curve curve;
+  final Color rippleColor;
+  final double rippleRadius;
 
   @override
   Color? get barrierColor => null;
@@ -294,17 +292,16 @@ class _RipplePageRoute<T> extends PageRoute<T> {
 
 /// Zoom-Out Transition Widget
 class _ZoomOutTransition extends StatelessWidget {
-  final Animation<double> animation;
-  final Offset sourcePosition;
-  final Size sourceSize;
-  final Widget child;
-
   const _ZoomOutTransition({
     required this.animation,
     required this.sourcePosition,
     required this.sourceSize,
     required this.child,
   });
+  final Animation<double> animation;
+  final Offset sourcePosition;
+  final Size sourceSize;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -313,26 +310,24 @@ class _ZoomOutTransition extends StatelessWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
-        // Calculate the scale and position for zoom-out effect
         final scale = Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).evaluate(animation);
 
         final opacity = Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).evaluate(animation);
 
-        // Calculate the position offset to create zoom-out from source
         final offsetX = Tween<double>(
           begin: sourcePosition.dx - (screenSize.width / 2),
-          end: 0.0,
+          end: 0,
         ).evaluate(animation);
 
         final offsetY = Tween<double>(
           begin: sourcePosition.dy - (screenSize.height / 2),
-          end: 0.0,
+          end: 0,
         ).evaluate(animation);
 
         return Transform(
@@ -351,17 +346,16 @@ class _ZoomOutTransition extends StatelessWidget {
 
 /// Zoom-In Transition Widget
 class _ZoomInTransition extends StatelessWidget {
-  final Animation<double> animation;
-  final Offset targetPosition;
-  final Size targetSize;
-  final Widget child;
-
   const _ZoomInTransition({
     required this.animation,
     required this.targetPosition,
     required this.targetSize,
     required this.child,
   });
+  final Animation<double> animation;
+  final Offset targetPosition;
+  final Size targetSize;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -370,25 +364,23 @@ class _ZoomInTransition extends StatelessWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
-        // Calculate the scale and position for zoom-in effect
         final scale = Tween<double>(
-          begin: 1.0,
-          end: 0.0,
+          begin: 1,
+          end: 0,
         ).evaluate(animation);
 
         final opacity = Tween<double>(
-          begin: 1.0,
-          end: 0.0,
+          begin: 1,
+          end: 0,
         ).evaluate(animation);
 
-        // Calculate the position offset to create zoom-in to target
         final offsetX = Tween<double>(
-          begin: 0.0,
+          begin: 0,
           end: targetPosition.dx - (screenSize.width / 2),
         ).evaluate(animation);
 
         final offsetY = Tween<double>(
-          begin: 0.0,
+          begin: 0,
           end: targetPosition.dy - (screenSize.height / 2),
         ).evaluate(animation);
 
@@ -408,12 +400,6 @@ class _ZoomInTransition extends StatelessWidget {
 
 /// Ripple Transition Widget
 class _RippleTransition extends StatelessWidget {
-  final Animation<double> animation;
-  final Offset sourcePosition;
-  final Color rippleColor;
-  final double rippleRadius;
-  final Widget child;
-
   const _RippleTransition({
     required this.animation,
     required this.sourcePosition,
@@ -421,6 +407,11 @@ class _RippleTransition extends StatelessWidget {
     required this.rippleRadius,
     required this.child,
   });
+  final Animation<double> animation;
+  final Offset sourcePosition;
+  final Color rippleColor;
+  final double rippleRadius;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -428,13 +419,13 @@ class _RippleTransition extends StatelessWidget {
       animation: animation,
       builder: (context, child) {
         final scale = Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).evaluate(animation);
 
         final opacity = Tween<double>(
-          begin: 0.0,
-          end: 1.0,
+          begin: 0,
+          end: 1,
         ).evaluate(animation);
 
         return Stack(
@@ -466,15 +457,14 @@ class _RippleTransition extends StatelessWidget {
 
 /// Ripple Painter
 class RipplePainter extends CustomPainter {
-  final Animation<double> animation;
-  final Color rippleColor;
-  final double rippleRadius;
-
   RipplePainter({
     required this.animation,
     required this.rippleColor,
     required this.rippleRadius,
   }) : super(repaint: animation);
+  final Animation<double> animation;
+  final Color rippleColor;
+  final double rippleRadius;
 
   @override
   void paint(Canvas canvas, Size size) {

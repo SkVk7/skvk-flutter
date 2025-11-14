@@ -6,13 +6,15 @@ library;
 
 /// Cache entry with access tracking for LRU and last-access-based TTL
 class _CacheEntry {
+  // Store original TTL duration for last-access-based expiry
+
+  _CacheEntry(this.data, this.expiryTime, this.lastAccessed, this.cacheType,
+      this.originalTtl,);
   final dynamic data;
   DateTime expiryTime; // Mutable to support last-access-based TTL extension
   final DateTime lastAccessed;
   final String cacheType;
-  final Duration originalTtl; // Store original TTL duration for last-access-based expiry
-
-  _CacheEntry(this.data, this.expiryTime, this.lastAccessed, this.cacheType, this.originalTtl);
+  final Duration originalTtl;
 
   bool get isExpired => DateTime.now().isAfter(expiryTime);
 }
@@ -37,6 +39,14 @@ class CacheType {
 /// - Different TTLs for different data types
 /// - Priority-based caching (user data > compatibility > predictions)
 class CacheService {
+  // Max cached predictions
+
+  CacheService._();
+
+  /// Get singleton instance
+  factory CacheService.instance() {
+    return _instance ??= CacheService._();
+  }
   static CacheService? _instance;
   final Map<String, _CacheEntry> _cache = {};
 
@@ -45,15 +55,7 @@ class CacheService {
       20; // Max cached groom/bride combinations
   static const int maxCompatibilityEntries =
       30; // Max cached compatibility results
-  static const int maxPredictionEntries = 50; // Max cached predictions
-
-  CacheService._();
-
-  /// Get singleton instance
-  static CacheService get instance {
-    _instance ??= CacheService._();
-    return _instance!;
-  }
+  static const int maxPredictionEntries = 50;
 
   /// Get cached data (updates last accessed time and extends expiry - last-access-based TTL)
   /// When an item is accessed, its expiry is reset to "now + original TTL duration"
@@ -67,11 +69,9 @@ class CacheService {
     }
 
     // Last-access-based TTL: reset expiry to "now + original TTL duration"
-    // This means frequently accessed items stay cached longer
     final now = DateTime.now();
     final newExpiryTime = now.add(entry.originalTtl);
 
-    // Update last accessed time and extend expiry (LRU + last-access-based TTL)
     _cache[key] = _CacheEntry(
       entry.data,
       newExpiryTime,
@@ -90,10 +90,8 @@ class CacheService {
     required Duration duration,
     String cacheType = CacheType.predictions,
   }) {
-    // Remove expired entries first
     _clearExpiredEntries();
 
-    // Check threshold limits for specific cache types
     if (cacheType == CacheType.minimalBirthData) {
       _enforceThreshold(
         cacheType,
@@ -137,12 +135,10 @@ class CacheService {
     Map<String, dynamic> newData,
     Duration duration,
   ) {
-    // Get all entries of this cache type
     final entriesOfType = _cache.entries
         .where((entry) => entry.value.cacheType == cacheType)
         .toList();
 
-    // If under threshold, just add the new entry
     if (entriesOfType.length < maxEntries) {
       final now = DateTime.now();
       final expiryTime = now.add(duration);
@@ -161,11 +157,9 @@ class CacheService {
     entriesOfType
         .sort((a, b) => a.value.lastAccessed.compareTo(b.value.lastAccessed));
 
-    // Remove the oldest (least recently used) entry
     final oldestKey = entriesOfType.first.key;
     _cache.remove(oldestKey);
 
-    // Add new entry
     final now = DateTime.now();
     final expiryTime = now.add(duration);
     _cache[newKey] = _CacheEntry(

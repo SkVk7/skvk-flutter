@@ -5,10 +5,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../core/design_system/design_system.dart';
-import 'calendar_day_box.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/ui/components/calendar/calendar_day_box.dart';
 
 class CalendarMonthGrid extends StatefulWidget {
+  const CalendarMonthGrid({
+    required this.currentMonth,
+    required this.selectedDate,
+    required this.onDateSelected,
+    required this.onDateDetailRequested,
+    required this.latitude,
+    required this.longitude,
+    super.key,
+    this.ayanamsha = 'lahiri',
+    this.showFestivals = true,
+    this.showAuspiciousTimes = true,
+    this.showCalendarInfo = true,
+  });
   final DateTime currentMonth;
   final DateTime selectedDate;
   final Function(DateTime) onDateSelected;
@@ -19,20 +32,6 @@ class CalendarMonthGrid extends StatefulWidget {
   final bool showFestivals;
   final bool showAuspiciousTimes;
   final bool showCalendarInfo;
-
-  const CalendarMonthGrid({
-    super.key,
-    required this.currentMonth,
-    required this.selectedDate,
-    required this.onDateSelected,
-    required this.onDateDetailRequested,
-    required this.latitude,
-    required this.longitude,
-    this.ayanamsha = 'lahiri',
-    this.showFestivals = true,
-    this.showAuspiciousTimes = true,
-    this.showCalendarInfo = true,
-  });
 
   @override
   State<CalendarMonthGrid> createState() => _CalendarMonthGridState();
@@ -57,20 +56,24 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
     );
 
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.2),
+      begin: const Offset(0, 0.2),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _animationController.forward();
   }
@@ -84,13 +87,12 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
   @override
   Widget build(BuildContext context) {
     final firstDayOfMonth =
-        DateTime(widget.currentMonth.year, widget.currentMonth.month, 1);
+        DateTime(widget.currentMonth.year, widget.currentMonth.month);
     final lastDayOfMonth =
         DateTime(widget.currentMonth.year, widget.currentMonth.month + 1, 0);
     final firstDayOfWeek = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
-    // Calculate total cells needed (including empty cells for days before month starts)
     final totalCells = firstDayOfWeek - 1 + daysInMonth;
     final weeks = (totalCells / 7).ceil();
 
@@ -117,7 +119,6 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                     crossAxisCount: 7,
                     crossAxisSpacing: 4,
                     mainAxisSpacing: 4,
-                    childAspectRatio: 1,
                   ),
                   itemCount: weeks * 7,
                   itemBuilder: (context, index) {
@@ -126,8 +127,11 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
                       return const SizedBox.shrink();
                     }
                     final day = dayIndex + 1;
-                    final date = DateTime(widget.currentMonth.year,
-                        widget.currentMonth.month, day);
+                    final date = DateTime(
+                      widget.currentMonth.year,
+                      widget.currentMonth.month,
+                      day,
+                    );
 
                     return CalendarDayBox(
                       date: date,
@@ -160,8 +164,8 @@ class _CalendarMonthGridState extends State<CalendarMonthGrid>
           child: Container(
             padding: ResponsiveSystem.symmetric(context, vertical: 12),
             decoration: BoxDecoration(
-              color: ThemeHelpers.getPrimaryColor(context)
-                  .withAlpha((0.1 * 255).round()),
+              color:
+                  ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1),
               borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
             ),
             child: Text(

@@ -35,4 +35,3 @@ final playerViewStateProvider =
     StateNotifierProvider<PlayerStateNotifier, PlayerViewState>((ref) {
   return PlayerStateNotifier();
 });
-

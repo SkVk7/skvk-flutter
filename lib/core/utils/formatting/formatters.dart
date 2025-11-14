@@ -72,7 +72,7 @@ String formatRashiName(int rashiNumber) {
     'Dhanu (Sagittarius)',
     'Makara (Capricorn)',
     'Kumbha (Aquarius)',
-    'Meena (Pisces)'
+    'Meena (Pisces)',
   ];
   return rashiNumber > 0 && rashiNumber <= 12
       ? rashiNames[rashiNumber - 1]
@@ -108,7 +108,7 @@ String formatNakshatraName(int nakshatraNumber) {
     'Shatabhisha',
     'Purva Bhadrapada',
     'Uttara Bhadrapada',
-    'Revati'
+    'Revati',
   ];
   return nakshatraNumber > 0 && nakshatraNumber <= 27
       ? nakshatraNames[nakshatraNumber - 1]
@@ -129,7 +129,7 @@ String formatHinduMonthName(int month) {
     'Margashirsha',
     'Pausha',
     'Magha',
-    'Phalguna'
+    'Phalguna',
   ];
   return month > 0 && month <= 12 ? hinduMonths[month - 1] : 'Unknown';
 }
@@ -148,7 +148,7 @@ String formatGregorianMonthName(int month) {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
   return month > 0 && month <= 12 ? gregorianMonths[month - 1] : 'Unknown';
 }
@@ -167,7 +167,7 @@ String formatShortMonthName(int month) {
     'Sep',
     'Oct',
     'Nov',
-    'Dec'
+    'Dec',
   ];
   return month > 0 && month <= 12 ? shortMonths[month - 1] : 'Unknown';
 }

@@ -4,21 +4,20 @@
 /// for calendar calculations
 library;
 
-import 'ayanamsha_info.dart';
+import 'package:skvk_application/core/utils/astrology/ayanamsha_info.dart';
 
 /// Region information
 class RegionInfo {
-  final String name;
-  final String ayanamsha;
-  final String ayanamshaDisplayName;
-  final bool isRecommended;
-
   const RegionInfo({
     required this.name,
     required this.ayanamsha,
     required this.ayanamshaDisplayName,
     this.isRecommended = false,
   });
+  final String name;
+  final String ayanamsha;
+  final String ayanamshaDisplayName;
+  final bool isRecommended;
 }
 
 /// Helper class for mapping regions to ayanamsha
@@ -27,13 +26,10 @@ class RegionAyanamshaMapper {
   static List<RegionInfo> getAllRegions() {
     final Map<String, RegionInfo> regionMap = {};
 
-    // Get all ayanamsha info
     final allAyanamshaInfo = AyanamshaInfoHelper.getAllAyanamshaInfo();
 
-    // Build region map - prefer recommended ayanamsha for each region
     for (final ayanamshaInfo in allAyanamshaInfo) {
       for (final region in ayanamshaInfo.regions) {
-        // If region doesn't exist or current ayanamsha is recommended, add/update
         if (!regionMap.containsKey(region) || ayanamshaInfo.isRecommended) {
           regionMap[region] = RegionInfo(
             name: region,
@@ -46,12 +42,12 @@ class RegionAyanamshaMapper {
     }
 
     // Sort regions: recommended first, then alphabetically
-    final regions = regionMap.values.toList();
-    regions.sort((a, b) {
-      if (a.isRecommended && !b.isRecommended) return -1;
-      if (!a.isRecommended && b.isRecommended) return 1;
-      return a.name.compareTo(b.name);
-    });
+    final regions = (regionMap.values.toList()
+      ..sort((a, b) {
+        if (a.isRecommended && !b.isRecommended) return -1;
+        if (!a.isRecommended && b.isRecommended) return 1;
+        return a.name.compareTo(b.name);
+      }));
 
     return regions;
   }
@@ -64,7 +60,7 @@ class RegionAyanamshaMapper {
       (info) => info.name.toLowerCase() == region.toLowerCase(),
       orElse: () => regions.firstWhere(
         (info) => info.isRecommended,
-        orElse: () => RegionInfo(
+        orElse: () => const RegionInfo(
           name: 'All India',
           ayanamsha: 'lahiri',
           ayanamshaDisplayName: 'Lahiri Ayanamsha',
@@ -82,7 +78,7 @@ class RegionAyanamshaMapper {
       return regions.firstWhere(
         (info) => info.name.toLowerCase() == regionName.toLowerCase(),
       );
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }

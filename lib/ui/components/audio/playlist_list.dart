@@ -5,12 +5,12 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/audio/playlist_service.dart';
-import '../../../core/services/audio/models/playlist.dart';
-import 'playlist_detail.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:skvk_application/core/services/audio/models/playlist.dart';
+import 'package:skvk_application/core/services/audio/playlist_service.dart';
+import 'package:skvk_application/ui/components/audio/playlist_detail.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Playlist List - Shows all playlists
 class PlaylistList extends ConsumerWidget {
@@ -57,7 +57,6 @@ class PlaylistList extends ConsumerWidget {
         return _PlaylistItem(
           playlist: playlist,
           onTap: () {
-            // Navigate to playlist detail
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -66,7 +65,6 @@ class PlaylistList extends ConsumerWidget {
             );
           },
           onRename: () async {
-            // Show rename dialog
             await PlaylistList._showRenameDialog(context, ref, playlist);
           },
           onDelete: () async {
@@ -86,12 +84,12 @@ class PlaylistList extends ConsumerWidget {
                   ),
                 );
               }
-            } catch (e) {
+            } on Exception {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
+                  const SnackBar(
                     content: Text('Failed to share playlist'),
-                    duration: const Duration(seconds: 2),
+                    duration: Duration(seconds: 2),
                   ),
                 );
               }
@@ -145,29 +143,36 @@ class PlaylistList extends ConsumerWidget {
                 decoration: InputDecoration(
                   hintText: 'Enter playlist name',
                   border: OutlineInputBorder(
-                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    borderRadius:
+                        ResponsiveSystem.circular(context, baseRadius: 8),
                     borderSide: BorderSide(
                       color: ThemeHelpers.getBorderColor(context),
-                      width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                      width:
+                          ResponsiveSystem.borderWidth(context, baseWidth: 1),
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    borderRadius:
+                        ResponsiveSystem.circular(context, baseRadius: 8),
                     borderSide: BorderSide(
                       color: ThemeHelpers.getBorderColor(context),
-                      width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                      width:
+                          ResponsiveSystem.borderWidth(context, baseWidth: 1),
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                    borderRadius:
+                        ResponsiveSystem.circular(context, baseRadius: 8),
                     borderSide: BorderSide(
                       color: ThemeHelpers.getPrimaryColor(context),
-                      width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
+                      width:
+                          ResponsiveSystem.borderWidth(context, baseWidth: 2),
                     ),
                   ),
                   filled: true,
                   fillColor: ThemeHelpers.getBackgroundColor(context),
-                  contentPadding: ResponsiveSystem.all(context, baseSpacing: 16),
+                  contentPadding:
+                      ResponsiveSystem.all(context, baseSpacing: 16),
                 ),
                 style: TextStyle(
                   fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
@@ -192,7 +197,8 @@ class PlaylistList extends ConsumerWidget {
                     child: Text(
                       'Cancel',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         color: ThemeHelpers.getSecondaryTextColor(context),
                       ),
                     ),
@@ -210,17 +216,21 @@ class PlaylistList extends ConsumerWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ThemeHelpers.getPrimaryColor(context),
-                      foregroundColor: ThemeHelpers.getPrimaryTextColor(context),
+                      foregroundColor:
+                          ThemeHelpers.getPrimaryTextColor(context),
                       padding: ResponsiveSystem.symmetric(
                         context,
-                        horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                        vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                        horizontal:
+                            ResponsiveSystem.spacing(context, baseSpacing: 16),
+                        vertical:
+                            ResponsiveSystem.spacing(context, baseSpacing: 12),
                       ),
                     ),
                     child: Text(
                       'Rename',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                       ),
                     ),
                   ),
@@ -232,7 +242,6 @@ class PlaylistList extends ConsumerWidget {
       ),
     );
 
-    // Handle result
     if (result != null && result.isNotEmpty && result != playlist.name) {
       try {
         await playlistService.renamePlaylist(playlist.id, result);
@@ -244,12 +253,12 @@ class PlaylistList extends ConsumerWidget {
             ),
           );
         }
-      } catch (e) {
+      } on Exception {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Failed to rename playlist'),
-              duration: const Duration(seconds: 2),
+              duration: Duration(seconds: 2),
             ),
           );
         }
@@ -260,12 +269,6 @@ class PlaylistList extends ConsumerWidget {
 
 /// Playlist Item Widget
 class _PlaylistItem extends StatelessWidget {
-  final Playlist playlist;
-  final VoidCallback onTap;
-  final VoidCallback onRename;
-  final VoidCallback onDelete;
-  final VoidCallback onShare;
-
   const _PlaylistItem({
     required this.playlist,
     required this.onTap,
@@ -273,6 +276,11 @@ class _PlaylistItem extends StatelessWidget {
     required this.onDelete,
     required this.onShare,
   });
+  final Playlist playlist;
+  final VoidCallback onTap;
+  final VoidCallback onRename;
+  final VoidCallback onDelete;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -402,4 +410,3 @@ class _PlaylistItem extends StatelessWidget {
     );
   }
 }
-

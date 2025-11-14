@@ -6,18 +6,19 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/services/content/content_api_service.dart';
-import '../../../core/services/analytics/analytics_service.dart';
-import '../../../core/services/network/network_connectivity_service.dart';
-import '../../../core/logging/logging_helper.dart';
-import 'models/lyric_line.dart';
-import 'lyrics_parser.dart';
-import 'player_queue_service.dart';
-import '../../../core/models/audio/track.dart';
-import 'models/queue_state.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/analytics/analytics_service.dart';
+import 'package:skvk_application/core/services/audio/lyrics_parser.dart';
+import 'package:skvk_application/core/services/audio/models/lyric_line.dart';
+import 'package:skvk_application/core/services/audio/models/queue_state.dart';
+import 'package:skvk_application/core/services/audio/player_queue_service.dart';
+import 'package:skvk_application/core/services/content/content_api_service.dart';
+import 'package:skvk_application/core/services/network/network_connectivity_service.dart';
 
 /// Repeat mode enum
 enum RepeatMode {
@@ -28,14 +29,6 @@ enum RepeatMode {
 
 /// Audio Track Model
 class AudioTrack {
-  final String id;
-  final String title;
-  final String? artist;
-  final String? subtitle;
-  final String? coverArtUrl;
-  final String? audioUrl;
-  final Duration? duration;
-
   const AudioTrack({
     required this.id,
     required this.title,
@@ -45,16 +38,6 @@ class AudioTrack {
     this.audioUrl,
     this.duration,
   });
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'title': title,
-        'artist': artist,
-        'subtitle': subtitle,
-        'coverArtUrl': coverArtUrl,
-        'audioUrl': audioUrl,
-        'duration': duration?.inMilliseconds,
-      };
 
   factory AudioTrack.fromJson(Map<String, dynamic> json) => AudioTrack(
         id: json['id'] as String,
@@ -80,19 +63,28 @@ class AudioTrack {
             ? Duration(milliseconds: music['duration'] as int)
             : null,
       );
+  final String id;
+  final String title;
+  final String? artist;
+  final String? subtitle;
+  final String? coverArtUrl;
+  final String? audioUrl;
+  final Duration? duration;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'artist': artist,
+        'subtitle': subtitle,
+        'coverArtUrl': coverArtUrl,
+        'audioUrl': audioUrl,
+        'duration': duration?.inMilliseconds,
+      };
 }
 
 /// Audio Player State
 class AudioPlayerState {
-  final AudioTrack? currentTrack;
-  final bool isPlaying;
-  final bool isLoading;
-  final Duration position;
-  final Duration duration;
-  final RepeatMode repeatMode;
-  final double playbackSpeed;
-  final String? errorMessage;
-  final List<LyricLine> lyrics; // Lyrics for current track
+  // Lyrics for current track
 
   const AudioPlayerState({
     this.currentTrack,
@@ -105,6 +97,15 @@ class AudioPlayerState {
     this.errorMessage,
     this.lyrics = const [],
   });
+  final AudioTrack? currentTrack;
+  final bool isPlaying;
+  final bool isLoading;
+  final Duration position;
+  final Duration duration;
+  final RepeatMode repeatMode;
+  final double playbackSpeed;
+  final String? errorMessage;
+  final List<LyricLine> lyrics;
 
   AudioPlayerState copyWith({
     AudioTrack? currentTrack,
@@ -135,6 +136,10 @@ class AudioPlayerState {
 
 /// Global Audio Player Controller
 class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
+  GlobalAudioPlayerController() : super(const AudioPlayerState()) {
+    _initializePlayer();
+    _loadPersistedState();
+  }
   final AudioPlayer _audioPlayer = AudioPlayer();
   Timer? _positionTimer;
   StreamSubscription<Duration>? _positionSubscription;
@@ -151,11 +156,6 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   static const String _queueKey = 'audio_queue';
   static const String _queueIndexKey = 'audio_queue_index';
 
-  GlobalAudioPlayerController() : super(const AudioPlayerState()) {
-    _initializePlayer();
-    _loadPersistedState();
-  }
-
   /// Set queue service reference (called from outside)
   void setQueueService(PlayerQueueService queueService) {
     _queueService = queueService;
@@ -169,11 +169,9 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   /// Handle queue state changes
   void _onQueueStateChanged(QueueState queueState) {
     if (!mounted) return;
-    
-    // If queue has a current track, load it
+
     final currentTrack = queueState.currentTrack;
     if (currentTrack != null && state.currentTrack?.id != currentTrack.id) {
-      // Convert Track to AudioTrack
       final audioTrack = AudioTrack(
         id: currentTrack.id,
         title: currentTrack.title,
@@ -185,7 +183,7 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       );
       loadTrack(audioTrack);
     }
-    
+
     // Sync repeat mode with queue
     if (state.repeatMode != queueState.repeatMode) {
       state = state.copyWith(repeatMode: queueState.repeatMode);
@@ -205,8 +203,8 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
     _durationSubscription = _audioPlayer.durationStream.listen((duration) {
       if (mounted && duration != null) {
         state = state.copyWith(duration: duration);
-        // Update track duration if available
-        if (state.currentTrack != null && state.currentTrack!.duration == null) {
+        if (state.currentTrack != null &&
+            state.currentTrack!.duration == null) {
           final updatedTrack = AudioTrack(
             id: state.currentTrack!.id,
             title: state.currentTrack!.title,
@@ -222,7 +220,8 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
     });
 
     // Listen to player state updates
-    _playerStateSubscription = _audioPlayer.playerStateStream.listen((playerState) {
+    _playerStateSubscription =
+        _audioPlayer.playerStateStream.listen((playerState) {
       if (mounted) {
         state = state.copyWith(
           isPlaying: playerState.playing,
@@ -232,7 +231,6 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       }
     });
 
-    // Handle playback completion
     _audioPlayer.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         _handlePlaybackComplete();
@@ -243,96 +241,99 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   Future<void> _loadPersistedState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
-      // Load repeat mode
+
       final repeatModeIndex = prefs.getInt(_repeatModeKey) ?? 0;
-      final repeatMode = RepeatMode.values[repeatModeIndex.clamp(0, RepeatMode.values.length - 1)];
-      
-      // Load playback speed
+      final repeatMode = RepeatMode
+          .values[repeatModeIndex.clamp(0, RepeatMode.values.length - 1)];
+
       final playbackSpeed = prefs.getDouble(_playbackSpeedKey) ?? 1.0;
-      
+
       state = state.copyWith(
         repeatMode: repeatMode,
         playbackSpeed: playbackSpeed,
       );
-      
+
       // Apply repeat mode and speed
       _applyRepeatMode();
       await _audioPlayer.setSpeed(playbackSpeed);
-    } catch (e) {
-      LoggingHelper.logError('Failed to load persisted audio state', source: 'GlobalAudioPlayer', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to load persisted audio state',
+          source: 'GlobalAudioPlayer', error: e,);
     }
   }
 
   Future<void> _savePersistedState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       if (state.currentTrack != null) {
-        // Save last track ID (we'll reload track details when needed)
         await prefs.setString(_lastTrackKey, state.currentTrack!.id);
         await prefs.setInt(_lastPositionKey, state.position.inMilliseconds);
       }
-      
+
       await prefs.setInt(_repeatModeKey, state.repeatMode.index);
       await prefs.setDouble(_playbackSpeedKey, state.playbackSpeed);
-      
-      // Save queue state if available
+
       if (_queueService != null) {
         final queueState = _queueService!.state;
         if (queueState.queue.isNotEmpty) {
-          // Save queue as JSON
-          final queueJson = jsonEncode(queueState.queue.map((t) => t.toJson()).toList());
+          final queueJson =
+              jsonEncode(queueState.queue.map((t) => t.toJson()).toList());
           await prefs.setString(_queueKey, queueJson);
           await prefs.setInt(_queueIndexKey, queueState.currentIndex);
         }
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to save persisted audio state', source: 'GlobalAudioPlayer', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to save persisted audio state',
+          source: 'GlobalAudioPlayer', error: e,);
     }
   }
 
   /// Restore queue state from persistence
   Future<void> _restoreQueueState() async {
     if (_queueService == null) return;
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final queueJson = prefs.getString(_queueKey);
       final queueIndex = prefs.getInt(_queueIndexKey) ?? 0;
-      
+
       if (queueJson != null && queueJson.isNotEmpty) {
         final queueList = jsonDecode(queueJson) as List<dynamic>;
-        final tracks = queueList.map((json) => Track.fromJson(json as Map<String, dynamic>)).toList();
-        
+        final tracks = queueList
+            .map((json) => Track.fromJson(json as Map<String, dynamic>))
+            .toList();
+
         if (tracks.isNotEmpty) {
-          await _queueService!.loadQueue(tracks, startIndex: queueIndex, autoplay: false);
+          await _queueService!
+              .loadQueue(tracks, startIndex: queueIndex, autoplay: false);
         }
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to restore queue state', source: 'GlobalAudioPlayer', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to restore queue state',
+          source: 'GlobalAudioPlayer', error: e,);
     }
   }
 
   /// Load and play a track
   Future<void> loadTrack(AudioTrack track) async {
     try {
-      // Check network connectivity first
-      final hasInternet = await NetworkConnectivityService.instance.hasInternetConnection();
+      final hasInternet =
+          await NetworkConnectivityService.instance().hasInternetConnection();
       if (!hasInternet) {
         state = state.copyWith(
           isLoading: false,
-          errorMessage: NetworkConnectivityService.instance.getOfflineMessage(),
+          errorMessage:
+              NetworkConnectivityService.instance().getOfflineMessage(),
         );
         return;
       }
 
-      state = state.copyWith(isLoading: true, errorMessage: null);
+      state = state.copyWith(isLoading: true);
 
-      // Get audio URL if not provided
       String audioUrl = track.audioUrl ?? '';
       if (audioUrl.isEmpty) {
-        audioUrl = await ContentApiService.instance.getMusicUrl(track.id);
+        audioUrl = await ContentApiService.instance().getMusicUrl(track.id);
       }
 
       if (audioUrl.isEmpty) {
@@ -342,7 +343,6 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       // Stop current playback
       await _audioPlayer.stop();
 
-      // Load new audio
       await _audioPlayer.setUrl(audioUrl).timeout(
         const Duration(seconds: 30),
         onTimeout: () {
@@ -350,26 +350,28 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
         },
       );
 
-      // Update state
       state = state.copyWith(
         currentTrack: track.copyWith(audioUrl: audioUrl),
         isLoading: false,
         lyrics: [], // Clear lyrics - will be loaded separately
       );
 
-      // Load lyrics in background (non-blocking)
       // Will use content language preference, fallback to English
-      _loadLyrics(track.id);
+      unawaited(_loadLyrics(track.id));
 
-      // Save state
       await _savePersistedState();
 
       // Track analytics (non-blocking)
-      Future.microtask(() {
-        AnalyticsService.instance.trackAudioPlay(track.id).catchError((e) {
-          LoggingHelper.logError('Failed to track audio play', source: 'GlobalAudioPlayer', error: e);
-        });
-      });
+      unawaited(
+        Future.microtask(() {
+          AnalyticsService.instance()
+              .trackAudioPlay(track.id)
+              .catchError((e) async {
+            await LoggingHelper.logError('Failed to track audio play',
+                source: 'GlobalAudioPlayer', error: e,);
+          });
+        }),
+      );
 
       // Auto-resume from last position if same track
       final prefs = await SharedPreferences.getInstance();
@@ -380,8 +382,9 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
           await seek(Duration(milliseconds: lastPositionMs));
         }
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to load track', source: 'GlobalAudioPlayer', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to load track',
+          source: 'GlobalAudioPlayer', error: e,);
       state = state.copyWith(
         isLoading: false,
         errorMessage: 'Failed to load audio. Please try again.',
@@ -401,37 +404,46 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       if (state.currentTrack == null) return;
 
       if (state.isPlaying) {
-        // Save current position before pausing
         await _savePersistedState();
         await _audioPlayer.pause();
         // Track analytics (non-blocking)
-        Future.microtask(() {
-          AnalyticsService.instance.trackAudioPause(state.currentTrack!.id).catchError((e) {
-            LoggingHelper.logError('Failed to track audio pause', source: 'GlobalAudioPlayer', error: e);
-          });
-        });
+        unawaited(
+          Future.microtask(() {
+            AnalyticsService.instance()
+                .trackAudioPause(state.currentTrack!.id)
+                .catchError((e) async {
+              await LoggingHelper.logError('Failed to track audio pause',
+                  source: 'GlobalAudioPlayer', error: e,);
+            });
+          }),
+        );
       } else {
-        // When resuming, ensure we're at the correct position
-        // Get the current position from the audio player to verify it matches our state
         final currentPosition = _audioPlayer.position;
         final statePosition = state.position;
-        
-        // If positions don't match, seek to the state position before playing
-        if ((currentPosition - statePosition).abs() > const Duration(milliseconds: 500)) {
+
+        if ((currentPosition - statePosition).abs() >
+            const Duration(milliseconds: 500)) {
           await _audioPlayer.seek(statePosition);
         }
-        
+
         await _audioPlayer.play();
         // Track analytics (non-blocking)
-        Future.microtask(() {
-          AnalyticsService.instance.trackAudioPlay(state.currentTrack!.id).catchError((e) {
-            LoggingHelper.logError('Failed to track audio play', source: 'GlobalAudioPlayer', error: e);
-          });
-        });
+        unawaited(
+          Future.microtask(() {
+            AnalyticsService.instance()
+                .trackAudioPlay(state.currentTrack!.id)
+                .catchError((e) async {
+              await LoggingHelper.logError('Failed to track audio play',
+                  source: 'GlobalAudioPlayer', error: e,);
+            });
+          }),
+        );
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to play/pause', source: 'GlobalAudioPlayer', error: e);
-      state = state.copyWith(errorMessage: 'Failed to play audio. Please try again.');
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to play/pause',
+          source: 'GlobalAudioPlayer', error: e,);
+      state = state.copyWith(
+          errorMessage: 'Failed to play audio. Please try again.',);
     }
   }
 
@@ -441,20 +453,26 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       await _audioPlayer.seek(position);
       state = state.copyWith(position: position);
       await _savePersistedState();
-      
+
       // Track analytics (non-blocking)
       if (state.currentTrack != null) {
-        Future.microtask(() {
-          AnalyticsService.instance.trackAudioSeek(
-            state.currentTrack!.id,
-            position.inSeconds,
-          ).catchError((e) {
-            LoggingHelper.logError('Failed to track audio seek', source: 'GlobalAudioPlayer', error: e);
-          });
-        });
+        unawaited(
+          Future.microtask(() {
+            AnalyticsService.instance()
+                .trackAudioSeek(
+              state.currentTrack!.id,
+              position.inSeconds,
+            )
+                .catchError((e) async {
+              await LoggingHelper.logError('Failed to track audio seek',
+                  source: 'GlobalAudioPlayer', error: e,);
+            });
+          }),
+        );
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to seek', source: 'GlobalAudioPlayer', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to seek',
+          source: 'GlobalAudioPlayer', error: e,);
     }
   }
 
@@ -503,8 +521,9 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       await _audioPlayer.setSpeed(speed);
       state = state.copyWith(playbackSpeed: speed);
       await _savePersistedState();
-    } catch (e) {
-      LoggingHelper.logError('Failed to set playback speed', source: 'GlobalAudioPlayer', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to set playback speed',
+          source: 'GlobalAudioPlayer', error: e,);
     }
   }
 
@@ -513,13 +532,15 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
     // Track analytics (non-blocking)
     if (state.currentTrack != null) {
       Future.microtask(() {
-        AnalyticsService.instance.trackAudioComplete(state.currentTrack!.id).catchError((e) {
-          LoggingHelper.logError('Failed to track audio complete', source: 'GlobalAudioPlayer', error: e);
+        AnalyticsService.instance()
+            .trackAudioComplete(state.currentTrack!.id)
+            .catchError((e) async {
+          await LoggingHelper.logError('Failed to track audio complete',
+              source: 'GlobalAudioPlayer', error: e,);
         });
       });
     }
-    
-    // Handle queue-based playback
+
     if (_queueService != null) {
       final queueState = _queueService!.state;
       if (queueState.canGoNext) {
@@ -578,7 +599,8 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   Stream<Duration> get positionStream => _audioPlayer.positionStream;
 
   /// Get current track stream
-  Stream<AudioTrack?> get currentTrackStream => stream.map((s) => s.currentTrack);
+  Stream<AudioTrack?> get currentTrackStream =>
+      stream.map((s) => s.currentTrack);
 
   /// Seek to position (alias for seek method)
   Future<void> seekTo(Duration position) => seek(position);
@@ -586,12 +608,12 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   /// Parse lyrics from Cloudflare R2 (LRC format only)
   /// Maps LRC format to LyricLine objects
   /// LRC format: [00:12.00]Line 1
-  List<LyricLine> _parseLyrics(String lyricsText, String trackId) {
+  Future<List<LyricLine>> _parseLyrics(
+      String lyricsText, String trackId,) async {
     try {
-      // Parse LRC format from Cloudflare R2
       return LyricsParser.parseLrc(lyricsText);
-    } catch (e) {
-      LoggingHelper.logError(
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
         'Failed to parse LRC lyrics for $trackId',
         source: 'GlobalAudioPlayer',
         error: e,
@@ -605,38 +627,34 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   /// Gets the preferred language from SharedPreferences (content language service)
   Future<void> _loadLyrics(String trackId, {String? preferredLanguage}) async {
     try {
-      // Get preferred language from SharedPreferences if not provided
       String language = preferredLanguage ?? 'en';
       if (preferredLanguage == null) {
         try {
           final prefs = await SharedPreferences.getInstance();
-          final languageCode = prefs.getString('content_language_preference') ?? 'en';
+          final languageCode =
+              prefs.getString('content_language_preference') ?? 'en';
           language = languageCode;
-        } catch (e) {
-          // If error reading preference, default to English
+        } on Exception {
           language = 'en';
         }
       }
-      
+
       // Try to load lyrics for the preferred language first
       String? lyricsText;
       try {
-        lyricsText = await ContentApiService.instance.getLyrics(
+        lyricsText = await ContentApiService.instance().getLyrics(
           trackId,
           language: language,
-          forceRefresh: false,
         );
-      } catch (e) {
-        // If preferred language fails, try English
+      } on Exception {
         if (language != 'en') {
-          LoggingHelper.logInfo(
+          await LoggingHelper.logInfo(
             'Failed to load lyrics for $trackId in language $language, trying English',
             source: 'GlobalAudioPlayer',
           );
-          lyricsText = await ContentApiService.instance.getLyrics(
+          lyricsText = await ContentApiService.instance().getLyrics(
             trackId,
             language: 'en',
-            forceRefresh: false,
           );
           language = 'en'; // Update to English since that's what we loaded
         } else {
@@ -645,36 +663,34 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       }
 
       if (lyricsText.isNotEmpty) {
-        // Parse LRC format from Cloudflare R2
-        List<LyricLine> lyrics = _parseLyrics(lyricsText, trackId);
+        final List<LyricLine> lyrics = await _parseLyrics(lyricsText, trackId);
         if (mounted && state.currentTrack?.id == trackId) {
           state = state.copyWith(lyrics: lyrics);
-          LoggingHelper.logInfo(
+          await LoggingHelper.logInfo(
             'Loaded ${lyrics.length} lyric lines for $trackId in language $language from Cloudflare R2',
             source: 'GlobalAudioPlayer',
           );
         }
       } else {
-        // If preferred language returned empty, try English as fallback
         if (language != 'en') {
           try {
-            lyricsText = await ContentApiService.instance.getLyrics(
+            lyricsText = await ContentApiService.instance().getLyrics(
               trackId,
               language: 'en',
-              forceRefresh: false,
             );
             if (lyricsText.isNotEmpty) {
-              List<LyricLine> lyrics = _parseLyrics(lyricsText, trackId);
+              final List<LyricLine> lyrics =
+                  await _parseLyrics(lyricsText, trackId);
               if (mounted && state.currentTrack?.id == trackId) {
                 state = state.copyWith(lyrics: lyrics);
-                LoggingHelper.logInfo(
+                await LoggingHelper.logInfo(
                   'Loaded ${lyrics.length} lyric lines for $trackId in English (fallback) from Cloudflare R2',
                   source: 'GlobalAudioPlayer',
                 );
               }
             }
-          } catch (e) {
-            LoggingHelper.logError(
+          } on Exception catch (e) {
+            await LoggingHelper.logError(
               'Failed to load English lyrics as fallback for $trackId',
               source: 'GlobalAudioPlayer',
               error: e,
@@ -682,8 +698,8 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
           }
         }
       }
-    } catch (e) {
-      LoggingHelper.logError(
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
         'Failed to load lyrics for $trackId',
         source: 'GlobalAudioPlayer',
         error: e,
@@ -697,25 +713,21 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
   /// Falls back to English if the requested language is not available
   Future<void> loadLyricsForLanguage(String trackId, String language) async {
     try {
-      // Get lyrics from API for the requested language
       String? lyricsText;
       try {
-        lyricsText = await ContentApiService.instance.getLyrics(
+        lyricsText = await ContentApiService.instance().getLyrics(
           trackId,
           language: language,
-          forceRefresh: false,
         );
-      } catch (e) {
-        // If requested language fails, try English as fallback
+      } on Exception {
         if (language != 'en') {
-          LoggingHelper.logInfo(
+          await LoggingHelper.logInfo(
             'Failed to load lyrics for $trackId in language $language, trying English',
             source: 'GlobalAudioPlayer',
           );
-          lyricsText = await ContentApiService.instance.getLyrics(
+          lyricsText = await ContentApiService.instance().getLyrics(
             trackId,
             language: 'en',
-            forceRefresh: false,
           );
         } else {
           rethrow; // If English also fails, rethrow
@@ -723,36 +735,34 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
       }
 
       if (lyricsText.isNotEmpty) {
-        // Parse LRC format from Cloudflare R2
-        List<LyricLine> lyrics = _parseLyrics(lyricsText, trackId);
+        final List<LyricLine> lyrics = await _parseLyrics(lyricsText, trackId);
         if (mounted && state.currentTrack?.id == trackId) {
           state = state.copyWith(lyrics: lyrics);
-          LoggingHelper.logInfo(
+          await LoggingHelper.logInfo(
             'Loaded ${lyrics.length} lyric lines for $trackId in language $language from Cloudflare R2',
             source: 'GlobalAudioPlayer',
           );
         }
       } else {
-        // If requested language returned empty, try English as fallback
         if (language != 'en') {
           try {
-            lyricsText = await ContentApiService.instance.getLyrics(
+            lyricsText = await ContentApiService.instance().getLyrics(
               trackId,
               language: 'en',
-              forceRefresh: false,
             );
             if (lyricsText.isNotEmpty) {
-              List<LyricLine> lyrics = _parseLyrics(lyricsText, trackId);
+              final List<LyricLine> lyrics =
+                  await _parseLyrics(lyricsText, trackId);
               if (mounted && state.currentTrack?.id == trackId) {
                 state = state.copyWith(lyrics: lyrics);
-                LoggingHelper.logInfo(
+                await LoggingHelper.logInfo(
                   'Loaded ${lyrics.length} lyric lines for $trackId in English (fallback) from Cloudflare R2',
                   source: 'GlobalAudioPlayer',
                 );
               }
             }
-          } catch (e) {
-            LoggingHelper.logError(
+          } on Exception catch (e) {
+            await LoggingHelper.logError(
               'Failed to load English lyrics as fallback for $trackId',
               source: 'GlobalAudioPlayer',
               error: e,
@@ -760,32 +770,31 @@ class GlobalAudioPlayerController extends StateNotifier<AudioPlayerState> {
           }
         }
       }
-    } catch (e) {
-      LoggingHelper.logError(
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
         'Failed to load lyrics for $trackId in language $language',
         source: 'GlobalAudioPlayer',
         error: e,
       );
-      // If error loading requested language, try English as fallback
       if (language != 'en') {
         try {
-          final lyricsText = await ContentApiService.instance.getLyrics(
+          final lyricsText = await ContentApiService.instance().getLyrics(
             trackId,
             language: 'en',
-            forceRefresh: false,
           );
           if (lyricsText.isNotEmpty) {
-            List<LyricLine> lyrics = _parseLyrics(lyricsText, trackId);
+            final List<LyricLine> lyrics =
+                await _parseLyrics(lyricsText, trackId);
             if (mounted && state.currentTrack?.id == trackId) {
               state = state.copyWith(lyrics: lyrics);
-              LoggingHelper.logInfo(
+              await LoggingHelper.logInfo(
                 'Loaded ${lyrics.length} lyric lines for $trackId in English (fallback) from Cloudflare R2',
                 source: 'GlobalAudioPlayer',
               );
             }
           }
-        } catch (e) {
-          LoggingHelper.logError(
+        } on Exception catch (e) {
+          await LoggingHelper.logError(
             'Failed to load English lyrics as fallback for $trackId',
             source: 'GlobalAudioPlayer',
             error: e,
@@ -835,4 +844,3 @@ final globalAudioPlayerProvider =
     StateNotifierProvider<GlobalAudioPlayerController, AudioPlayerState>(
   (ref) => GlobalAudioPlayerController(),
 );
-

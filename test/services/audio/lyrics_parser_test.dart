@@ -5,7 +5,6 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:skvk_application/core/services/audio/lyrics_parser.dart';
-import 'package:skvk_application/core/services/audio/models/lyric_line.dart';
 
 void main() {
   group('LyricsParser', () {

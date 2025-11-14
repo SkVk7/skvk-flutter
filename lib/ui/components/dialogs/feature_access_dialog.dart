@@ -4,38 +4,35 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Feature Access Dialog - Dialog shown when user tries to access a feature without completing profile
 class FeatureAccessDialog extends StatelessWidget {
+  const FeatureAccessDialog({
+    required this.translationService,
+    required this.featureName,
+    required this.onCompleteProfile,
+    super.key,
+    this.onCancel,
+  });
   final TranslationService translationService;
   final String featureName;
   final VoidCallback onCompleteProfile;
   final VoidCallback? onCancel;
 
-  const FeatureAccessDialog({
-    super.key,
-    required this.translationService,
-    required this.featureName,
-    required this.onCompleteProfile,
-    this.onCancel,
-  });
-
   @override
   Widget build(BuildContext context) {
-    // Calculate responsive dimensions based on screen size and aspect ratio
     final dialogWidth = ResponsiveSystem.dialogWidth(context);
     final dialogPadding = ResponsiveSystem.dialogPadding(context);
-    
-    // Calculate button count for proper sizing
+
     final buttonCount = onCancel != null ? 2 : 1;
     final buttonConstraints = ResponsiveSystem.dialogActionConstraints(
       context,
       buttonCount: buttonCount,
     );
-    
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -55,15 +52,17 @@ class FeatureAccessDialog extends StatelessWidget {
           children: [
             // Title
             Text(
-              translationService.translateContent('complete_your_profile',
-                  fallback: 'Complete Your Profile'),
+              translationService.translateContent(
+                'complete_your_profile',
+                fallback: 'Complete Your Profile',
+              ),
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
                 fontWeight: FontWeight.bold,
                 color: ThemeHelpers.getPrimaryTextColor(context),
               ),
             ),
-            
+
             // Content
             Padding(
               padding: EdgeInsets.only(
@@ -86,14 +85,15 @@ class FeatureAccessDialog extends StatelessWidget {
                     'To access $featureName, please complete your profile first.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 14),
                       color: ThemeHelpers.getSecondaryTextColor(context),
                     ),
                   ),
                 ],
               ),
             ),
-            
+
             // Actions Row
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -107,9 +107,11 @@ class FeatureAccessDialog extends StatelessWidget {
                         onCancel?.call();
                       },
                       child: Text(
-                        translationService.translateContent('cancel', fallback: 'Cancel'),
+                        translationService.translateContent('cancel',
+                            fallback: 'Cancel',),
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 14),
                           color: ThemeHelpers.getSecondaryTextColor(context),
                         ),
                       ),
@@ -129,18 +131,24 @@ class FeatureAccessDialog extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ThemeHelpers.getPrimaryColor(context),
-                      foregroundColor: ThemeHelpers.getPrimaryTextColor(context),
+                      foregroundColor:
+                          ThemeHelpers.getPrimaryTextColor(context),
                       padding: ResponsiveSystem.symmetric(
                         context,
-                        horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                        vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                        horizontal:
+                            ResponsiveSystem.spacing(context, baseSpacing: 16),
+                        vertical:
+                            ResponsiveSystem.spacing(context, baseSpacing: 12),
                       ),
                     ),
                     child: Text(
                       translationService.translateContent(
-                          'complete_profile', fallback: 'Complete Profile'),
+                        'complete_profile',
+                        fallback: 'Complete Profile',
+                      ),
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                       ),
                     ),
                   ),
@@ -172,4 +180,3 @@ class FeatureAccessDialog extends StatelessWidget {
     );
   }
 }
-

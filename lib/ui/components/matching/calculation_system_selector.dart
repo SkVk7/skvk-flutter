@@ -4,26 +4,27 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/utils/astrology/ayanamsha_info.dart' show AyanamshaInfoHelper;
-import '../../../core/utils/astrology/house_system_info.dart' show HouseSystemInfoHelper;
-import '../common/index.dart';
+import 'package:skvk_application/core/utils/astrology/ayanamsha_info.dart'
+    show AyanamshaInfoHelper;
+import 'package:skvk_application/core/utils/astrology/house_system_info.dart'
+    show HouseSystemInfoHelper;
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Calculation System Selector - Ayanamsha and House System dropdowns
 class CalculationSystemSelector extends StatelessWidget {
-  final String selectedAyanamsha;
-  final String selectedHouseSystem;
-  final ValueChanged<String> onAyanamshaChanged;
-  final ValueChanged<String> onHouseSystemChanged;
-
   const CalculationSystemSelector({
-    super.key,
     required this.selectedAyanamsha,
     required this.selectedHouseSystem,
     required this.onAyanamshaChanged,
     required this.onHouseSystemChanged,
+    super.key,
   });
+  final String selectedAyanamsha;
+  final String selectedHouseSystem;
+  final ValueChanged<String> onAyanamshaChanged;
+  final ValueChanged<String> onHouseSystemChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -33,32 +34,40 @@ class CalculationSystemSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionTitle(
-            title: 'Calculation System'),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+        const SectionTitle(
+          title: 'Calculation System',
+        ),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+        ),
         // Responsive layout: Row on larger screens, Column on small screens
-        isSmallScreen
-            ? Column(
-                children: [
-                  _buildAyanamshaDropdown(context),
-                  ResponsiveSystem.sizedBox(context,
-                      height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
-                  _buildHouseSystemDropdown(context),
-                ],
-              )
-            : Row(
-                children: [
-                  Expanded(
-                    child: _buildAyanamshaDropdown(context),
-                  ),
-                  ResponsiveSystem.sizedBox(context,
-                      width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
-                  Expanded(
-                    child: _buildHouseSystemDropdown(context),
-                  ),
-                ],
+        if (isSmallScreen)
+          Column(
+            children: [
+              _buildAyanamshaDropdown(context),
+              ResponsiveSystem.sizedBox(
+                context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 12),
               ),
+              _buildHouseSystemDropdown(context),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: _buildAyanamshaDropdown(context),
+              ),
+              ResponsiveSystem.sizedBox(
+                context,
+                width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+              ),
+              Expanded(
+                child: _buildHouseSystemDropdown(context),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -86,7 +95,7 @@ class CalculationSystemSelector extends StatelessWidget {
           child: Text(info?.name ?? type),
         );
       }).toList(),
-      onChanged: (String? newValue) {
+      onChanged: (newValue) {
         if (newValue != null) {
           onAyanamshaChanged(newValue);
         }
@@ -117,7 +126,7 @@ class CalculationSystemSelector extends StatelessWidget {
           child: Text(info?.name ?? system),
         );
       }).toList(),
-      onChanged: (String? newValue) {
+      onChanged: (newValue) {
         if (newValue != null) {
           onHouseSystemChanged(newValue);
         }
@@ -125,4 +134,3 @@ class CalculationSystemSelector extends StatelessWidget {
     );
   }
 }
-

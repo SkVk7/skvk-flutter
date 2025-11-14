@@ -113,94 +113,91 @@ class DesignTokens {
 class FontSizes {
   const FontSizes();
 
-  final double displayLarge = 57.0;
-  final double displayMedium = 45.0;
-  final double displaySmall = 36.0;
-  final double headlineLarge = 32.0;
-  final double headlineMedium = 28.0;
-  final double headlineSmall = 24.0;
-  final double titleLarge = 22.0;
-  final double titleMedium = 16.0;
-  final double titleSmall = 14.0;
-  final double bodyLarge = 16.0;
-  final double bodyMedium = 14.0;
-  final double bodySmall = 12.0;
-  final double labelLarge = 14.0;
-  final double labelMedium = 12.0;
-  final double labelSmall = 11.0;
+  double get displayLarge => 57;
+  double get displayMedium => 45;
+  double get displaySmall => 36;
+  double get headlineLarge => 32;
+  double get headlineMedium => 28;
+  double get headlineSmall => 24;
+  double get titleLarge => 22;
+  double get titleMedium => 16;
+  double get titleSmall => 14;
+  double get bodyLarge => 16;
+  double get bodyMedium => 14;
+  double get bodySmall => 12;
+  double get labelLarge => 14;
+  double get labelMedium => 12;
+  double get labelSmall => 11;
 }
 
 /// Font weights
 class FontWeights {
   const FontWeights();
 
-  final FontWeight thin = FontWeight.w100;
-  final FontWeight extraLight = FontWeight.w200;
-  final FontWeight light = FontWeight.w300;
-  final FontWeight regular = FontWeight.w400;
-  final FontWeight medium = FontWeight.w500;
-  final FontWeight semiBold = FontWeight.w600;
-  final FontWeight bold = FontWeight.w700;
-  final FontWeight extraBold = FontWeight.w800;
-  final FontWeight black = FontWeight.w900;
+  FontWeight get thin => FontWeight.w100;
+  FontWeight get extraLight => FontWeight.w200;
+  FontWeight get light => FontWeight.w300;
+  FontWeight get regular => FontWeight.w400;
+  FontWeight get medium => FontWeight.w500;
+  FontWeight get semiBold => FontWeight.w600;
+  FontWeight get bold => FontWeight.w700;
+  FontWeight get extraBold => FontWeight.w800;
+  FontWeight get black => FontWeight.w900;
 }
 
 /// Spacing values
 class Spacing {
   const Spacing();
 
-  final double xs = 4.0;
-  final double sm = 8.0;
-  final double md = 16.0;
-  final double lg = 24.0;
-  final double xl = 32.0;
-  final double xxl = 48.0;
-  final double xxxl = 64.0;
+  double get xs => 4;
+  double get sm => 8;
+  double get md => 16;
+  double get lg => 24;
+  double get xl => 32;
+  double get xxl => 48;
+  double get xxxl => 64;
 
-  // Component specific spacing
-  final double card = 16.0;
-  final double buttonHorizontal = 24.0;
-  final double buttonVertical = 12.0;
-  final double inputHorizontal = 16.0;
-  final double inputVertical = 12.0;
+  double get card => 16;
+  double get buttonHorizontal => 24;
+  double get buttonVertical => 12;
+  double get inputHorizontal => 16;
+  double get inputVertical => 12;
 }
 
 /// Border radius values
 class AppBorderRadius {
   const AppBorderRadius();
 
-  final double xs = 2.0;
-  final double sm = 4.0;
-  final double md = 8.0;
-  final double lg = 12.0;
-  final double xl = 16.0;
-  final double xxl = 24.0;
-  final double full = 999.0;
+  double get xs => 2;
+  double get sm => 4;
+  double get md => 8;
+  double get lg => 12;
+  double get xl => 16;
+  double get xxl => 24;
+  double get full => 999;
 
-  // Component specific border radius
-  final double card = 12.0;
-  final double button = 8.0;
-  final double input = 8.0;
+  double get card => 12;
+  double get button => 8;
+  double get input => 8;
 }
 
 /// Elevation values
 class Elevations {
   const Elevations();
 
-  final double none = 0.0;
-  final double xs = 1.0;
-  final double sm = 2.0;
-  final double md = 4.0;
-  final double lg = 8.0;
-  final double xl = 16.0;
-  final double xxl = 24.0;
+  double get none => 0;
+  double get xs => 1;
+  double get sm => 2;
+  double get md => 4;
+  double get lg => 8;
+  double get xl => 16;
+  double get xxl => 24;
 
-  // Component specific elevations
-  final double appBar = 4.0;
-  final double card = 2.0;
-  final double button = 2.0;
-  final double dialog = 24.0;
-  final double bottomSheet = 16.0;
+  double get appBar => 4;
+  double get card => 2;
+  double get button => 2;
+  double get dialog => 24;
+  double get bottomSheet => 16;
 }
 
 /// Animation durations
@@ -212,7 +209,6 @@ class AnimationDurations {
   static const Duration slow = Duration(milliseconds: 500);
   static const Duration verySlow = Duration(milliseconds: 800);
 
-  // Component specific durations
   static const Duration button = Duration(milliseconds: 150);
   static const Duration card = Duration(milliseconds: 200);
   static const Duration page = Duration(milliseconds: 300);
@@ -232,7 +228,6 @@ class AnimationCurves {
   static const Curve bounce = Curves.bounceOut;
   static const Curve elastic = Curves.elasticOut;
 
-  // Component specific curves
   static const Curve button = Curves.easeOut;
   static const Curve card = Curves.easeInOut;
   static const Curve page = Curves.fastOutSlowIn;

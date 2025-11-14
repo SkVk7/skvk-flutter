@@ -5,13 +5,13 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'language_service.dart';
+import 'package:skvk_application/core/services/language/language_service.dart';
 
 /// Global Translation Service - Single point of access
 class TranslationService {
-  static final TranslationService _instance = TranslationService._internal();
   factory TranslationService() => _instance;
   TranslationService._internal();
+  static final TranslationService _instance = TranslationService._internal();
 
   /// Current language preferences
   LanguagePreferences? _currentPreferences;
@@ -100,7 +100,7 @@ class TranslationService {
       'complete_your_profile': 'Complete Your Profile',
       'complete_profile': 'Complete Profile',
       'my_profile': 'My Profile',
-      'todays_guidance': 'Today\'s Guidance',
+      'todays_guidance': "Today's Guidance",
 
       // User Profile Screen
       'loading_profile': 'Loading profile...',
@@ -203,7 +203,6 @@ class TranslationService {
       // Matching Screen
       'matching_kundali_matching': 'Kundali Matching',
 
-      // Additional Predictions Screen
       'love_relationships': 'Love & Relationships',
       'career_professional': 'Career & Professional',
       'health_wellness': 'Health & Wellness',
@@ -397,7 +396,6 @@ class TranslationService {
       // Matching Screen
       'matching_kundali_matching': 'कुंडली मिलान',
 
-      // Additional Predictions Screen
       'love_relationships': 'प्रेम और रिश्ते',
       'career_professional': 'करियर और व्यावसायिक',
       'health_wellness': 'स्वास्थ्य और कल्याण',
@@ -585,7 +583,6 @@ class TranslationService {
       // Matching Screen
       'matching_kundali_matching': 'కుండలి మిలన్',
 
-      // Additional Predictions Screen
       'love_relationships': 'ప్రేమ మరియు సంబంధాలు',
       'career_professional': 'వృత్తి మరియు వృత్తిపరమైన',
       'health_wellness': 'ఆరోగ్యం మరియు క్షేమం',
@@ -778,7 +775,6 @@ class TranslationService {
       // Matching Screen
       'matching_kundali_matching': 'குண்டலி மிலன்',
 
-      // Additional Predictions Screen
       'love_relationships': 'காதல் மற்றும் உறவுகள்',
       'career_professional': 'தொழில் மற்றும் தொழில்முறை',
       'health_wellness': 'ஆரோக்கியம் மற்றும் நல்வாழ்வு',
@@ -837,8 +833,11 @@ class TranslationService {
   }
 
   /// Get translation for specific language
-  String translateForLanguage(SupportedLanguage language, String key,
-      {String? fallback}) {
+  String translateForLanguage(
+    SupportedLanguage language,
+    String key, {
+    String? fallback,
+  }) {
     final cacheKey = '${language.name}_$key';
     if (_cache.containsKey(cacheKey)) {
       return _cache[cacheKey]!;
@@ -877,7 +876,6 @@ class TranslationService {
 /// Global translation service instance
 final TranslationService globalTranslationService = TranslationService();
 
-// Provider for reactive translation service
 final translationServiceProvider = Provider<TranslationService>((ref) {
   // Watch language service to trigger rebuilds when language changes
   ref.watch(languageServiceProvider);

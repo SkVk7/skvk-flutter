@@ -5,7 +5,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../design_system/design_system.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
 
 /// Slide direction enum for navigation animations
 enum SlideDirection {
@@ -17,15 +17,14 @@ enum SlideDirection {
 
 /// Animated page route with slide transitions
 class AnimatedPageRoute<T> extends PageRoute<T> {
-  final Widget child;
-  final SlideDirection direction;
-  final Duration duration;
-
   AnimatedPageRoute({
     required this.child,
     required this.direction,
     required this.duration,
   });
+  final Widget child;
+  final SlideDirection direction;
+  final Duration duration;
 
   @override
   Color? get barrierColor => null;
@@ -61,16 +60,16 @@ class AnimatedPageRoute<T> extends PageRoute<T> {
     Offset begin;
     switch (direction) {
       case SlideDirection.leftToRight:
-        begin = const Offset(-1.0, 0.0);
+        begin = const Offset(-1, 0);
         break;
       case SlideDirection.rightToLeft:
-        begin = const Offset(1.0, 0.0);
+        begin = const Offset(1, 0);
         break;
       case SlideDirection.topToBottom:
-        begin = const Offset(0.0, -1.0);
+        begin = const Offset(0, -1);
         break;
       case SlideDirection.bottomToTop:
-        begin = const Offset(0.0, 1.0);
+        begin = const Offset(0, 1);
         break;
     }
 
@@ -151,10 +150,12 @@ class AnimatedNavigation {
             scale: Tween<double>(
               begin: beginScale,
               end: endScale,
-            ).animate(CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            )),
+            ).animate(
+              CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              ),
+            ),
             child: child,
           );
         },
@@ -179,11 +180,11 @@ class AnimatedNavigation {
             tag: heroTag,
             child: child,
             flightShuttleBuilder: (
-              BuildContext flightContext,
-              Animation<double> animation,
-              HeroFlightDirection flightDirection,
-              BuildContext fromHeroContext,
-              BuildContext toHeroContext,
+              flightContext,
+              animation,
+              flightDirection,
+              fromHeroContext,
+              toHeroContext,
             ) {
               return Transform.scale(
                 scale: animation.value,
@@ -243,7 +244,6 @@ class AnimatedNavigation {
     T? result,
     Duration duration = const Duration(milliseconds: 150),
   }) {
-    // Add exit animation before popping
     Navigator.of(context).pop<T>(result);
   }
 
@@ -314,14 +314,13 @@ class AnimatedNavigation {
 
 /// Animated dialog widget
 class AnimatedDialog extends StatefulWidget {
-  final Widget child;
-  final Duration duration;
-
   const AnimatedDialog({
-    super.key,
     required this.child,
+    super.key,
     this.duration = const Duration(milliseconds: 300),
   });
+  final Widget child;
+  final Duration duration;
 
   @override
   State<AnimatedDialog> createState() => _AnimatedDialogState();
@@ -342,20 +341,24 @@ class _AnimatedDialogState extends State<AnimatedDialog>
     );
 
     _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.bounceOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.bounceOut,
+      ),
+    );
 
     _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _controller.forward();
   }
@@ -385,14 +388,13 @@ class _AnimatedDialogState extends State<AnimatedDialog>
 
 /// Animated bottom sheet widget
 class AnimatedBottomSheet extends StatefulWidget {
-  final Widget child;
-  final Duration duration;
-
   const AnimatedBottomSheet({
-    super.key,
     required this.child,
+    super.key,
     this.duration = const Duration(milliseconds: 300),
   });
+  final Widget child;
+  final Duration duration;
 
   @override
   State<AnimatedBottomSheet> createState() => _AnimatedBottomSheetState();
@@ -413,20 +415,24 @@ class _AnimatedBottomSheetState extends State<AnimatedBottomSheet>
     );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 1.0),
+      begin: const Offset(0, 1),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _controller.forward();
   }
@@ -456,16 +462,15 @@ class _AnimatedBottomSheetState extends State<AnimatedBottomSheet>
 
 /// Animated snackbar content
 class AnimatedSnackBarContent extends StatefulWidget {
-  final String message;
-  final IconData? icon;
-  final Color? textColor;
-
   const AnimatedSnackBarContent({
-    super.key,
     required this.message,
+    super.key,
     this.icon,
     this.textColor,
   });
+  final String message;
+  final IconData? icon;
+  final Color? textColor;
 
   @override
   State<AnimatedSnackBarContent> createState() =>
@@ -487,20 +492,24 @@ class _AnimatedSnackBarContentState extends State<AnimatedSnackBarContent>
     );
 
     _slideAnimation = Tween<double>(
-      begin: -1.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+      begin: -1,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _opacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _controller.forward();
   }

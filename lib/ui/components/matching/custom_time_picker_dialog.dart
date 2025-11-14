@@ -5,17 +5,16 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Custom themed time picker dialog with reactive sizing
 class CustomTimePickerDialog extends StatefulWidget {
-  final TimeOfDay initialTime;
-
   const CustomTimePickerDialog({
-    super.key,
     required this.initialTime,
+    super.key,
   });
+  final TimeOfDay initialTime;
 
   @override
   State<CustomTimePickerDialog> createState() => _CustomTimePickerDialogState();
@@ -55,8 +54,10 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
     return Dialog(
       backgroundColor: ThemeHelpers.getSurfaceColor(context),
       shape: RoundedRectangleBorder(
-        borderRadius: ResponsiveSystem.circular(context,
-            baseRadius: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+        borderRadius: ResponsiveSystem.circular(
+          context,
+          baseRadius: ResponsiveSystem.spacing(context, baseSpacing: 16),
+        ),
       ),
       child: Container(
         width: ResponsiveSystem.responsive(
@@ -78,8 +79,10 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                 color: ThemeHelpers.getPrimaryTextColor(context),
               ),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+            ),
 
             // Time Selection Row
             Row(
@@ -105,8 +108,10 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                   },
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // Minute Selection
                 _buildTimeSelector(
@@ -127,22 +132,28 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                   },
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    width: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // AM/PM Selection
                 _buildPeriodSelector(),
               ],
             ),
 
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+            ),
 
             // Clock Display
             _buildClockDisplay(),
 
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+            ),
 
             // Action Buttons
             Row(
@@ -159,14 +170,15 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                     ),
                   ),
                 ),
-                ResponsiveSystem.sizedBox(context,
-                    width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, _selectedTime),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: ThemeHelpers.getPrimaryColor(context),
-                    foregroundColor:
-                        ThemeHelpers.getPrimaryTextColor(context),
+                    foregroundColor: ThemeHelpers.getPrimaryTextColor(context),
                     padding: ResponsiveSystem.symmetric(
                       context,
                       horizontal:
@@ -175,9 +187,13 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                           ResponsiveSystem.spacing(context, baseSpacing: 12),
                     ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: ResponsiveSystem.circular(context,
-                          baseRadius: ResponsiveSystem.spacing(context,
-                              baseSpacing: 8)),
+                      borderRadius: ResponsiveSystem.circular(
+                        context,
+                        baseRadius: ResponsiveSystem.spacing(
+                          context,
+                          baseSpacing: 8,
+                        ),
+                      ),
                     ),
                   ),
                   child: Text(
@@ -213,15 +229,19 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+        ),
         Container(
           width: ResponsiveSystem.spacing(context, baseSpacing: 80),
           height: ResponsiveSystem.spacing(context, baseSpacing: 100),
           decoration: BoxDecoration(
             color: ThemeHelpers.getSurfaceContainerColor(context),
-            borderRadius: ResponsiveSystem.circular(context,
-                baseRadius: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            borderRadius: ResponsiveSystem.circular(
+              context,
+              baseRadius: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             border: Border.all(
               color: ThemeHelpers.getPrimaryColor(context),
               width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
@@ -272,15 +292,19 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+        ),
         Container(
           width: ResponsiveSystem.spacing(context, baseSpacing: 80),
           height: ResponsiveSystem.spacing(context, baseSpacing: 100),
           decoration: BoxDecoration(
             color: ThemeHelpers.getSurfaceContainerColor(context),
-            borderRadius: ResponsiveSystem.circular(context,
-                baseRadius: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            borderRadius: ResponsiveSystem.circular(
+              context,
+              baseRadius: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             border: Border.all(
               color: ThemeHelpers.getPrimaryColor(context),
               width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
@@ -305,9 +329,11 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                         : ThemeHelpers.getTransparentColor(context),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(
-                          ResponsiveSystem.borderRadius(context, baseRadius: 10)),
+                        ResponsiveSystem.borderRadius(context, baseRadius: 10),
+                      ),
                       topRight: Radius.circular(
-                          ResponsiveSystem.borderRadius(context, baseRadius: 10)),
+                        ResponsiveSystem.borderRadius(context, baseRadius: 10),
+                      ),
                     ),
                   ),
                   child: Center(
@@ -341,9 +367,11 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                         : ThemeHelpers.getTransparentColor(context),
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(
-                          ResponsiveSystem.borderRadius(context, baseRadius: 10)),
+                        ResponsiveSystem.borderRadius(context, baseRadius: 10),
+                      ),
                       bottomRight: Radius.circular(
-                          ResponsiveSystem.borderRadius(context, baseRadius: 10)),
+                        ResponsiveSystem.borderRadius(context, baseRadius: 10),
+                      ),
                     ),
                   ),
                   child: Center(
@@ -392,8 +420,10 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
                 color: ThemeHelpers.getPrimaryTextColor(context),
               ),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+            ),
             Text(
               _selectedTime.period == DayPeriod.am ? 'AM' : 'PM',
               style: TextStyle(
@@ -407,4 +437,3 @@ class _CustomTimePickerDialogState extends State<CustomTimePickerDialog> {
     );
   }
 }
-

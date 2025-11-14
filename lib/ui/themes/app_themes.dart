@@ -5,8 +5,8 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'light_theme.dart';
-import 'dark_theme.dart';
+import 'package:skvk_application/ui/themes/dark_theme.dart';
+import 'package:skvk_application/ui/themes/light_theme.dart';
 
 /// Centralized theme accessor
 class AppThemes {
@@ -17,8 +17,7 @@ class AppThemes {
   static ThemeData get darkTheme => DarkTheme.theme;
 
   /// Get theme based on brightness
-  static ThemeData getTheme(bool isDark) {
+  static ThemeData getTheme({required bool isDark}) {
     return isDark ? darkTheme : lightTheme;
   }
 }
-

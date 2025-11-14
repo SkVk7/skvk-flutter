@@ -4,12 +4,22 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Reset Confirmation Dialog - Dialog for confirming reset operations
 class ResetConfirmationDialog extends StatelessWidget {
+  const ResetConfirmationDialog({
+    required this.translationService,
+    required this.title,
+    required this.message,
+    required this.onConfirm,
+    super.key,
+    this.confirmText,
+    this.cancelText,
+    this.onCancel,
+  });
   final TranslationService translationService;
   final String title;
   final String message;
@@ -18,30 +28,17 @@ class ResetConfirmationDialog extends StatelessWidget {
   final VoidCallback onConfirm;
   final VoidCallback? onCancel;
 
-  const ResetConfirmationDialog({
-    super.key,
-    required this.translationService,
-    required this.title,
-    required this.message,
-    this.confirmText,
-    this.cancelText,
-    required this.onConfirm,
-    this.onCancel,
-  });
-
   @override
   Widget build(BuildContext context) {
-    // Calculate responsive dimensions based on screen size and aspect ratio
     final dialogWidth = ResponsiveSystem.dialogWidth(context);
     final dialogPadding = ResponsiveSystem.dialogPadding(context);
-    
-    // Calculate button count for proper sizing
+
     final buttonCount = onCancel != null ? 2 : 1;
     final buttonConstraints = ResponsiveSystem.dialogActionConstraints(
       context,
       buttonCount: buttonCount,
     );
-    
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -68,7 +65,7 @@ class ResetConfirmationDialog extends StatelessWidget {
                 color: ThemeHelpers.getPrimaryTextColor(context),
               ),
             ),
-            
+
             // Content
             Padding(
               padding: EdgeInsets.only(
@@ -83,7 +80,7 @@ class ResetConfirmationDialog extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Actions Row
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -98,9 +95,11 @@ class ResetConfirmationDialog extends StatelessWidget {
                       },
                       child: Text(
                         cancelText ??
-                            translationService.translateContent('cancel', fallback: 'Cancel'),
+                            translationService.translateContent('cancel',
+                                fallback: 'Cancel',),
                         style: TextStyle(
-                          fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 14),
                           color: ThemeHelpers.getSecondaryTextColor(context),
                         ),
                       ),
@@ -123,15 +122,19 @@ class ResetConfirmationDialog extends StatelessWidget {
                       foregroundColor: Theme.of(context).colorScheme.onError,
                       padding: ResponsiveSystem.symmetric(
                         context,
-                        horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                        vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                        horizontal:
+                            ResponsiveSystem.spacing(context, baseSpacing: 16),
+                        vertical:
+                            ResponsiveSystem.spacing(context, baseSpacing: 12),
                       ),
                     ),
                     child: Text(
                       confirmText ??
-                          translationService.translateContent('reset', fallback: 'Reset'),
+                          translationService.translateContent('reset',
+                              fallback: 'Reset',),
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                       ),
                     ),
                   ),
@@ -150,9 +153,9 @@ class ResetConfirmationDialog extends StatelessWidget {
     required TranslationService translationService,
     required String title,
     required String message,
+    required VoidCallback onConfirm,
     String? confirmText,
     String? cancelText,
-    required VoidCallback onConfirm,
     VoidCallback? onCancel,
   }) {
     return showDialog<bool>(
@@ -169,4 +172,3 @@ class ResetConfirmationDialog extends StatelessWidget {
     );
   }
 }
-

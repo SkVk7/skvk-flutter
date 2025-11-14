@@ -4,23 +4,22 @@
 library;
 
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/design_system/design_system.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Daily prediction notification service
 class DailyPredictionNotificationService {
-  static DailyPredictionNotificationService? _instance;
-  static DailyPredictionNotificationService get instance {
-    _instance ??= DailyPredictionNotificationService._();
-    return _instance!;
-  }
-
   DailyPredictionNotificationService._();
 
+  factory DailyPredictionNotificationService.instance() {
+    return _instance ??= DailyPredictionNotificationService._();
+  }
+  static DailyPredictionNotificationService? _instance;
   FlutterLocalNotificationsPlugin? _notifications;
   bool _isInitialized = false;
 
@@ -31,18 +30,12 @@ class DailyPredictionNotificationService {
     try {
       _notifications = FlutterLocalNotificationsPlugin();
 
-      // Android initialization settings
       const androidSettings =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
       // iOS initialization settings
-      const iosSettings = DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-      );
+      const iosSettings = DarwinInitializationSettings();
 
-      // Initialize plugin
       const initSettings = InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
@@ -57,12 +50,12 @@ class DailyPredictionNotificationService {
       await _requestPermissions();
 
       _isInitialized = true;
-      LoggingHelper.logInfo(
+      await LoggingHelper.logInfo(
         'Daily prediction notification service initialized',
         source: 'DailyPredictionNotificationService',
       );
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error initializing notification service: $e',
         error: e,
         stackTrace: stackTrace,
@@ -92,8 +85,8 @@ class DailyPredictionNotificationService {
           );
         }
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error requesting notification permissions: $e',
         error: e,
         stackTrace: stackTrace,
@@ -112,7 +105,6 @@ class DailyPredictionNotificationService {
         await initialize();
       }
 
-      // Get theme mode from storage
       final isDarkMode = await _getIsDarkMode();
 
       // Extract prediction summary
@@ -137,33 +129,26 @@ class DailyPredictionNotificationService {
       rashi ??= predictions['rashi'] as String? ?? '';
       nakshatra ??= predictions['nakshatra'] as String? ?? '';
 
-      // Create notification title
       final title = userName != null
           ? '🌟 Daily Prediction for $userName'
           : '🌟 Your Daily Prediction';
 
-      // Create notification body with summary
       final body = _createNotificationBody(
         generalOutlook: generalOutlook,
         rashi: rashi,
         nakshatra: nakshatra,
       );
 
-      // Get themed colors from design tokens
       final primaryColor = isDarkMode
           ? DesignTokens.darkButtonColors['primary']!
           : DesignTokens.lightButtonColors['primary']!;
 
-      // Android notification details with themed colors
       final androidDetails = AndroidNotificationDetails(
         'daily_predictions',
         'Daily Predictions',
         channelDescription: 'Notifications for daily astrological predictions',
         importance: Importance.high,
         priority: Priority.high,
-        showWhen: true,
-        enableVibration: true,
-        playSound: true,
         icon: '@mipmap/ic_launcher',
         color: primaryColor,
         colorized: true,
@@ -175,7 +160,7 @@ class DailyPredictionNotificationService {
       );
 
       // iOS notification details
-      final iosDetails = DarwinNotificationDetails(
+      const iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -188,7 +173,6 @@ class DailyPredictionNotificationService {
         iOS: iosDetails,
       );
 
-      // Show notification with deep link to predictions screen
       await _notifications!.show(
         1001, // Unique notification ID for daily predictions
         title,
@@ -197,12 +181,12 @@ class DailyPredictionNotificationService {
         payload: 'predictions', // Deep link payload
       );
 
-      LoggingHelper.logInfo(
+      await LoggingHelper.logInfo(
         'Daily prediction notification shown',
         source: 'DailyPredictionNotificationService',
       );
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error showing daily prediction notification: $e',
         error: e,
         stackTrace: stackTrace,
@@ -226,8 +210,8 @@ class DailyPredictionNotificationService {
       }
 
       return mode == AppThemeMode.dark;
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting theme mode: $e',
         error: e,
         stackTrace: stackTrace,
@@ -247,18 +231,15 @@ class DailyPredictionNotificationService {
   }) {
     final buffer = StringBuffer();
 
-    // Calculate max length based on design tokens (responsive sizing)
     // Using bodyMedium font size as base for notification text
     final maxLength = (DesignTokens.fontSizes.bodyMedium * 10)
         .round(); // ~140 chars for medium screens
 
-    // Add general outlook (truncated if too long)
     final outlook = generalOutlook.length > maxLength
         ? '${generalOutlook.substring(0, maxLength - 3)}...'
         : generalOutlook;
     buffer.writeln(outlook);
 
-    // Add rashi and nakshatra if available
     if (rashi != null && rashi.isNotEmpty) {
       buffer.writeln('Rashi: $rashi');
     }
@@ -266,7 +247,6 @@ class DailyPredictionNotificationService {
       buffer.writeln('Nakshatra: $nakshatra');
     }
 
-    // Add "Click to know more" message
     buffer.writeln('\nTap to view full prediction');
 
     return buffer.toString();
@@ -283,13 +263,14 @@ class DailyPredictionNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    LoggingHelper.logDebug(
-      'Notification tapped: ${response.payload}',
-      source: 'DailyPredictionNotificationService',
+    unawaited(
+      LoggingHelper.logDebug(
+        'Notification tapped: ${response.payload}',
+        source: 'DailyPredictionNotificationService',
+      ),
     );
     _lastNotificationPayload = response.payload;
 
-    // Navigation will be handled by the app's navigation system
     // The app should check lastNotificationPayload and navigate accordingly
     // Payloads: 'predictions' -> navigate to predictions screen
     //          'create_profile' -> navigate to profile creation screen
@@ -301,8 +282,8 @@ class DailyPredictionNotificationService {
       if (_notifications != null) {
         await _notifications!.cancelAll();
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error canceling notifications: $e',
         error: e,
         stackTrace: stackTrace,
@@ -317,8 +298,8 @@ class DailyPredictionNotificationService {
       if (_notifications != null) {
         await _notifications!.cancel(id);
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error canceling notification: $e',
         error: e,
         stackTrace: stackTrace,
@@ -334,33 +315,26 @@ class DailyPredictionNotificationService {
         await initialize();
       }
 
-      // Get theme mode from storage
       final isDarkMode = await _getIsDarkMode();
 
-      // Get themed colors from design tokens
       final primaryColor = isDarkMode
           ? DesignTokens.darkButtonColors['primary']!
           : DesignTokens.lightButtonColors['primary']!;
 
-      // Create notification title and body
       const title = '🌟 Get Daily Predictions';
       const body =
           'Create your user profile to receive personalized daily astrological predictions and insights.';
 
-      // Android notification details with themed colors
       final androidDetails = AndroidNotificationDetails(
         'daily_predictions',
         'Daily Predictions',
         channelDescription: 'Notifications for daily astrological predictions',
         importance: Importance.high,
         priority: Priority.high,
-        showWhen: true,
-        enableVibration: true,
-        playSound: true,
         icon: '@mipmap/ic_launcher',
         color: primaryColor,
         colorized: true,
-        styleInformation: BigTextStyleInformation(
+        styleInformation: const BigTextStyleInformation(
           body,
           contentTitle: title,
           summaryText: 'Tap to create your profile',
@@ -368,7 +342,7 @@ class DailyPredictionNotificationService {
       );
 
       // iOS notification details
-      final iosDetails = DarwinNotificationDetails(
+      const iosDetails = DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -381,7 +355,6 @@ class DailyPredictionNotificationService {
         iOS: iosDetails,
       );
 
-      // Show notification with deep link to profile creation
       await _notifications!.show(
         1002, // Unique notification ID for create profile prompt
         title,
@@ -390,12 +363,12 @@ class DailyPredictionNotificationService {
         payload: 'create_profile', // Deep link payload
       );
 
-      LoggingHelper.logInfo(
+      await LoggingHelper.logInfo(
         'Create profile notification shown',
         source: 'DailyPredictionNotificationService',
       );
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error showing create profile notification: $e',
         error: e,
         stackTrace: stackTrace,

@@ -6,15 +6,15 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../common/index.dart';
-import '../../../core/services/language/translation_service.dart';
-import '../../../core/logging/logging_helper.dart';
-import '../../utils/screen_handlers.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Standard App Bar - Consistent app bar across all screens
-/// 
+///
 /// Features:
 /// - Title with optional icon
 /// - Back button (optional)
@@ -23,22 +23,21 @@ import '../../utils/screen_handlers.dart';
 /// - Profile photo
 /// - Responsive sizing
 class StandardAppBar extends ConsumerWidget implements PreferredSizeWidget {
-  final String title;
-  final IconData? titleIcon;
-  final bool showBackButton;
-  final VoidCallback? onBackPressed;
-  final VoidCallback? onProfileTap;
-  final double? toolbarHeight;
-
   const StandardAppBar({
-    super.key,
     required this.title,
+    super.key,
     this.titleIcon,
     this.showBackButton = true,
     this.onBackPressed,
     this.onProfileTap,
     this.toolbarHeight,
   });
+  final String title;
+  final IconData? titleIcon;
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+  final VoidCallback? onProfileTap;
+  final double? toolbarHeight;
 
   @override
   Size get preferredSize {
@@ -93,15 +92,15 @@ class StandardAppBar extends ConsumerWidget implements PreferredSizeWidget {
       actions: [
         // Language Dropdown Widget
         LanguageDropdown(
-          onLanguageChanged: (value) {
-            LoggingHelper.logInfo('Language changed to: $value');
+          onLanguageChanged: (value) async {
+            await LoggingHelper.logInfo('Language changed to: $value');
             ScreenHandlers.handleLanguageChange(ref, value);
           },
         ),
         // Theme Dropdown Widget
         ThemeDropdown(
-          onThemeChanged: (value) {
-            LoggingHelper.logInfo('Theme changed to: $value');
+          onThemeChanged: (value) async {
+            await LoggingHelper.logInfo('Theme changed to: $value');
             ScreenHandlers.handleThemeChange(ref, value);
           },
         ),
@@ -127,6 +126,4 @@ class StandardAppBar extends ConsumerWidget implements PreferredSizeWidget {
       ],
     );
   }
-
 }
-

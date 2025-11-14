@@ -4,18 +4,17 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/models/audio/track.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// About View - Shows track metadata and description
 class AboutView extends StatelessWidget {
-  final Track? track;
-
   const AboutView({
     super.key,
     this.track,
   });
+  final Track? track;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +54,7 @@ class AboutView extends StatelessWidget {
             height: ResponsiveSystem.spacing(context, baseSpacing: 8),
           ),
           // Subtitle/Artist
-          if ((track!.subtitle?.isNotEmpty ?? false))
+          if (track!.subtitle?.isNotEmpty ?? false)
             Text(
               track!.subtitle!,
               style: TextStyle(
@@ -68,7 +67,7 @@ class AboutView extends StatelessWidget {
             height: ResponsiveSystem.spacing(context, baseSpacing: 16),
           ),
           // Album
-          if ((track!.album?.isNotEmpty ?? false)) ...[
+          if (track!.album?.isNotEmpty ?? false) ...[
             Text(
               'Album',
               style: TextStyle(
@@ -131,38 +130,42 @@ class AboutView extends StatelessWidget {
               context,
               height: ResponsiveSystem.spacing(context, baseSpacing: 8),
             ),
-            ...metadata.entries.map((entry) => Padding(
-                  padding: ResponsiveSystem.only(
-                    context,
-                    bottom: ResponsiveSystem.spacing(context, baseSpacing: 8),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          '${entry.key}:',
-                          style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
-                            fontWeight: FontWeight.w600,
-                            color: ThemeHelpers.getSecondaryTextColor(context),
-                          ),
+            ...metadata.entries.map(
+              (entry) => Padding(
+                padding: ResponsiveSystem.only(
+                  context,
+                  bottom: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        '${entry.key}:',
+                        style: TextStyle(
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 14),
+                          fontWeight: FontWeight.w600,
+                          color: ThemeHelpers.getSecondaryTextColor(context),
                         ),
                       ),
-                      Expanded(
-                        flex: 3,
-                        child: Text(
-                          entry.value.toString(),
-                          style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
-                            color: ThemeHelpers.getPrimaryTextColor(context),
-                          ),
+                    ),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        entry.value.toString(),
+                        style: TextStyle(
+                          fontSize:
+                              ResponsiveSystem.fontSize(context, baseSize: 14),
+                          color: ThemeHelpers.getPrimaryTextColor(context),
                         ),
                       ),
-                    ],
-                  ),
-                )),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ],
       ),
@@ -175,4 +178,3 @@ class AboutView extends StatelessWidget {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 }
-

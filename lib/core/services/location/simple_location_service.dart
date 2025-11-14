@@ -1,15 +1,17 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../../core/logging/app_logger.dart';
+import 'package:http/http.dart' as http;
+import 'package:skvk_application/core/logging/app_logger.dart';
 
 /// Simple, production-ready location service using free APIs
 class SimpleLocationService {
-  static final SimpleLocationService _instance =
-      SimpleLocationService._internal();
   factory SimpleLocationService() => _instance;
   SimpleLocationService._internal();
+  static final SimpleLocationService _instance =
+      SimpleLocationService._internal();
 
   final _logger = AppLogger();
 
@@ -17,8 +19,12 @@ class SimpleLocationService {
   Future<LocationResult> getCoordinatesFromPlaceName(String placeName) async {
     try {
       if (kDebugMode) {
-        _logger.debug('Searching for coordinates: $placeName',
-            source: 'LocationService');
+        unawaited(
+          _logger.debug(
+            'Searching for coordinates: $placeName',
+            source: 'LocationService',
+          ),
+        );
       }
 
       final encodedPlaceName = Uri.encodeComponent(placeName);
@@ -36,13 +42,17 @@ class SimpleLocationService {
         final List<dynamic> data = json.decode(response.body);
 
         if (data.isNotEmpty) {
-          final result = data.first;
+          final result = data.first as Map<String, dynamic>;
           final lat = double.tryParse(result['lat']?.toString() ?? '0') ?? 0.0;
           final lon = double.tryParse(result['lon']?.toString() ?? '0') ?? 0.0;
 
           if (kDebugMode) {
-            _logger.debug('Found coordinates: $lat, $lon',
-                source: 'LocationService');
+            unawaited(
+              _logger.debug(
+                'Found coordinates: $lat, $lon',
+                source: 'LocationService',
+              ),
+            );
           }
 
           return LocationResult.success(
@@ -57,12 +67,16 @@ class SimpleLocationService {
       } else {
         return LocationResult.error('Failed to fetch location data');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (kDebugMode) {
-        _logger.error('Location service error: $e',
+        unawaited(
+          _logger.error(
+            'Location service error: $e',
             source: 'LocationService',
             metadata: {'error': e.toString()},
-            stackTrace: StackTrace.current);
+            stackTrace: StackTrace.current,
+          ),
+        );
       }
       return LocationResult.error('Error fetching location: $e');
     }
@@ -70,10 +84,12 @@ class SimpleLocationService {
 
   /// Get place name from coordinates (reverse geocoding)
   Future<LocationResult> getPlaceNameFromCoordinates(
-      double latitude, double longitude) async {
+    double latitude,
+    double longitude,
+  ) async {
     try {
       if (kDebugMode) {
-        _logger.debug('🔍 Reverse geocoding: $latitude, $longitude');
+        unawaited(_logger.debug('🔍 Reverse geocoding: $latitude, $longitude'));
       }
 
       final url =
@@ -103,7 +119,7 @@ class SimpleLocationService {
       } else {
         return LocationResult.error('Failed to reverse geocode coordinates');
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (kDebugMode) {
         print('❌ Reverse geocoding error: $e');
       }
@@ -123,12 +139,14 @@ class SimpleLocationService {
 
       // Fallback to country-level location (less accurate but sufficient for calendar)
       if (kDebugMode) {
-        _logger.debug(
+        unawaited(
+          _logger.debug(
             'Device location not available, using country-level location',
-            source: 'LocationService');
+            source: 'LocationService',
+          ),
+        );
       }
 
-      // Get country from device locale or use default
       final countryCode = await _getCountryCode();
       final countryLocation = await getCoordinatesFromPlaceName(countryCode);
 
@@ -143,12 +161,16 @@ class SimpleLocationService {
         placeName: 'India',
         address: 'India',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       if (kDebugMode) {
-        _logger.error('Error getting location with fallback: $e',
+        unawaited(
+          _logger.error(
+            'Error getting location with fallback: $e',
             source: 'LocationService',
             metadata: {'error': e.toString()},
-            stackTrace: StackTrace.current);
+            stackTrace: StackTrace.current,
+          ),
+        );
       }
       // Final fallback: Use India's center coordinates
       return LocationResult.success(
@@ -163,13 +185,11 @@ class SimpleLocationService {
   /// Get device current location
   Future<LocationResult> getDeviceLocation() async {
     try {
-      // Check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         return LocationResult.error('Location services are disabled');
       }
 
-      // Check location permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -180,19 +200,22 @@ class SimpleLocationService {
 
       if (permission == LocationPermission.deniedForever) {
         return LocationResult.error(
-            'Location permissions are permanently denied');
+          'Location permissions are permanently denied',
+        );
       }
 
-      // Get current position
-      Position position = await Geolocator.getCurrentPosition(
+      final Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy
             .medium, // Medium accuracy is sufficient for calendar
       );
 
       if (kDebugMode) {
-        _logger.debug(
+        unawaited(
+          _logger.debug(
             'Device location: ${position.latitude}, ${position.longitude}',
-            source: 'LocationService');
+            source: 'LocationService',
+          ),
+        );
       }
 
       return LocationResult.success(
@@ -201,12 +224,16 @@ class SimpleLocationService {
         placeName: 'Current Location',
         address: 'Current Location',
       );
-    } catch (e) {
+    } on Exception catch (e) {
       if (kDebugMode) {
-        _logger.error('Error getting device location: $e',
+        unawaited(
+          _logger.error(
+            'Error getting device location: $e',
             source: 'LocationService',
             metadata: {'error': e.toString()},
-            stackTrace: StackTrace.current);
+            stackTrace: StackTrace.current,
+          ),
+        );
       }
       return LocationResult.error('Error getting device location: $e');
     }
@@ -218,12 +245,11 @@ class SimpleLocationService {
       // Try to get country from device locale
       final locale = PlatformDispatcher.instance.locale;
       if (locale.countryCode != null && locale.countryCode!.isNotEmpty) {
-        // Get country name from country code
         final countryName = await _getCountryNameFromCode(locale.countryCode!);
         return countryName;
       }
       return 'India'; // Default fallback
-    } catch (e) {
+    } on Exception {
       return 'India'; // Default fallback
     }
   }
@@ -291,14 +317,15 @@ class SimpleLocationService {
         final List<dynamic> data = json.decode(response.body);
 
         final results = data.map((item) {
-          final lat = double.tryParse(item['lat']?.toString() ?? '0') ?? 0.0;
-          final lon = double.tryParse(item['lon']?.toString() ?? '0') ?? 0.0;
+          final itemMap = item as Map<String, dynamic>;
+          final lat = double.tryParse(itemMap['lat']?.toString() ?? '0') ?? 0.0;
+          final lon = double.tryParse(itemMap['lon']?.toString() ?? '0') ?? 0.0;
 
           return LocationResult.success(
             latitude: lat,
             longitude: lon,
-            placeName: item['display_name'] ?? query,
-            address: item['display_name'] ?? query,
+            placeName: itemMap['display_name'] ?? query,
+            address: itemMap['display_name'] ?? query,
           );
         }).toList();
 
@@ -310,7 +337,7 @@ class SimpleLocationService {
       } else {
         return [];
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (kDebugMode) {
         print('❌ Place search error: $e');
       }
@@ -321,13 +348,6 @@ class SimpleLocationService {
 
 /// Simple result class for location operations
 class LocationResult {
-  final bool isSuccess;
-  final double? latitude;
-  final double? longitude;
-  final String? placeName;
-  final String? address;
-  final String? error;
-
   LocationResult._({
     required this.isSuccess,
     this.latitude,
@@ -358,4 +378,10 @@ class LocationResult {
       error: error,
     );
   }
+  final bool isSuccess;
+  final double? latitude;
+  final double? longitude;
+  final String? placeName;
+  final String? address;
+  final String? error;
 }

@@ -5,40 +5,42 @@
 library;
 
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:skvk_application/core/errors/failures.dart';
-import '../../../core/models/user/user_model.dart';
-import '../../../core/services/shared/cache_service.dart';
-import '../../../core/logging/logging_helper.dart';
-import '../../../core/utils/either.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/services/shared/cache_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// User storage service that integrates with centralized astrology cache
 class UserStorageService {
+  /// Get singleton instance
+  factory UserStorageService.instance() {
+    return _instance ??= UserStorageService._();
+  }
+
+  // Private constructor for singleton
+  UserStorageService._();
   static UserStorageService? _instance;
   SharedPreferences? _prefs;
-  final CacheService _cacheService = CacheService.instance;
+  final CacheService _cacheService = CacheService.instance();
 
   // Storage keys
   static const String _userDataKey = 'user_profile_data';
   static const String _userCacheKey = 'user_cache';
 
-  // Private constructor for singleton
-  UserStorageService._();
-
-  /// Get singleton instance
-  static UserStorageService get instance {
-    _instance ??= UserStorageService._();
-    return _instance!;
-  }
-
   /// Initialize the service
   Future<void> initialize() async {
     try {
       _prefs = await SharedPreferences.getInstance();
-      LoggingHelper.logInfo('User Storage Service initialized');
-    } catch (e) {
-      LoggingHelper.logError('Failed to initialize user storage service',
-          source: 'UserStorageService', error: e);
+      await LoggingHelper.logInfo('User Storage Service initialized');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to initialize user storage service',
+        source: 'UserStorageService',
+        error: e,
+      );
       rethrow;
     }
   }
@@ -48,14 +50,12 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      // Validate user data
       if (!user.isValid) {
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid user data provided'),
+          const ValidationFailure(message: 'Invalid user data provided'),
         );
       }
 
-      // Save to SharedPreferences for persistence
       final userJson = json.encode(user.toJson());
       await _prefs!.setString(_userDataKey, userJson);
 
@@ -66,11 +66,14 @@ class UserStorageService {
         duration: const Duration(days: 365),
       );
 
-      LoggingHelper.logInfo('User data saved successfully');
+      await LoggingHelper.logInfo('User data saved successfully');
       return ResultHelper.success(null);
-    } catch (e) {
-      LoggingHelper.logError('Failed to save user data',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to save user data',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(message: 'Failed to save user data: ${e.toString()}'),
       );
@@ -82,11 +85,10 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      // First try to get from cache (fastest)
       final cachedData = _cacheService.get(_userCacheKey);
       if (cachedData != null) {
         final user = UserModel.fromJson(cachedData);
-        LoggingHelper.logDebug('User data retrieved from cache');
+        await LoggingHelper.logDebug('User data retrieved from cache');
         return ResultHelper.success(user);
       }
 
@@ -103,18 +105,23 @@ class UserStorageService {
           duration: const Duration(days: 365),
         );
 
-        LoggingHelper.logDebug('User data retrieved from storage and cached');
+        await LoggingHelper.logDebug(
+            'User data retrieved from storage and cached',);
         return ResultHelper.success(user);
       }
 
-      LoggingHelper.logDebug('No user data found');
+      await LoggingHelper.logDebug('No user data found');
       return ResultHelper.success(null);
-    } catch (e) {
-      LoggingHelper.logError('Failed to get current user',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get current user',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(
-            message: 'Failed to get current user: ${e.toString()}'),
+          message: 'Failed to get current user: ${e.toString()}',
+        ),
       );
     }
   }
@@ -124,37 +131,37 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      // Validate user data
       if (!user.isValid) {
         return ResultHelper.failure(
-          ValidationFailure(message: 'Invalid user data provided'),
+          const ValidationFailure(message: 'Invalid user data provided'),
         );
       }
 
-      // Update with timestamp
       final updatedUser = user.copyWith(
         updatedAt: DateTime.now(),
       );
 
-      // Save to SharedPreferences
       final userJson = json.encode(updatedUser.toJson());
       await _prefs!.setString(_userDataKey, userJson);
 
-      // Update cache
       _cacheService.set(
         _userCacheKey,
         updatedUser.toJson(),
         duration: const Duration(days: 365),
       );
 
-      LoggingHelper.logInfo('User data updated successfully');
+      await LoggingHelper.logInfo('User data updated successfully');
       return ResultHelper.success(null);
-    } catch (e) {
-      LoggingHelper.logError('Failed to update user data',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to update user data',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(
-            message: 'Failed to update user data: ${e.toString()}'),
+          message: 'Failed to update user data: ${e.toString()}',
+        ),
       );
     }
   }
@@ -166,12 +173,16 @@ class UserStorageService {
 
       final userData = _prefs!.getString(_userDataKey);
       return ResultHelper.success(userData != null);
-    } catch (e) {
-      LoggingHelper.logError('Failed to check if user exists',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to check if user exists',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(
-            message: 'Failed to check if user exists: ${e.toString()}'),
+          message: 'Failed to check if user exists: ${e.toString()}',
+        ),
       );
     }
   }
@@ -181,20 +192,22 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      // Remove from SharedPreferences
       await _prefs!.remove(_userDataKey);
 
-      // Remove from cache
       _cacheService.remove(_userCacheKey);
 
-      LoggingHelper.logInfo('User data deleted successfully');
+      await LoggingHelper.logInfo('User data deleted successfully');
       return ResultHelper.success(null);
-    } catch (e) {
-      LoggingHelper.logError('Failed to delete user data',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to delete user data',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(
-            message: 'Failed to delete user data: ${e.toString()}'),
+          message: 'Failed to delete user data: ${e.toString()}',
+        ),
       );
     }
   }
@@ -204,20 +217,22 @@ class UserStorageService {
     try {
       await _ensureInitialized();
 
-      // Clear SharedPreferences
       await _prefs!.remove(_userDataKey);
 
-      // Clear cache
       _cacheService.remove(_userCacheKey);
 
-      LoggingHelper.logInfo('All user data cleared successfully');
+      await LoggingHelper.logInfo('All user data cleared successfully');
       return ResultHelper.success(null);
-    } catch (e) {
-      LoggingHelper.logError('Failed to clear user data',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to clear user data',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(
-            message: 'Failed to clear user data: ${e.toString()}'),
+          message: 'Failed to clear user data: ${e.toString()}',
+        ),
       );
     }
   }
@@ -232,7 +247,6 @@ class UserStorageService {
 
       final user = userResult.value!;
 
-      // Return only the essential data needed for astrology calculations
       final astrologyData = {
         'name': user.name,
         'dateOfBirth': user.dateOfBirth.toIso8601String(),
@@ -247,12 +261,16 @@ class UserStorageService {
       };
 
       return ResultHelper.success(astrologyData);
-    } catch (e) {
-      LoggingHelper.logError('Failed to get user astrology data',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get user astrology data',
+        source: 'UserStorageService',
+        error: e,
+      );
       return ResultHelper.failure(
         UnexpectedFailure(
-            message: 'Failed to get user astrology data: ${e.toString()}'),
+          message: 'Failed to get user astrology data: ${e.toString()}',
+        ),
       );
     }
   }
@@ -271,9 +289,12 @@ class UserStorageService {
         'cacheStats': cacheStats,
         'storageType': 'SharedPreferences + AstrologyCache',
       };
-    } catch (e) {
-      LoggingHelper.logError('Failed to get storage stats',
-          source: 'UserStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get storage stats',
+        source: 'UserStorageService',
+        error: e,
+      );
       return {
         'error': e.toString(),
       };

@@ -16,7 +16,7 @@ io.File createMobileFile(String path) {
 /// Get temporary directory on mobile platform
 /// This function is only called when !kIsWeb
 Future<io.Directory> getMobileTemporaryDirectory() async {
-  return await getTemporaryDirectory();
+  return getTemporaryDirectory();
 }
 
 /// Create a directory on mobile platform

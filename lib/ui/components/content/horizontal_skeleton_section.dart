@@ -4,23 +4,22 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Horizontal Skeleton Section
 ///
 /// Displays a skeleton loading state for horizontal sections
 class HorizontalSkeletonSection extends StatelessWidget {
+  const HorizontalSkeletonSection({
+    required this.title,
+    required this.icon,
+    super.key,
+    this.itemCount = 5,
+  });
   final String title;
   final IconData icon;
   final int itemCount;
-
-  const HorizontalSkeletonSection({
-    super.key,
-    required this.title,
-    required this.icon,
-    this.itemCount = 5,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -151,4 +150,3 @@ class HorizontalSkeletonSection extends StatelessWidget {
     );
   }
 }
-

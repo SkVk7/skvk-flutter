@@ -6,19 +6,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:palette_generator/palette_generator.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Palette Colors - Extracted color palette from image
 class PaletteColors {
-  final Color? dominant;
-  final Color? vibrant;
-  final Color? lightVibrant;
-  final Color? darkVibrant;
-  final Color? muted;
-  final Color? lightMuted;
-  final Color? darkMuted;
-  final bool isDark;
-
   const PaletteColors({
     this.dominant,
     this.vibrant,
@@ -29,6 +20,14 @@ class PaletteColors {
     this.darkMuted,
     this.isDark = false,
   });
+  final Color? dominant;
+  final Color? vibrant;
+  final Color? lightVibrant;
+  final Color? darkVibrant;
+  final Color? muted;
+  final Color? lightMuted;
+  final Color? darkMuted;
+  final bool isDark;
 
   /// Get best color for lyric highlighting
   /// Tries vibrant first, then dominant, then lightVibrant, then fallback
@@ -55,7 +54,7 @@ class PaletteService {
   static const Duration _timeout = Duration(seconds: 10);
 
   /// Extract color palette from image URL
-  /// 
+  ///
   /// Downloads image, extracts palette, and returns PaletteColors
   /// Falls back to default colors if extraction fails
   static Future<PaletteColors> extractColors(
@@ -63,28 +62,26 @@ class PaletteService {
     Color fallback = const Color(0xFFF38F31), // Saffron accent
   }) async {
     if (imageUrl.isEmpty) {
-      return PaletteColors(isDark: false);
+      return const PaletteColors();
     }
 
     try {
       // Download image
       final response = await http.get(Uri.parse(imageUrl)).timeout(_timeout);
-      
+
       if (response.statusCode != 200) {
-        LoggingHelper.logError(
+        await LoggingHelper.logError(
           'Failed to download image: ${response.statusCode}',
           source: 'PaletteService',
         );
-        return PaletteColors(isDark: false);
+        return const PaletteColors();
       }
 
-      // Create image provider from bytes
       final imageProvider = MemoryImage(response.bodyBytes);
 
       // Generate palette
       final paletteGenerator = await PaletteGenerator.fromImageProvider(
         imageProvider,
-        maximumColorCount: 16,
       );
 
       // Determine if image is dark
@@ -100,13 +97,13 @@ class PaletteService {
         darkMuted: paletteGenerator.darkMutedColor?.color,
         isDark: isDark,
       );
-    } catch (e) {
-      LoggingHelper.logError(
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
         'Failed to extract colors from image: $imageUrl',
         source: 'PaletteService',
         error: e,
       );
-      return PaletteColors(isDark: false);
+      return const PaletteColors();
     }
   }
 
@@ -115,7 +112,6 @@ class PaletteService {
     final dominant = generator.dominantColor?.color;
     if (dominant == null) return false;
 
-    // Calculate luminance
     final luminance = (0.299 * (dominant.r * 255.0).round() +
             0.587 * (dominant.g * 255.0).round() +
             0.114 * (dominant.b * 255.0).round()) /
@@ -125,10 +121,10 @@ class PaletteService {
   }
 
   /// Adjust color brightness for contrast
-  /// 
+  ///
   /// If image is dark, lighten color by 12%
   /// If image is light, darken color by 12%
-  static Color adjustColorForContrast(Color color, bool isDark) {
+  static Color adjustColorForContrast(Color color, {required bool isDark}) {
     if (isDark) {
       // Lighten by 12%
       final r = (color.r * 255.0).round();
@@ -154,4 +150,3 @@ class PaletteService {
     }
   }
 }
-

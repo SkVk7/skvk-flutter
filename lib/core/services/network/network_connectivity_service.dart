@@ -9,14 +9,12 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Network Connectivity Service
 class NetworkConnectivityService {
-  static NetworkConnectivityService? _instance;
-  static NetworkConnectivityService get instance {
-    _instance ??= NetworkConnectivityService._();
-    return _instance!;
-  }
-
   NetworkConnectivityService._();
 
+  factory NetworkConnectivityService.instance() {
+    return _instance ??= NetworkConnectivityService._();
+  }
+  static NetworkConnectivityService? _instance;
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
@@ -25,8 +23,7 @@ class NetworkConnectivityService {
     try {
       final results = await _connectivity.checkConnectivity();
       return results.any((result) => result != ConnectivityResult.none);
-    } catch (e) {
-      // If check fails, assume no connection for safety
+    } on Exception {
       return false;
     }
   }
@@ -46,4 +43,3 @@ class NetworkConnectivityService {
     _subscription?.cancel();
   }
 }
-

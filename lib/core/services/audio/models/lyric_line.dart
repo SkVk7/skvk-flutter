@@ -3,15 +3,17 @@
 /// Represents a single lyric line with timestamp
 library;
 
-/// Lyric line with timestamp
-class LyricLine {
-  final Duration timestamp;
-  final String text;
+import 'package:flutter/foundation.dart';
 
+/// Lyric line with timestamp
+@immutable
+class LyricLine {
   const LyricLine({
     required this.timestamp,
     required this.text,
   });
+  final Duration timestamp;
+  final String text;
 
   @override
   bool operator ==(Object other) =>
@@ -27,4 +29,3 @@ class LyricLine {
   @override
   String toString() => 'LyricLine(timestamp: $timestamp, text: $text)';
 }
-

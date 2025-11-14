@@ -5,4 +5,3 @@ library;
 
 export 'injection_container.dart';
 export 'providers_registry.dart';
-

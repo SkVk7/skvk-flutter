@@ -6,21 +6,20 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Date Field - Reusable date picker field
 class DateField extends StatelessWidget {
-  final String label;
-  final DateTime selectedDate;
-  final ValueChanged<DateTime> onDateChanged;
-
   const DateField({
-    super.key,
     required this.label,
     required this.selectedDate,
     required this.onDateChanged,
+    super.key,
   });
+  final String label;
+  final DateTime selectedDate;
+  final ValueChanged<DateTime> onDateChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +82,8 @@ class DateField extends StatelessWidget {
                   child: Text(
                     DateFormat('dd MMM yyyy').format(selectedDate),
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 16),
                       color: ThemeHelpers.getPrimaryTextColor(context),
                     ),
                   ),
@@ -101,4 +101,3 @@ class DateField extends StatelessWidget {
     );
   }
 }
-

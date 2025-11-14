@@ -7,16 +7,16 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/services/audio/audio_controller.dart';
-import '../../core/models/audio/track.dart';
-import '../components/audio/lyrics_view.dart';
-import '../components/audio/player_controls.dart';
-import '../components/audio/lyrics_language_selector.dart';
-import '../../core/services/audio/global_audio_player_controller.dart';
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-import '../utils/animations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/audio/audio_controller.dart';
+import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
+import 'package:skvk_application/ui/components/audio/lyrics_language_selector.dart';
+import 'package:skvk_application/ui/components/audio/lyrics_view.dart';
+import 'package:skvk_application/ui/components/audio/player_controls.dart';
+import 'package:skvk_application/ui/utils/animations.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Now Playing Screen
 ///
@@ -52,21 +52,22 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
       curve: AnimationCurves.smooth,
     );
     _fadeController.forward();
-    // Set full screen open state immediately
     // Use SchedulerBinding to ensure it runs after the current frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (mounted) {
-        ref.read(audioControllerProvider.notifier).setFullScreenOpen(true);
-        // Load current language preference
+        ref
+            .read(audioControllerProvider.notifier)
+            .setFullScreenOpen(isOpen: true);
         try {
           final prefs = await SharedPreferences.getInstance();
-          final languageCode = prefs.getString('content_language_preference') ?? 'en';
+          final languageCode =
+              prefs.getString('content_language_preference') ?? 'en';
           if (mounted) {
             setState(() {
               _currentLyricsLanguage = languageCode;
             });
           }
-        } catch (e) {
+        } on Exception {
           // Keep default 'en' if error
         }
       }
@@ -75,8 +76,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
 
   @override
   void dispose() {
-    // Set full screen closed state
-    ref.read(audioControllerProvider.notifier).setFullScreenOpen(false);
+    ref.read(audioControllerProvider.notifier).setFullScreenOpen(isOpen: false);
     _fadeController.dispose();
     super.dispose();
   }
@@ -105,53 +105,55 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     return FadeTransition(
       opacity: _fadeAnimation,
       child: PopScope(
-        canPop: true,
         onPopInvokedWithResult: (didPop, result) {
           if (didPop) {
-            // Set full screen closed when navigating back (Android back button or gesture)
-            ref.read(audioControllerProvider.notifier).setFullScreenOpen(false);
+            ref
+                .read(audioControllerProvider.notifier)
+                .setFullScreenOpen(isOpen: false);
           }
         },
         child: Scaffold(
           backgroundColor: ThemeHelpers.getBackgroundColor(context),
           body: SafeArea(
-          child: Column(
-            children: [
-              // Top bar with back button and title
-              _buildTopBar(track, controller, playerState),
-              // Main content area (artwork or lyrics)
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    );
-                  },
-                  child: _showLyrics && hasLyrics
-                      ? const LyricsView(key: ValueKey('lyrics'))
-                      : _buildArtworkView(track, key: const ValueKey('artwork')),
+            child: Column(
+              children: [
+                // Top bar with back button and title
+                _buildTopBar(track, controller, playerState),
+                // Main content area (artwork or lyrics)
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      );
+                    },
+                    child: _showLyrics && hasLyrics
+                        ? const LyricsView(key: ValueKey('lyrics'))
+                        : _buildArtworkView(track,
+                            key: const ValueKey('artwork'),),
+                  ),
                 ),
-              ),
-              // Bottom controls area
-              _buildBottomControls(
-                track,
-                position,
-                duration,
-                playerState,
-                controller,
-                hasLyrics,
-              ),
-            ],
+                // Bottom controls area
+                _buildBottomControls(
+                  track,
+                  position,
+                  duration,
+                  playerState,
+                  controller,
+                  hasLyrics,
+                ),
+              ],
+            ),
           ),
-        ),
         ),
       ),
     );
   }
 
-  Widget _buildTopBar(Track track, AudioController controller, PlayerState playerState) {
+  Widget _buildTopBar(
+      Track track, AudioController controller, PlayerState playerState,) {
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
@@ -164,8 +166,9 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             icon: const Icon(Icons.keyboard_arrow_down),
             onPressed: () {
               HapticFeedback.lightImpact();
-              // Set full screen closed before navigating back
-              ref.read(audioControllerProvider.notifier).setFullScreenOpen(false);
+              ref
+                  .read(audioControllerProvider.notifier)
+                  .setFullScreenOpen(isOpen: false);
               Navigator.of(context).pop();
             },
             tooltip: 'Minimize',
@@ -191,7 +194,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 14),
                       color: ThemeHelpers.getSecondaryTextColor(context),
                     ),
                   ),
@@ -203,7 +207,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             LyricsLanguageSelector(
               trackId: track.id,
               currentLanguage: _currentLyricsLanguage,
-              onLanguageChanged: (String languageCode) {
+              onLanguageChanged: (languageCode) {
                 setState(() {
                   _currentLyricsLanguage = languageCode;
                 });
@@ -214,7 +218,7 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             IconButton(
               icon: Icon(
                 _showLyrics ? Icons.album : Icons.lyrics,
-                color: _showLyrics 
+                color: _showLyrics
                     ? ThemeHelpers.getSecondaryTextColor(context)
                     : ThemeHelpers.getPrimaryColor(context),
               ),
@@ -245,7 +249,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             ),
             boxShadow: [
               BoxShadow(
-                color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.3),
+                color:
+                    ThemeHelpers.getShadowColor(context).withValues(alpha: 0.3),
                 blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 30),
                 offset: Offset(
                   0,
@@ -310,7 +315,8 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
             children: [
               Slider(
                 value: duration.inMilliseconds > 0
-                    ? position.inMilliseconds.clamp(0, duration.inMilliseconds)
+                    ? position.inMilliseconds
+                        .clamp(0, duration.inMilliseconds)
                         .toDouble()
                     : 0.0,
                 max: duration.inMilliseconds > 0
@@ -342,14 +348,16 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
                     Text(
                       _formatDuration(position),
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: ThemeHelpers.getSecondaryTextColor(context),
                       ),
                     ),
                     Text(
                       _formatDuration(duration),
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 12),
                         color: ThemeHelpers.getSecondaryTextColor(context),
                       ),
                     ),
@@ -424,4 +432,3 @@ class _NowPlayingScreenState extends ConsumerState<NowPlayingScreen>
     }
   }
 }
-

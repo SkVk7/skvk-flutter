@@ -4,24 +4,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/language/translation_service.dart';
-import '../common/modern_button.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/common/modern_button.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Profile Completion Dialog - Dialog shown when user needs to complete profile
 @immutable
 class ProfileCompletionDialog extends StatelessWidget {
+  const ProfileCompletionDialog({
+    required this.translationService,
+    required this.onCompleteProfile,
+    super.key,
+    this.onSkip,
+  });
   final TranslationService translationService;
   final VoidCallback onCompleteProfile;
   final VoidCallback? onSkip;
-
-  const ProfileCompletionDialog({
-    super.key,
-    required this.translationService,
-    required this.onCompleteProfile,
-    this.onSkip,
-  });
 
   static void show(
     BuildContext context,
@@ -41,10 +40,9 @@ class ProfileCompletionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate responsive dimensions based on screen size and aspect ratio
     final dialogWidth = ResponsiveSystem.dialogWidth(context);
     final dialogPadding = ResponsiveSystem.dialogPadding(context);
-    
+
     return Dialog(
       backgroundColor: Colors.transparent,
       child: Container(
@@ -81,7 +79,8 @@ class ProfileCompletionDialog extends StatelessWidget {
                       fallback: 'Complete Your Profile',
                     ),
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 18),
                       fontWeight: FontWeight.bold,
                       color: ThemeHelpers.getPrimaryTextColor(context),
                     ),
@@ -89,7 +88,7 @@ class ProfileCompletionDialog extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             // Content
             Padding(
               padding: EdgeInsets.only(
@@ -108,7 +107,7 @@ class ProfileCompletionDialog extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Actions Row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,7 +116,8 @@ class ProfileCompletionDialog extends StatelessWidget {
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.only(
-                        right: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                        right:
+                            ResponsiveSystem.spacing(context, baseSpacing: 8),
                       ),
                       child: OutlinedButton(
                         onPressed: () {
@@ -127,21 +127,27 @@ class ProfileCompletionDialog extends StatelessWidget {
                         style: OutlinedButton.styleFrom(
                           padding: ResponsiveSystem.symmetric(
                             context,
-                            horizontal: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                            vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                            horizontal: ResponsiveSystem.spacing(context,
+                                baseSpacing: 16,),
+                            vertical: ResponsiveSystem.spacing(context,
+                                baseSpacing: 12,),
                           ),
                           side: BorderSide(
                             color: ThemeHelpers.getSecondaryTextColor(context),
-                            width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
+                            width: ResponsiveSystem.borderWidth(context,
+                                baseWidth: 1,),
                           ),
                           shape: RoundedRectangleBorder(
-                            borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
+                            borderRadius: ResponsiveSystem.circular(context,
+                                baseRadius: 8,),
                           ),
                         ),
                         child: Text(
-                          translationService.translateContent('close', fallback: 'Close'),
+                          translationService.translateContent('close',
+                              fallback: 'Close',),
                           style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                            fontSize: ResponsiveSystem.fontSize(context,
+                                baseSize: 14,),
                             fontWeight: FontWeight.w600,
                             color: ThemeHelpers.getSecondaryTextColor(context),
                           ),
@@ -152,7 +158,7 @@ class ProfileCompletionDialog extends StatelessWidget {
                 Expanded(
                   child: Padding(
                     padding: EdgeInsets.only(
-                      left: onSkip != null 
+                      left: onSkip != null
                           ? ResponsiveSystem.spacing(context, baseSpacing: 8)
                           : 0,
                     ),
@@ -166,7 +172,8 @@ class ProfileCompletionDialog extends StatelessWidget {
                         Navigator.of(context).pop();
                         onCompleteProfile();
                       },
-                      height: ResponsiveSystem.buttonHeight(context, baseHeight: 40),
+                      height: ResponsiveSystem.buttonHeight(context,
+                          baseHeight: 40,),
                     ),
                   ),
                 ),
@@ -178,4 +185,3 @@ class ProfileCompletionDialog extends StatelessWidget {
     );
   }
 }
-

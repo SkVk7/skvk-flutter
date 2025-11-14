@@ -11,13 +11,13 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/services/language/language_service.dart';
+import 'package:skvk_application/core/services/language/language_service.dart';
 
 class AstrologyNameService {
-  static final AstrologyNameService _instance =
-      AstrologyNameService._internal();
   factory AstrologyNameService() => _instance;
   AstrologyNameService._internal();
+  static final AstrologyNameService _instance =
+      AstrologyNameService._internal();
 
   // Tithi names (1-30)
   static const Map<int, Map<SupportedLanguage, String>> _tithiNames = {
@@ -616,7 +616,6 @@ class AstrologyNameService {
   }
 }
 
-// Provider for astrology name service
 final astrologyNameServiceProvider = Provider<AstrologyNameService>((ref) {
   return AstrologyNameService();
 });

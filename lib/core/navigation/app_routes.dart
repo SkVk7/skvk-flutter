@@ -5,20 +5,25 @@
 library;
 
 import 'package:flutter/material.dart';
-
-// Screen imports
-import '../../ui/screens/home_screen.dart' as home_screen;
-import '../../ui/screens/pradakshana_screen.dart' as pradakshana_screen;
-import '../../ui/screens/user_profile_screen.dart' as user_screen;
-import '../../ui/screens/user_edit_screen.dart' as edit_user_screen;
-import '../../ui/screens/matching_screen.dart' as matching_screen;
-import '../../ui/screens/horoscope_screen.dart' as horoscope_screen;
-import '../../ui/screens/calendar_screen.dart' as calendar_screen;
-import '../../ui/screens/predictions_screen.dart' as predictions_screen;
-import '../../ui/screens/audio_screen.dart' as audio_screen;
+import 'package:skvk_application/ui/screens/audio_screen.dart' as audio_screen;
+import 'package:skvk_application/ui/screens/calendar_screen.dart'
+    as calendar_screen;
+import 'package:skvk_application/ui/screens/home_screen.dart' as home_screen;
+import 'package:skvk_application/ui/screens/horoscope_screen.dart'
+    as horoscope_screen;
+import 'package:skvk_application/ui/screens/matching_screen.dart'
+    as matching_screen;
+import 'package:skvk_application/ui/screens/pradakshana_screen.dart'
+    as pradakshana_screen;
+import 'package:skvk_application/ui/screens/predictions_screen.dart'
+    as predictions_screen;
+import 'package:skvk_application/ui/screens/user_edit_screen.dart'
+    as edit_user_screen;
+import 'package:skvk_application/ui/screens/user_profile_screen.dart'
+    as user_screen;
 
 /// App route definitions
-/// 
+///
 /// This map is used throughout the app to ensure consistent routing
 class AppRoutes {
   /// Route path constants
@@ -35,7 +40,7 @@ class AppRoutes {
   static const String settings = '/settings';
 
   /// Get all route definitions
-  /// 
+  ///
   /// Returns a map of route paths to their corresponding widget builders
   static Map<String, Widget Function(BuildContext)> getRoutes() {
     return {
@@ -63,4 +68,3 @@ class AppRoutes {
     };
   }
 }
-

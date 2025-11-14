@@ -3,21 +3,10 @@
 /// Domain interface for horoscope operations
 library;
 
-import '../../../utils/either.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// Horoscope data entity
 class HoroscopeData {
-  final String nakshatram;
-  final int pada;
-  final String raasi;
-  final String luckyNumber;
-  final String luckyColor;
-  final String currentDasha;
-  final String upcomingDasha;
-  final String generalPrediction;
-  final String careerPrediction;
-  final String healthPrediction;
-
   const HoroscopeData({
     required this.nakshatram,
     required this.pada,
@@ -30,6 +19,16 @@ class HoroscopeData {
     required this.careerPrediction,
     required this.healthPrediction,
   });
+  final String nakshatram;
+  final int pada;
+  final String raasi;
+  final String luckyNumber;
+  final String luckyColor;
+  final String currentDasha;
+  final String upcomingDasha;
+  final String generalPrediction;
+  final String careerPrediction;
+  final String healthPrediction;
 }
 
 /// Horoscope repository interface

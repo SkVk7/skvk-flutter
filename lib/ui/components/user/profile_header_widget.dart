@@ -5,27 +5,26 @@
 library;
 
 import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/services/user/profile_photo_provider.dart';
+import 'package:skvk_application/core/services/user/profile_photo_service.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
 import 'package:universal_html/html.dart' as html;
-import '../../../core/design_system/design_system.dart';
-import '../../../core/models/user/user_model.dart';
-import '../../../core/services/user/profile_photo_service.dart';
-import '../../../core/services/user/profile_photo_provider.dart';
-// UI Components - Reusable components
-import '../../components/common/index.dart';
 
 class ProfileHeaderWidget extends ConsumerStatefulWidget {
-  final UserModel? user;
-  final Function(String?)? onProfilePictureChanged;
-
   const ProfileHeaderWidget({
-    super.key,
     required this.user,
+    super.key,
     this.onProfilePictureChanged,
   });
+  final UserModel? user;
+  final Function(String?)? onProfilePictureChanged;
 
   @override
   ConsumerState<ProfileHeaderWidget> createState() =>
@@ -36,7 +35,6 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
   @override
   void initState() {
     super.initState();
-    // Initialize the provider if not already loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(profilePhotoNotifierProvider.notifier);
     });
@@ -44,7 +42,6 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize responsive sizing
     // ResponsiveSystem.init(context); // Removed - not needed
     final profilePhotoAsync = ref.watch(profilePhotoNotifierProvider);
 
@@ -74,7 +71,9 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                     blurRadius:
                         ResponsiveSystem.spacing(context, baseSpacing: 12),
                     offset: Offset(
-                        0, ResponsiveSystem.spacing(context, baseSpacing: 6)),
+                      0,
+                      ResponsiveSystem.spacing(context, baseSpacing: 6),
+                    ),
                   ),
                 ],
               ),
@@ -109,18 +108,25 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: ThemeHelpers.getSurfaceColor(context),
-                          width: ResponsiveSystem.borderWidth(context,
-                              baseWidth: 3),
+                          width: ResponsiveSystem.borderWidth(
+                            context,
+                            baseWidth: 3,
+                          ),
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: ThemeHelpers.getShadowColor(context),
-                            blurRadius: ResponsiveSystem.spacing(context,
-                                baseSpacing: 8),
+                            blurRadius: ResponsiveSystem.spacing(
+                              context,
+                              baseSpacing: 8,
+                            ),
                             offset: Offset(
-                                0,
-                                ResponsiveSystem.spacing(context,
-                                    baseSpacing: 4)),
+                              0,
+                              ResponsiveSystem.spacing(
+                                context,
+                                baseSpacing: 4,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -146,8 +152,7 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
               color: ThemeHelpers.getPrimaryTextColor(context)
-                  .withAlpha((0.8 * 255).round()),
-              fontWeight: FontWeight.w500,
+                  .withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -191,10 +196,11 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
         decoration: BoxDecoration(
           color: ThemeHelpers.getSurfaceColor(context),
           borderRadius: BorderRadius.vertical(
-              top: Radius.circular(
-                  ResponsiveSystem.borderRadius(context, baseRadius: 20))),
-          boxShadow:
-              ThemeHelpers.getElevatedShadows(context, elevation: 2.0),
+            top: Radius.circular(
+              ResponsiveSystem.borderRadius(context, baseRadius: 20),
+            ),
+          ),
+          boxShadow: ThemeHelpers.getElevatedShadows(context),
         ),
         padding:
             EdgeInsets.all(ResponsiveSystem.spacing(context, baseSpacing: 20)),
@@ -210,7 +216,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
               ),
             ),
             SizedBox(
-                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+              height: ResponsiveSystem.spacing(context, baseSpacing: 20),
+            ),
             Text(
               'Select Profile Picture',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -219,7 +226,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
                   ),
             ),
             SizedBox(
-                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+              height: ResponsiveSystem.spacing(context, baseSpacing: 20),
+            ),
             Wrap(
               alignment: WrapAlignment.center,
               spacing: ResponsiveSystem.spacing(context, baseSpacing: 12),
@@ -255,7 +263,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
               ],
             ),
             SizedBox(
-                height: ResponsiveSystem.spacing(context, baseSpacing: 20)),
+              height: ResponsiveSystem.spacing(context, baseSpacing: 20),
+            ),
           ],
         ),
       ),
@@ -282,7 +291,6 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
   Future<void> _pickImage(BuildContext context, ImageSource source) async {
     try {
-      // Check if running on web
       if (kIsWeb) {
         await _showWebImagePicker(context);
         return;
@@ -297,20 +305,17 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
       );
 
       if (image != null) {
-        // Save image to app directory
         final String? savedPath =
             await ProfilePhotoService.saveImageToAppDirectory(image.path);
         if (savedPath != null) {
-          // Save path to SharedPreferences
           await ProfilePhotoService.saveProfilePhotoPath(savedPath);
-          // Update the global provider state
           ref
               .read(profilePhotoNotifierProvider.notifier)
               .updatePhotoPath(savedPath);
           widget.onProfilePictureChanged?.call(savedPath);
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -330,7 +335,7 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
         // For mobile apps, use ImagePicker as fallback
         await _pickImage(context, ImageSource.gallery);
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -344,11 +349,10 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
   Future<void> _pickImageFromWeb() async {
     try {
-      // Create a file input element
       final html.FileUploadInputElement uploadInput =
-          html.FileUploadInputElement();
-      uploadInput.accept = 'image/*';
-      uploadInput.click();
+          html.FileUploadInputElement()
+            ..accept = 'image/*'
+            ..click();
 
       // Listen for file selection
       uploadInput.onChange.listen((e) {
@@ -360,11 +364,8 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
           reader.onLoadEnd.listen((e) async {
             final result = reader.result;
             if (result != null) {
-              // Convert to data URL
               final dataUrl = result.toString();
-              // Save to SharedPreferences for persistence
               await ProfilePhotoService.saveProfilePhotoPath(dataUrl);
-              // Update the provider state
               ref
                   .read(profilePhotoNotifierProvider.notifier)
                   .updatePhotoPath(dataUrl);
@@ -375,14 +376,13 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
           reader.readAsDataUrl(file);
         }
       });
-    } catch (e) {
+    } on Exception {
       // Swallow errors silently in web file picker; log if needed
     }
   }
 
-  void _removeImage(BuildContext context) async {
+  Future<void> _removeImage(BuildContext context) async {
     await ProfilePhotoService.removeProfilePhoto();
-    // Update the provider state
     ref.read(profilePhotoNotifierProvider.notifier).clearPhoto();
     widget.onProfilePictureChanged?.call(null);
   }
@@ -403,8 +403,10 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
 
   Widget _buildDefaultAvatar(BuildContext context) {
     return Container(
-      width: ResponsiveSystem.spacing(context,
-          baseSpacing: 23), // Match the circle avatar radius
+      width: ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 23,
+      ), // Match the circle avatar radius
       height: ResponsiveSystem.spacing(context, baseSpacing: 23),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -412,8 +414,10 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
       ),
       child: Icon(
         Icons.face,
-        size: ResponsiveSystem.iconSize(context,
-            baseSize: 60), // Increased icon size
+        size: ResponsiveSystem.iconSize(
+          context,
+          baseSize: 60,
+        ), // Increased icon size
         color: ThemeHelpers.getSurfaceColor(context),
       ),
     );
@@ -429,10 +433,10 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
       children: [
         Container(
           padding: EdgeInsets.all(
-              ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.spacing(context, baseSpacing: 12),
+          ),
           decoration: BoxDecoration(
-            color: ThemeHelpers.getSurfaceColor(context)
-                .withAlpha((0.2 * 255).round()),
+            color: ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.2),
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           ),
           child: Icon(
@@ -455,7 +459,7 @@ class _ProfileHeaderWidgetState extends ConsumerState<ProfileHeaderWidget> {
           style: TextStyle(
             fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
             color: ThemeHelpers.getPrimaryTextColor(context)
-                .withAlpha((0.8 * 255).round()),
+                .withValues(alpha: 0.8),
           ),
         ),
       ],

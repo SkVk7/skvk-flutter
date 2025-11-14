@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// UI Utils - Use only these for consistency
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-// Core imports
-import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
-import '../../core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
-import '../utils/screen_handlers.dart';
-// UI Components - Reusable components
-import '../components/common/index.dart';
-import '../components/app_bar/index.dart';
-import '../components/dialogs/index.dart';
-// Core imports
-import '../../core/services/language/translation_service.dart';
-import '../../core/features/user/providers/user_provider.dart' as user_providers;
-import '../../core/utils/validation/profile_completion_checker.dart';
-import '../../core/utils/either.dart';
-import '../../core/models/user/user_model.dart';
-import '../../core/logging/logging_helper.dart';
-import '../../core/utils/astrology/horoscope_insights_generator.dart';
-import 'user_edit_screen.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:skvk_application/core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
+import 'package:skvk_application/core/features/user/providers/user_provider.dart'
+    as user_providers;
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/utils/astrology/horoscope_insights_generator.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/profile_completion_checker.dart';
+import 'package:skvk_application/ui/components/app_bar/index.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/dialogs/index.dart';
+import 'package:skvk_application/ui/screens/user_edit_screen.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 class HoroscopeScreen extends ConsumerStatefulWidget {
   const HoroscopeScreen({super.key});
@@ -66,12 +63,11 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
           _isLoading = false;
         });
 
-        // If profile is complete, generate horoscope
         if (_isProfileComplete && user != null && !_isDisposed) {
           await _generateHoroscope(user);
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted && !_isDisposed) {
         setState(() {
           _isProfileComplete = false;
@@ -89,9 +85,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
         _errorMessage = null;
       });
 
-      // First, try to get cached user birth chart data (from when user saved profile)
       final userService = ref.read(user_providers.userServiceProvider.notifier);
-      Map<String, dynamic>? birthData =
+      final Map<String, dynamic>? birthData =
           await userService.getFormattedAstrologyData();
 
       if (mounted && !_isDisposed) {
@@ -102,7 +97,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted && !_isDisposed) {
         setState(() {
           _isLoading = false;
@@ -131,16 +126,15 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     if (_isLoading) {
       return Scaffold(
         appBar: StandardAppBar(
-          title: translationService.translateHeader('horoscope_title',
-              fallback: 'Horoscope'),
-          showBackButton: true,
+          title: translationService.translateHeader(
+            'horoscope_title',
+            fallback: 'Horoscope',
+          ),
         ),
-        body: Container(
+        body: DecoratedBox(
           decoration: BoxDecoration(
             gradient: BackgroundGradients.getBackgroundGradient(
               isDark: Theme.of(context).brightness == Brightness.dark,
-              isEvening: false,
-              useSacredFire: false,
             ),
           ),
           child: const Center(
@@ -153,16 +147,15 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     if (!_isProfileComplete) {
       return Scaffold(
         appBar: StandardAppBar(
-          title: translationService.translateHeader('horoscope_title',
-              fallback: 'Horoscope'),
-          showBackButton: true,
+          title: translationService.translateHeader(
+            'horoscope_title',
+            fallback: 'Horoscope',
+          ),
         ),
-        body: Container(
+        body: DecoratedBox(
           decoration: BoxDecoration(
             gradient: BackgroundGradients.getBackgroundGradient(
               isDark: Theme.of(context).brightness == Brightness.dark,
-              isEvening: false,
-              useSacredFire: false,
             ),
           ),
           child: Center(
@@ -178,8 +171,10 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                   ),
                   ResponsiveSystem.sizedBox(context, height: 24),
                   Text(
-                    translationService.translateHeader('horoscope_title',
-                        fallback: 'Your Horoscope'),
+                    translationService.translateHeader(
+                      'horoscope_title',
+                      fallback: 'Your Horoscope',
+                    ),
                     style: TextStyle(
                       fontSize:
                           ResponsiveSystem.fontSize(context, baseSize: 24),
@@ -189,9 +184,11 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                   ),
                   ResponsiveSystem.sizedBox(context, height: 16),
                   Text(
-                    translationService.translateContent('horoscope_message',
-                        fallback:
-                            'Please complete your profile to view your personalized horoscope.'),
+                    translationService.translateContent(
+                      'horoscope_message',
+                      fallback:
+                          'Please complete your profile to view your personalized horoscope.',
+                    ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize:
@@ -202,8 +199,9 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                   ResponsiveSystem.sizedBox(context, height: 24),
                   ModernButton(
                     text: translationService.translateContent(
-                        'complete_profile',
-                        fallback: 'Complete Profile'),
+                      'complete_profile',
+                      fallback: 'Complete Profile',
+                    ),
                     onPressed: () {
                       Navigator.pushNamed(context, '/edit-profile');
                     },
@@ -217,12 +215,10 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     }
 
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: BackgroundGradients.getBackgroundGradient(
             isDark: Theme.of(context).brightness == Brightness.dark,
-            isEvening: false,
-            useSacredFire: false,
           ),
         ),
         child: CustomScrollView(
@@ -247,15 +243,15 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
               actions: [
                 // Language Dropdown Widget
                 LanguageDropdown(
-                  onLanguageChanged: (value) {
-                    LoggingHelper.logInfo('Language changed to: $value');
+                  onLanguageChanged: (value) async {
+                    await LoggingHelper.logInfo('Language changed to: $value');
                     ScreenHandlers.handleLanguageChange(ref, value);
                   },
                 ),
                 // Theme Dropdown Widget
                 ThemeDropdown(
-                  onThemeChanged: (value) {
-                    LoggingHelper.logInfo('Theme changed to: $value');
+                  onThemeChanged: (value) async {
+                    await LoggingHelper.logInfo('Theme changed to: $value');
                     ScreenHandlers.handleThemeChange(ref, value);
                   },
                 ),
@@ -278,8 +274,10 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
               ],
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
-                  translationService.translateHeader('horoscope_title',
-                      fallback: 'Horoscope'),
+                  translationService.translateHeader(
+                    'horoscope_title',
+                    fallback: 'Horoscope',
+                  ),
                   style: TextStyle(
                     fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
                     fontWeight: FontWeight.bold,
@@ -287,7 +285,6 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                   ),
                 ),
                 background: _buildHeroSection(),
-                collapseMode: CollapseMode.parallax,
               ),
             ),
             SliverToBoxAdapter(
@@ -318,7 +315,6 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
                         icon: Icons.error_outline,
                       ),
                     ] else ...[
-                      // Show loading state when data is being fetched
                       _buildBirthChartInfo(),
                       ResponsiveSystem.sizedBox(context, height: 16),
                       _buildRasiNakshatraInfo(),
@@ -344,7 +340,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(
+          const SectionTitle(
             title: 'Birth Chart Information',
             baseFontSize: 18,
           ),
@@ -390,7 +386,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       return InfoCard(
         child: Column(
           children: [
-            SectionTitle(
+            const SectionTitle(
               title: 'Rasi & Nakshatra Information',
               baseFontSize: 18,
             ),
@@ -413,7 +409,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(
+          const SectionTitle(
             title: 'Rasi & Nakshatra Information',
             baseFontSize: 18,
           ),
@@ -429,13 +425,15 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
           InfoRow(
             label: 'Rasi (Moon Sign)',
             value: _getRashiOrNakshatraName(
-                (_fixedBirthData!['rashi'] as Map<String, dynamic>?)),
+              _fixedBirthData!['rashi'] as Map<String, dynamic>?,
+            ),
             icon: Icons.nightlight_round,
           ),
           InfoRow(
             label: 'Nakshatra (Birth Star)',
             value: _getRashiOrNakshatraName(
-                (_fixedBirthData!['nakshatra'] as Map<String, dynamic>?)),
+              _fixedBirthData!['nakshatra'] as Map<String, dynamic>?,
+            ),
             icon: Icons.star,
           ),
           InfoRow(
@@ -446,26 +444,34 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
           ),
           InfoRow(
             label: 'Rasi Lord',
-            value: _getPlanetDisplayName((_fixedBirthData!['rashi']
-                as Map<String, dynamic>?)?['lord'] as String?),
+            value: _getPlanetDisplayName(
+              (_fixedBirthData!['rashi'] as Map<String, dynamic>?)?['lord']
+                  as String?,
+            ),
             icon: Icons.king_bed,
           ),
           InfoRow(
             label: 'Nakshatra Lord',
-            value: _getPlanetDisplayName((_fixedBirthData!['nakshatra']
-                as Map<String, dynamic>?)?['lord'] as String?),
+            value: _getPlanetDisplayName(
+              (_fixedBirthData!['nakshatra'] as Map<String, dynamic>?)?['lord']
+                  as String?,
+            ),
             icon: Icons.star_border,
           ),
           InfoRow(
             label: 'Element',
-            value: _getElementDisplayName((_fixedBirthData!['rashi']
-                as Map<String, dynamic>?)?['element'] as String?),
+            value: _getElementDisplayName(
+              (_fixedBirthData!['rashi'] as Map<String, dynamic>?)?['element']
+                  as String?,
+            ),
             icon: Icons.water_drop,
           ),
           InfoRow(
             label: 'Quality',
-            value: _getQualityDisplayName((_fixedBirthData!['rashi']
-                as Map<String, dynamic>?)?['quality'] as String?),
+            value: _getQualityDisplayName(
+              (_fixedBirthData!['rashi'] as Map<String, dynamic>?)?['quality']
+                  as String?,
+            ),
             icon: Icons.speed,
           ),
         ],
@@ -516,7 +522,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(
+          const SectionTitle(
             title: 'Your Personality & Traits',
             baseFontSize: 18,
           ),
@@ -529,11 +535,16 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
             ),
           ),
           ResponsiveSystem.sizedBox(context, height: 16),
-          _buildPersonalityInsight('Core Identity', HoroscopeInsightsGenerator.getSunInsight(_birthChart)),
-          _buildPersonalityInsight('Emotional Nature', HoroscopeInsightsGenerator.getMoonInsight(_birthChart)),
-          _buildPersonalityInsight('Energy & Drive', HoroscopeInsightsGenerator.getMarsInsight(_birthChart)),
-          _buildPersonalityInsight('Wisdom & Growth', HoroscopeInsightsGenerator.getJupiterInsight(_birthChart)),
-          _buildPersonalityInsight('Love & Relationships', HoroscopeInsightsGenerator.getVenusInsight(_birthChart)),
+          _buildPersonalityInsight('Core Identity',
+              HoroscopeInsightsGenerator.getSunInsight(_birthChart),),
+          _buildPersonalityInsight('Emotional Nature',
+              HoroscopeInsightsGenerator.getMoonInsight(_birthChart),),
+          _buildPersonalityInsight('Energy & Drive',
+              HoroscopeInsightsGenerator.getMarsInsight(_birthChart),),
+          _buildPersonalityInsight('Wisdom & Growth',
+              HoroscopeInsightsGenerator.getJupiterInsight(_birthChart),),
+          _buildPersonalityInsight('Love & Relationships',
+              HoroscopeInsightsGenerator.getVenusInsight(_birthChart),),
         ],
       ),
     );
@@ -581,7 +592,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(
+          const SectionTitle(
             title: 'Life Insights & Guidance',
             baseFontSize: 18,
           ),
@@ -594,10 +605,14 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
             ),
           ),
           ResponsiveSystem.sizedBox(context, height: 16),
-          _buildLifeInsight('Career & Success', HoroscopeInsightsGenerator.getCareerInsight(_birthChart)),
-          _buildLifeInsight('Relationships & Love', HoroscopeInsightsGenerator.getMarriageInsight(_birthChart)),
-          _buildLifeInsight('Wealth & Resources', HoroscopeInsightsGenerator.getWealthInsight(_birthChart)),
-          _buildLifeInsight('Health & Wellbeing', HoroscopeInsightsGenerator.getHealthInsight(_birthChart)),
+          _buildLifeInsight('Career & Success',
+              HoroscopeInsightsGenerator.getCareerInsight(_birthChart),),
+          _buildLifeInsight('Relationships & Love',
+              HoroscopeInsightsGenerator.getMarriageInsight(_birthChart),),
+          _buildLifeInsight('Wealth & Resources',
+              HoroscopeInsightsGenerator.getWealthInsight(_birthChart),),
+          _buildLifeInsight('Health & Wellbeing',
+              HoroscopeInsightsGenerator.getHealthInsight(_birthChart),),
         ],
       ),
     );
@@ -646,7 +661,7 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionTitle(
+          const SectionTitle(
             title: 'Current Influences',
             baseFontSize: 18,
           ),
@@ -659,9 +674,12 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
             ),
           ),
           ResponsiveSystem.sizedBox(context, height: 16),
-          _buildCurrentInsight('Rising Sign', HoroscopeInsightsGenerator.getAscendantInsight(_birthChart)),
-          _buildCurrentInsight('Current Focus', HoroscopeInsightsGenerator.getCurrentFocusInsight(_birthChart)),
-          _buildCurrentInsight('Best Time for Action', HoroscopeInsightsGenerator.getBestTimeInsight(_birthChart)),
+          _buildCurrentInsight('Rising Sign',
+              HoroscopeInsightsGenerator.getAscendantInsight(_birthChart),),
+          _buildCurrentInsight('Current Focus',
+              HoroscopeInsightsGenerator.getCurrentFocusInsight(_birthChart),),
+          _buildCurrentInsight('Best Time for Action',
+              HoroscopeInsightsGenerator.getBestTimeInsight(_birthChart),),
         ],
       ),
     );
@@ -691,13 +709,11 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     );
   }
 
-  // Note: All insight generation methods have been moved to HoroscopeInsightsGenerator
   // for better code reusability and maintainability
 
   // Helper methods for displaying astrological information
   String _getRashiOrNakshatraName(Map<String, dynamic>? data) {
     if (data == null) return 'Unknown';
-    // Check for both 'englishName' and 'name' fields for backward compatibility
     if (data.containsKey('englishName')) {
       return data['englishName'] as String? ?? 'Unknown';
     } else if (data.containsKey('name')) {
@@ -762,34 +778,44 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
     }
   }
 
-
   /// Handle profile icon tap - show popup if profile incomplete, otherwise navigate to profile
-  Future<void> _handleProfileTap(BuildContext context, WidgetRef ref,
-      TranslationService translationService) async {
+  Future<void> _handleProfileTap(
+    BuildContext context,
+    WidgetRef ref,
+    TranslationService translationService,
+  ) async {
+    if (!mounted) return;
     final currentContext = context;
     try {
       final userService = ref.read(user_providers.userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
+      if (!mounted) return;
       final user =
           ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Use ProfileCompletionChecker to determine if user has real profile data
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
-        // Show "Complete Your Profile" popup instead of directly navigating
-        _showProfileCompletionPopup(currentContext, translationService);
+        if (currentContext.mounted) {
+          _showProfileCompletionPopup(currentContext, translationService);
+        }
       } else {
-        // Navigate to profile view screen
-        _navigateToProfile(currentContext);
+        if (currentContext.mounted) {
+          _navigateToProfile(currentContext);
+        }
       }
-    } catch (e) {
+    } on Exception {
       // On error, show profile completion popup
-      _showProfileCompletionPopup(currentContext, translationService);
+      if (currentContext.mounted) {
+        _showProfileCompletionPopup(currentContext, translationService);
+      }
     }
   }
 
   /// Show profile completion popup
   void _showProfileCompletionPopup(
-      BuildContext context, TranslationService translationService) {
+    BuildContext context,
+    TranslationService translationService,
+  ) {
     showDialog(
       context: context,
       builder: (context) => ProfileCompletionDialog(
@@ -807,21 +833,29 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
 
   /// Navigate to user edit screen with hero animation
   void _navigateToUser(BuildContext context) {
-    // Get the screen size for positioning
     final screenSize = MediaQuery.of(context).size;
 
-    // Calculate approximate position of profile icon (top right)
     final sourcePosition = Offset(
       screenSize.width -
-          ResponsiveSystem.spacing(context,
-              baseSpacing: 60), // Approximate position of profile icon
-      ResponsiveSystem.spacing(context,
-          baseSpacing: 60), // Approximate Y position
+          ResponsiveSystem.spacing(
+            context,
+            baseSpacing: 60,
+          ), // Approximate position of profile icon
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 60,
+      ), // Approximate Y position
     );
     final sourceSize = Size(
-        ResponsiveSystem.spacing(context, baseSpacing: 40),
-        ResponsiveSystem.spacing(context,
-            baseSpacing: 40)); // Approximate size of profile icon
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 40,
+      ),
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 40,
+      ),
+    ); // Approximate size of profile icon
 
     // Use hero navigation with zoom-out effect from profile icon
     HeroNavigationWithRipple.pushWithRipple(
@@ -829,10 +863,8 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
       const UserEditScreen(),
       sourcePosition,
       sourceSize,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
       rippleColor: ThemeHelpers.getPrimaryColor(context),
-      rippleRadius: 100.0,
+      rippleRadius: 100,
     );
   }
 
@@ -843,14 +875,16 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
 
   Widget _buildHeroSection() {
     final primaryGradient = ThemeHelpers.getPrimaryGradient(context);
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
           bottomRight: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
         ),
       ),
       child: Container(
@@ -870,8 +904,10 @@ class _HoroscopeScreenState extends ConsumerState<HoroscopeScreen> {
               size: ResponsiveSystem.iconSize(context, baseSize: 40),
               color: ThemeHelpers.getPrimaryTextColor(context),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
 
             // Subtitle only (title is handled by SliverAppBar)
             Text(

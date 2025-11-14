@@ -8,18 +8,19 @@
 /// - App bar with title, theme, language, and profile
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async';
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-import '../utils/screen_handlers.dart';
-import '../components/counter/index.dart';
-import '../components/app_bar/standard_app_bar.dart';
-import '../components/dialogs/index.dart';
-import '../../core/services/language/translation_service.dart';
-import '../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/app_bar/standard_app_bar.dart';
+import 'package:skvk_application/ui/components/counter/index.dart';
+import 'package:skvk_application/ui/components/dialogs/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Pradakshana Counter Screen
 class PradakshanaScreen extends ConsumerStatefulWidget {
@@ -34,7 +35,7 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
   // State variables
   int _count = 0;
   bool _isButtonDisabled = false;
-  Duration _cooldownDuration = const Duration(seconds: 0);
+  Duration _cooldownDuration = Duration.zero;
   Timer? _cooldownTimer;
   DateTime? _lastTriggerTime;
   Duration _remainingCooldown = Duration.zero;
@@ -71,20 +72,24 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     );
 
     _countScaleAnimation = Tween<double>(
-      begin: 1.0,
+      begin: 1,
       end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _countAnimationController,
-      curve: Curves.elasticOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _countAnimationController,
+        curve: Curves.elasticOut,
+      ),
+    );
 
     _buttonScaleAnimation = Tween<double>(
-      begin: 1.0,
+      begin: 1,
       end: 0.95,
-    ).animate(CurvedAnimation(
-      parent: _buttonAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _buttonAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
@@ -95,14 +100,13 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     super.dispose();
   }
 
-  // Load persisted data
   Future<void> _loadPersistedData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedCount = prefs.getInt(_countKey) ?? 0;
       final savedCooldownSeconds = prefs.getInt(_cooldownKey) ?? 0;
       final savedLastTriggerTime = prefs.getString(_lastTriggerKey);
-      
+
       DateTime? lastTriggerTime;
       if (savedLastTriggerTime != null) {
         lastTriggerTime = DateTime.parse(savedLastTriggerTime);
@@ -115,8 +119,8 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
       });
 
       _calculateAndApplyDynamicCooldown();
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Failed to load persisted data: $e',
         error: e,
         stackTrace: stackTrace,
@@ -125,13 +129,12 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     }
   }
 
-  // Save count
   Future<void> _saveCount() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_countKey, _count);
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Failed to save count: $e',
         error: e,
         stackTrace: stackTrace,
@@ -140,13 +143,12 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     }
   }
 
-  // Save cooldown duration
   Future<void> _saveCooldownDuration() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_cooldownKey, _cooldownDuration.inSeconds);
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Failed to save cooldown duration: $e',
         error: e,
         stackTrace: stackTrace,
@@ -155,15 +157,15 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     }
   }
 
-  // Save last trigger time
   Future<void> _saveLastTriggerTime() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       if (_lastTriggerTime != null) {
-        await prefs.setString(_lastTriggerKey, _lastTriggerTime!.toIso8601String());
+        await prefs.setString(
+            _lastTriggerKey, _lastTriggerTime!.toIso8601String(),);
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Failed to save last trigger time: $e',
         error: e,
         stackTrace: stackTrace,
@@ -172,7 +174,6 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     }
   }
 
-  // Calculate dynamic cooldown
   void _calculateAndApplyDynamicCooldown() {
     if (_cooldownDuration.inSeconds == 0) {
       setState(() {
@@ -239,8 +240,6 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     _calculateAndApplyDynamicCooldown();
   }
 
-  // Note: _handleProfileTap has been moved to ScreenHandlers utility
-
   // Reset count
   Future<void> _resetCount() async {
     final translationService = ref.watch(translationServiceProvider);
@@ -269,7 +268,6 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
     );
   }
 
-  // Show time selector
   void _showTimeSelector() {
     showModalBottomSheet(
       context: context,
@@ -299,8 +297,8 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
           'pradakshana_counter',
           fallback: 'Pradakshana Counter',
         ),
-        showBackButton: true,
-        onProfileTap: () => ScreenHandlers.handleProfileTap(context, ref, translationService),
+        onProfileTap: () =>
+            ScreenHandlers.handleProfileTap(context, ref, translationService),
       ),
       body: SafeArea(
         child: Column(
@@ -351,7 +349,8 @@ class _PradakshanaScreenState extends ConsumerState<PradakshanaScreen>
                   // Plus button
                   CounterButtons(
                     onIncrement: _incrementCount,
-                    onDecrement: () {}, // No longer used, but kept for component compatibility
+                    onDecrement:
+                        () {}, // No longer used, but kept for component compatibility
                     isDisabled: _isButtonDisabled,
                     remainingCooldown: _remainingCooldown,
                     scaleAnimation: _buttonScaleAnimation,

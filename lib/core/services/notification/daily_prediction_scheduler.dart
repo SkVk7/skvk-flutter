@@ -5,31 +5,31 @@
 library;
 
 import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/services/astrology/astrology_service_bridge.dart';
+import 'package:skvk_application/core/services/notification/daily_prediction_notification_service.dart';
+import 'package:skvk_application/core/services/shared/cache_service.dart';
+import 'package:skvk_application/core/services/user/user_storage_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
 import 'package:workmanager/workmanager.dart';
-import '../../../core/utils/either.dart';
-import '../../../core/services/user/user_storage_service.dart';
-import '../../../core/services/astrology/astrology_service_bridge.dart';
-import 'daily_prediction_notification_service.dart';
-import '../../../core/services/shared/cache_service.dart';
 
 /// Daily prediction scheduler service
 class DailyPredictionScheduler {
-  static DailyPredictionScheduler? _instance;
-  static DailyPredictionScheduler get instance {
-    _instance ??= DailyPredictionScheduler._();
-    return _instance!;
-  }
-
   DailyPredictionScheduler._();
 
+  factory DailyPredictionScheduler.instance() {
+    return _instance ??= DailyPredictionScheduler._();
+  }
+  static DailyPredictionScheduler? _instance;
   static const String _lastFetchDateKey = 'daily_prediction_last_fetch_date';
   static const String _backgroundTaskName = 'dailyPredictionTask';
 
-  Connectivity? _connectivity;
+  late Connectivity? _connectivity;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   bool _isInitialized = false;
 
@@ -38,10 +38,8 @@ class DailyPredictionScheduler {
     if (_isInitialized) return;
 
     try {
-      // Initialize connectivity listener
       _connectivity = Connectivity();
 
-      // Initialize WorkManager for background tasks
       await Workmanager().initialize(
         callbackDispatcher,
         isInDebugMode: kDebugMode,
@@ -55,7 +53,7 @@ class DailyPredictionScheduler {
 
       _isInitialized = true;
       debugPrint('Daily prediction scheduler initialized');
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error initializing daily prediction scheduler: $e');
     }
   }
@@ -79,7 +77,7 @@ class DailyPredictionScheduler {
       );
 
       debugPrint('Daily prediction task scheduled at 5:30 AM');
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error scheduling daily task: $e');
     }
   }
@@ -89,7 +87,6 @@ class DailyPredictionScheduler {
     final now = DateTime.now();
     var nextRun = DateTime(now.year, now.month, now.day, 5, 30);
 
-    // If 5:30 AM has passed today, schedule for tomorrow
     if (now.isAfter(nextRun)) {
       nextRun = nextRun.add(const Duration(days: 1));
     }
@@ -100,37 +97,35 @@ class DailyPredictionScheduler {
   /// Listen to connectivity changes
   void _listenToConnectivity() {
     _connectivitySubscription = _connectivity!.onConnectivityChanged.listen(
-      (List<ConnectivityResult> results) async {
-        // Check if we have internet connection
+      (results) async {
         final hasInternet = results.any(
           (result) => result != ConnectivityResult.none,
         );
 
         if (hasInternet) {
-          // Check if user exists first
-          final userStorageService = UserStorageService.instance;
+          final userStorageService = UserStorageService.instance();
           await userStorageService.initialize();
           final userResult = await userStorageService.getCurrentUser();
           final user = ResultHelper.isSuccess(userResult)
-              ? ResultHelper.getValue(userResult)
+              // ignore: unnecessary_cast
+              ? ResultHelper.getValue(userResult) as UserModel?
               : null;
 
           if (user == null) {
             // No user - show create profile notification
-            await DailyPredictionNotificationService.instance
+            await DailyPredictionNotificationService.instance()
                 .showCreateProfileNotification();
             return;
           }
 
-          // Check if we've already fetched today
           final lastFetchDate = await _getLastFetchDate();
           final today = DateTime.now();
           final todayDate = DateTime(today.year, today.month, today.day);
 
           if (lastFetchDate == null || lastFetchDate.isBefore(todayDate)) {
-            // First internet connection of the day - fetch predictions
             debugPrint(
-                'First internet connection of the day - fetching daily predictions');
+              'First internet connection of the day - fetching daily predictions',
+            );
             await fetchAndNotifyDailyPrediction();
           }
         }
@@ -142,7 +137,6 @@ class DailyPredictionScheduler {
   /// Public method for background tasks
   Future<void> fetchAndNotifyDailyPrediction() async {
     try {
-      // Check if already fetched today
       final lastFetchDate = await _getLastFetchDate();
       final today = DateTime.now();
       final todayDate = DateTime(today.year, today.month, today.day);
@@ -153,34 +147,31 @@ class DailyPredictionScheduler {
       }
 
       // Invalidate old prediction caches when scheduler runs on a new day
-      // This ensures fresh data is fetched and old caches are cleaned up
       try {
-        final cacheService = CacheService.instance;
-        cacheService.clearByType(CacheType.predictions);
+        CacheService.instance().clearByType(CacheType.predictions);
         debugPrint('Old prediction caches invalidated for new day');
-      } catch (e) {
+      } on Exception catch (e) {
         debugPrint('Error invalidating old prediction caches: $e');
         // Continue even if cache invalidation fails
       }
 
-      // Get user data from storage (for background tasks)
-      final userStorageService = UserStorageService.instance;
+      final userStorageService = UserStorageService.instance();
       await userStorageService.initialize();
       final userResult = await userStorageService.getCurrentUser();
       final user = ResultHelper.isSuccess(userResult)
-          ? ResultHelper.getValue(userResult)
+          // ignore: unnecessary_cast
+          ? ResultHelper.getValue(userResult) as UserModel?
           : null;
 
       if (user == null) {
         debugPrint('No user data available for daily prediction');
-        // Show notification prompting user to create profile
-        await DailyPredictionNotificationService.instance
+        await DailyPredictionNotificationService.instance()
             .showCreateProfileNotification();
         return;
       }
 
       // Fetch daily prediction
-      final bridge = AstrologyServiceBridge.instance;
+      final bridge = AstrologyServiceBridge.instance();
       final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
         user.latitude,
         user.longitude,
@@ -199,18 +190,16 @@ class DailyPredictionScheduler {
         ayanamsha: user.ayanamsha,
       );
 
-      // Show notification
-      await DailyPredictionNotificationService.instance
+      await DailyPredictionNotificationService.instance()
           .showDailyPredictionNotification(
         predictions: predictions,
         userName: user.name,
       );
 
-      // Save fetch date
       await _saveLastFetchDate(todayDate);
 
       debugPrint('Daily prediction fetched and notification shown');
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error fetching daily prediction: $e');
     }
   }
@@ -224,7 +213,7 @@ class DailyPredictionScheduler {
         return DateTime.fromMillisecondsSinceEpoch(timestamp);
       }
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error getting last fetch date: $e');
       return null;
     }
@@ -235,7 +224,7 @@ class DailyPredictionScheduler {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_lastFetchDateKey, date.millisecondsSinceEpoch);
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error saving last fetch date: $e');
     }
   }
@@ -260,14 +249,13 @@ void callbackDispatcher() {
       debugPrint('Background task executed: $task');
 
       if (task == 'dailyPredictionTask') {
-        // Initialize scheduler and fetch prediction
-        final scheduler = DailyPredictionScheduler.instance;
+        final scheduler = DailyPredictionScheduler.instance();
         await scheduler.fetchAndNotifyDailyPrediction();
         return Future.value(true);
       }
 
       return Future.value(false);
-    } catch (e) {
+    } on Exception catch (e) {
       debugPrint('Error in background task: $e');
       return Future.value(false);
     }
@@ -277,5 +265,5 @@ void callbackDispatcher() {
 /// Provider for daily prediction scheduler
 final dailyPredictionSchedulerProvider =
     Provider<DailyPredictionScheduler>((ref) {
-  return DailyPredictionScheduler.instance;
+  return DailyPredictionScheduler.instance();
 });

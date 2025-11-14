@@ -7,12 +7,26 @@ library;
 
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/audio/track.dart';
-import 'global_audio_player_controller.dart';
-import 'models/lyric_line.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
+import 'package:skvk_application/core/services/audio/models/lyric_line.dart';
 
 /// Player state for UI consumption
 class PlayerState {
+  const PlayerState({
+    this.currentTrack,
+    this.isPlaying = false,
+    this.isLoading = false,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
+    this.showMiniPlayer = false,
+    this.isFullScreenOpen = false,
+    this.errorMessage,
+    this.lyrics = const [],
+    this.repeatMode = RepeatMode.none,
+    this.playbackSpeed = 1.0,
+  });
+
   /// Current track being played
   final Track? currentTrack;
 
@@ -45,20 +59,6 @@ class PlayerState {
 
   /// Playback speed
   final double playbackSpeed;
-
-  const PlayerState({
-    this.currentTrack,
-    this.isPlaying = false,
-    this.isLoading = false,
-    this.position = Duration.zero,
-    this.duration = Duration.zero,
-    this.showMiniPlayer = false,
-    this.isFullScreenOpen = false,
-    this.errorMessage,
-    this.lyrics = const [],
-    this.repeatMode = RepeatMode.none,
-    this.playbackSpeed = 1.0,
-  });
 
   PlayerState copyWith({
     Track? currentTrack,
@@ -97,12 +97,11 @@ class PlayerState {
 /// Manages all audio playback logic and state.
 /// Uses the existing GlobalAudioPlayerController under the hood.
 class AudioController extends StateNotifier<PlayerState> {
-  final GlobalAudioPlayerController _globalController;
-  StreamSubscription<AudioPlayerState>? _stateSubscription;
-
   AudioController(this._globalController) : super(const PlayerState()) {
     _initialize();
   }
+  final GlobalAudioPlayerController _globalController;
+  StreamSubscription<AudioPlayerState>? _stateSubscription;
 
   /// Initialize controller and listen to global player state
   void _initialize() {
@@ -110,7 +109,6 @@ class AudioController extends StateNotifier<PlayerState> {
     _stateSubscription = _globalController.stream.listen((globalState) {
       if (!mounted) return;
 
-      // Convert AudioTrack to Track
       final track = globalState.currentTrack != null
           ? Track(
               id: globalState.currentTrack!.id,
@@ -123,15 +121,13 @@ class AudioController extends StateNotifier<PlayerState> {
             )
           : null;
 
-      // Update local state
       // Determine if mini player should be shown:
       // - If track is cleared, hide mini player
       // - If it's a new track (different ID), show mini player (unless full screen is open)
       // - If it's the same track, preserve user preference (unless full screen is open)
       final isNewTrack = track != null && track.id != state.currentTrack?.id;
-      final shouldShowMiniPlayer = track != null 
-          ? (isNewTrack || state.showMiniPlayer) // Show for new tracks, or if user hasn't hidden it
-          : false;
+      final shouldShowMiniPlayer =
+          track != null && (isNewTrack || state.showMiniPlayer);
 
       state = state.copyWith(
         currentTrack: track,
@@ -143,7 +139,6 @@ class AudioController extends StateNotifier<PlayerState> {
         lyrics: globalState.lyrics,
         repeatMode: globalState.repeatMode,
         playbackSpeed: globalState.playbackSpeed,
-        // Hide mini player if full screen is open, otherwise respect logic above
         showMiniPlayer: shouldShowMiniPlayer && !state.isFullScreenOpen,
       );
     });
@@ -154,7 +149,6 @@ class AudioController extends StateNotifier<PlayerState> {
   /// Loads and plays the specified track. If a track is already playing,
   /// it will be replaced.
   Future<void> playTrack(Track track) async {
-    // Convert Track to AudioTrack
     final audioTrack = AudioTrack(
       id: track.id,
       title: track.title,
@@ -186,10 +180,8 @@ class AudioController extends StateNotifier<PlayerState> {
   /// If queue service is available, moves to next track.
   /// Otherwise does nothing.
   Future<void> next() async {
-    // Check if queue service is available
     // The global controller handles queue logic internally
     // For now, we'll rely on the global controller's queue handling
-    // This can be extended if needed
   }
 
   /// Play previous track in queue
@@ -219,7 +211,6 @@ class AudioController extends StateNotifier<PlayerState> {
   ///
   /// Note: Shuffle functionality depends on queue service implementation
   void toggleShuffle() {
-    // This would need to be implemented in the queue service
     // For now, it's a placeholder
   }
 
@@ -238,18 +229,16 @@ class AudioController extends StateNotifier<PlayerState> {
   }
 
   /// Show or hide mini player
-  void showMiniPlayer(bool show) {
-    // Only hide if full screen is not open (full screen takes precedence)
+  void showMiniPlayer({required bool show}) {
     if (!show && state.isFullScreenOpen) return;
     state = state.copyWith(showMiniPlayer: show && state.hasTrack);
   }
 
   /// Set full screen player open state
-  void setFullScreenOpen(bool isOpen) {
+  void setFullScreenOpen({required bool isOpen}) {
     state = state.copyWith(
       isFullScreenOpen: isOpen,
-      // Hide mini player when full screen is open, show it when closing (if track exists)
-      showMiniPlayer: isOpen ? false : state.hasTrack,
+      showMiniPlayer: !isOpen && state.hasTrack,
     );
   }
 
@@ -281,4 +270,3 @@ final audioControllerProvider =
   final globalController = ref.watch(globalAudioPlayerProvider.notifier);
   return AudioController(globalController);
 });
-

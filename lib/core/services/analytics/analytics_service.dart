@@ -7,16 +7,12 @@ library;
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
-import '../../../core/config/app_config.dart';
+import 'package:skvk_application/core/config/app_config.dart';
 
 /// Analytics Service
 ///
 /// Provides methods to track user interactions and retrieve analytics data.
 class AnalyticsService {
-  static AnalyticsService? _instance;
-  final String baseUrl;
-  final http.Client _client;
-
   AnalyticsService._({
     required this.baseUrl,
     required http.Client client,
@@ -27,7 +23,6 @@ class AnalyticsService {
     String? baseUrl,
     http.Client? client,
   }) {
-    // Get Workers URL from config (to be added to AppConfig)
     final workersUrl = baseUrl ?? AppConfig.current.workersBaseUrl;
     return AnalyticsService._(
       baseUrl: workersUrl,
@@ -36,10 +31,12 @@ class AnalyticsService {
   }
 
   /// Get singleton instance
-  static AnalyticsService get instance {
-    _instance ??= AnalyticsService.create();
-    return _instance!;
+  factory AnalyticsService.instance() {
+    return _instance ??= AnalyticsService.create();
   }
+  static AnalyticsService? _instance;
+  final String baseUrl;
+  final http.Client _client;
 
   /// Track audio play event
   Future<void> trackAudioPlay(String contentId) async {
@@ -172,7 +169,7 @@ class AnalyticsService {
           throw Exception('Analytics tracking timeout');
         },
       );
-    } catch (e) {
+    } on Exception catch (e) {
       // Silently fail - analytics shouldn't break the app
       developer.log('Analytics tracking failed: $e', name: 'AnalyticsService');
     }
@@ -199,11 +196,13 @@ class AnalyticsService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return List<Map<String, dynamic>>.from(data['mostPlayed'] ?? []);
       } else {
-        developer.log('Failed to get most played: ${response.statusCode}',
-            name: 'AnalyticsService');
+        developer.log(
+          'Failed to get most played: ${response.statusCode}',
+          name: 'AnalyticsService',
+        );
         return [];
       }
-    } catch (e) {
+    } on Exception catch (e) {
       developer.log('Error getting most played: $e', name: 'AnalyticsService');
       return [];
     }
@@ -212,8 +211,9 @@ class AnalyticsService {
   /// Get most visited books
   ///
   /// Returns list of most visited books sorted by view count
-  Future<List<Map<String, dynamic>>> getMostVisitedBooks(
-      {int limit = 10}) async {
+  Future<List<Map<String, dynamic>>> getMostVisitedBooks({
+    int limit = 10,
+  }) async {
     try {
       final response = await _client.get(
         Uri.parse('$baseUrl/api/analytics/most-visited-books?limit=$limit'),
@@ -232,13 +232,16 @@ class AnalyticsService {
         return List<Map<String, dynamic>>.from(data['mostVisited'] ?? []);
       } else {
         developer.log(
-            'Failed to get most visited books: ${response.statusCode}',
-            name: 'AnalyticsService');
+          'Failed to get most visited books: ${response.statusCode}',
+          name: 'AnalyticsService',
+        );
         return [];
       }
-    } catch (e) {
-      developer.log('Error getting most visited books: $e',
-          name: 'AnalyticsService');
+    } on Exception catch (e) {
+      developer.log(
+        'Error getting most visited books: $e',
+        name: 'AnalyticsService',
+      );
       return [];
     }
   }
@@ -255,7 +258,8 @@ class AnalyticsService {
       final url = Uri.parse('$baseUrl/api/analytics/trending?limit=$limit');
       final finalUrl = type != null
           ? url.replace(
-              queryParameters: {'limit': limit.toString(), 'type': type})
+              queryParameters: {'limit': limit.toString(), 'type': type},
+            )
           : url;
 
       final response = await _client.get(
@@ -274,11 +278,13 @@ class AnalyticsService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return List<Map<String, dynamic>>.from(data['trending'] ?? []);
       } else {
-        developer.log('Failed to get trending: ${response.statusCode}',
-            name: 'AnalyticsService');
+        developer.log(
+          'Failed to get trending: ${response.statusCode}',
+          name: 'AnalyticsService',
+        );
         return [];
       }
-    } catch (e) {
+    } on Exception catch (e) {
       developer.log('Error getting trending: $e', name: 'AnalyticsService');
       return [];
     }
@@ -305,13 +311,17 @@ class AnalyticsService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         return data;
       } else {
-        developer.log('Failed to get content stats: ${response.statusCode}',
-            name: 'AnalyticsService');
+        developer.log(
+          'Failed to get content stats: ${response.statusCode}',
+          name: 'AnalyticsService',
+        );
         return null;
       }
-    } catch (e) {
-      developer.log('Error getting content stats: $e',
-          name: 'AnalyticsService');
+    } on Exception catch (e) {
+      developer.log(
+        'Error getting content stats: $e',
+        name: 'AnalyticsService',
+      );
       return null;
     }
   }

@@ -6,25 +6,23 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/design_system/design_system.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
 
 class ProfileInfoCard extends ConsumerWidget {
+  const ProfileInfoCard({
+    required this.title,
+    required this.icon,
+    required this.children,
+    super.key,
+    this.onTap,
+  });
   final String title;
   final IconData icon;
   final List<Widget> children;
   final VoidCallback? onTap;
 
-  const ProfileInfoCard({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.children,
-    this.onTap,
-  });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Initialize responsive sizing
     // ResponsiveSystem.init(context); // Removed - not needed
 
     return Card(
@@ -38,7 +36,8 @@ class ProfileInfoCard extends ConsumerWidget {
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
         child: Container(
           padding: EdgeInsets.all(
-              ResponsiveSystem.spacing(context, baseSpacing: 16)),
+            ResponsiveSystem.spacing(context, baseSpacing: 16),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -47,12 +46,15 @@ class ProfileInfoCard extends ConsumerWidget {
                 children: [
                   Container(
                     padding: EdgeInsets.all(
-                        ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                      ResponsiveSystem.spacing(context, baseSpacing: 8),
+                    ),
                     decoration: BoxDecoration(
                       color: ThemeHelpers.getPrimaryColor(context)
-                          .withAlpha((0.1 * 255).round()),
-                      borderRadius: ResponsiveSystem.circular(context,
-                          baseRadius: 8),
+                          .withValues(alpha: 0.1),
+                      borderRadius: ResponsiveSystem.circular(
+                        context,
+                        baseRadius: 8,
+                      ),
                     ),
                     child: Icon(
                       icon,
@@ -61,8 +63,8 @@ class ProfileInfoCard extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(
-                      width:
-                          ResponsiveSystem.spacing(context, baseSpacing: 12)),
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+                  ),
                   Expanded(
                     child: Text(
                       title,
@@ -84,7 +86,8 @@ class ProfileInfoCard extends ConsumerWidget {
               ),
 
               SizedBox(
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+              ),
 
               // Content
               ...children,

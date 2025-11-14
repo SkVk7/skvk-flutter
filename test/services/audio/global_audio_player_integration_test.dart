@@ -7,7 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
 import 'package:skvk_application/core/services/audio/player_queue_service.dart';
-import 'package:skvk_application/core/services/audio/models/track.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
 
 void main() {
   group('GlobalAudioPlayerController Integration', () {
@@ -38,8 +38,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: 'https://example.com/cover1.jpg',
           sourceUrl: 'https://example.com/audio1.mp3',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];
@@ -50,7 +48,6 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
       
       // Verify player state reflects queue
-      final playerState = container.read(globalAudioPlayerProvider);
       // Note: Actual track loading requires audio URL, so we just verify integration
       expect(queueService.currentTrack?.id, '1');
     });
@@ -65,8 +62,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
         Track(
@@ -77,8 +72,6 @@ void main() {
           duration: const Duration(minutes: 4),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];

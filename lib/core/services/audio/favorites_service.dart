@@ -7,28 +7,28 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Favorites Service - Manages favorites with persistence
 class FavoritesService extends StateNotifier<Set<String>> {
-  static const String _favoritesKey = 'audio_favorites';
-
   FavoritesService() : super({}) {
     _loadFavorites();
   }
+  static const String _favoritesKey = 'audio_favorites';
 
   /// Load favorites from storage
   Future<void> _loadFavorites() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getString(_favoritesKey);
-      
+
       if (favoritesJson != null) {
         final List<dynamic> decoded = jsonDecode(favoritesJson);
         state = decoded.map((id) => id as String).toSet();
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to load favorites', source: 'FavoritesService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to load favorites',
+          source: 'FavoritesService', error: e,);
       state = {};
     }
   }
@@ -39,8 +39,9 @@ class FavoritesService extends StateNotifier<Set<String>> {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = jsonEncode(state.toList());
       await prefs.setString(_favoritesKey, favoritesJson);
-    } catch (e) {
-      LoggingHelper.logError('Failed to save favorites', source: 'FavoritesService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to save favorites',
+          source: 'FavoritesService', error: e,);
     }
   }
 
@@ -91,4 +92,3 @@ final favoritesServiceProvider =
     StateNotifierProvider<FavoritesService, Set<String>>((ref) {
   return FavoritesService();
 });
-

@@ -3,9 +3,11 @@
 /// Service for managing user profile photos
 library;
 
+import 'dart:developer' as developer;
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePhotoService {
   static const String _profilePhotoKey = 'profile_photo_path';
@@ -39,8 +41,8 @@ class ProfilePhotoService {
 
       await sourceFile.copy(destinationPath);
       return destinationPath;
-    } catch (e) {
-      print('Error saving image: $e');
+    } on Exception catch (e) {
+      developer.log('Error saving image: $e', name: 'ProfilePhotoService');
       return null;
     }
   }
@@ -50,7 +52,7 @@ class ProfilePhotoService {
     final String? photoPath = await getProfilePhotoPath();
     if (photoPath != null) {
       final File photoFile = File(photoPath);
-      if (await photoFile.exists()) {
+      if (photoFile.existsSync()) {
         return photoFile;
       }
     }
@@ -67,7 +69,7 @@ class ProfilePhotoService {
       }
       // For file paths (mobile), check if file exists
       final File photoFile = File(photoPath);
-      return await photoFile.exists();
+      return photoFile.existsSync();
     }
     return false;
   }

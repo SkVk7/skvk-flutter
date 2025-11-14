@@ -62,21 +62,21 @@ Future<String> getBookMobile(String url) async {
       // Try to parse error JSON for better error message
       try {
         final errorData = jsonDecode(errorBody) as Map<String, dynamic>?;
-        final errorMessage = errorData?['error'] ?? errorData?['message'] ?? 'Unknown error';
+        final errorMessage =
+            errorData?['error'] ?? errorData?['message'] ?? 'Unknown error';
         throw Exception('API error: $errorMessage (${response.statusCode})');
-      } catch (_) {
+      } on Exception catch (_) {
         throw Exception('API error: ${response.statusCode} - $errorBody');
       }
     }
 
     // Read response body (automatically decompressed by HttpClient)
     final bookJson = await response.transform(utf8.decoder).join();
-    
-    // Check if response is empty
+
     if (bookJson.isEmpty) {
       throw Exception('Book file is empty or not found');
     }
-    
+
     return bookJson;
   } finally {
     client.close();

@@ -5,15 +5,31 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../common/index.dart';
-import '../../../core/services/language/translation_service.dart';
-import '../../../core/logging/logging_helper.dart';
-import '../../utils/screen_handlers.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Sliver App Bar with Hero Section - Reusable SliverAppBar with hero background
 class SliverAppBarWithHero extends ConsumerWidget {
+  const SliverAppBarWithHero({
+    required this.title,
+    super.key,
+    this.subtitle,
+    this.titleIcon,
+    this.heroBackground,
+    this.expandedHeight,
+    this.floating = true,
+    this.pinned = true,
+    this.snap = true,
+    this.leadingIcon,
+    this.onLeadingTap,
+    this.onProfileTap,
+    this.onLanguageChanged,
+    this.onThemeChanged,
+  });
   final String title;
   final String? subtitle;
   final IconData? titleIcon;
@@ -28,30 +44,13 @@ class SliverAppBarWithHero extends ConsumerWidget {
   final Function(String)? onLanguageChanged;
   final Function(String)? onThemeChanged;
 
-  const SliverAppBarWithHero({
-    super.key,
-    required this.title,
-    this.subtitle,
-    this.titleIcon,
-    this.heroBackground,
-    this.expandedHeight,
-    this.floating = true,
-    this.pinned = true,
-    this.snap = true,
-    this.leadingIcon,
-    this.onLeadingTap,
-    this.onProfileTap,
-    this.onLanguageChanged,
-    this.onThemeChanged,
-  });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final translationService = ref.watch(translationServiceProvider);
 
     return SliverAppBar(
-      expandedHeight: expandedHeight ??
-          ResponsiveSystem.spacing(context, baseSpacing: 250),
+      expandedHeight:
+          expandedHeight ?? ResponsiveSystem.spacing(context, baseSpacing: 250),
       floating: floating,
       pinned: pinned,
       snap: snap,
@@ -79,8 +78,8 @@ class SliverAppBarWithHero extends ConsumerWidget {
       actions: [
         // Language Dropdown Widget
         LanguageDropdown(
-          onLanguageChanged: (value) {
-            LoggingHelper.logInfo('Language changed to: $value');
+          onLanguageChanged: (value) async {
+            await LoggingHelper.logInfo('Language changed to: $value');
             if (onLanguageChanged != null) {
               onLanguageChanged!(value);
             } else {
@@ -90,8 +89,8 @@ class SliverAppBarWithHero extends ConsumerWidget {
         ),
         // Theme Dropdown Widget
         ThemeDropdown(
-          onThemeChanged: (value) {
-            LoggingHelper.logInfo('Theme changed to: $value');
+          onThemeChanged: (value) async {
+            await LoggingHelper.logInfo('Theme changed to: $value');
             if (onThemeChanged != null) {
               onThemeChanged!(value);
             } else {
@@ -121,12 +120,8 @@ class SliverAppBarWithHero extends ConsumerWidget {
       flexibleSpace: heroBackground != null
           ? FlexibleSpaceBar(
               background: heroBackground,
-              collapseMode: CollapseMode.parallax,
-              stretchModes: const [StretchMode.zoomBackground],
             )
           : null,
     );
   }
-
 }
-

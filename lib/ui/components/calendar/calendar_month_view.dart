@@ -4,36 +4,37 @@
 /// with current day highlighted and basic calendar information
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../../core/design_system/design_system.dart';
-import '../../../core/services/language/translation_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'day_view_popup.dart';
-import '../../../core/services/astrology/astrology_service_bridge.dart';
-import '../../../core/services/location/simple_location_service.dart';
-import '../../../core/utils/astrology/timezone_util.dart';
-import '../../../core/services/astrology/astrology_name_service.dart';
-import '../../../core/services/language/language_service.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/astrology/astrology_name_service.dart';
+import 'package:skvk_application/core/services/astrology/astrology_service_bridge.dart';
+import 'package:skvk_application/core/services/language/language_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/location/simple_location_service.dart';
+import 'package:skvk_application/core/utils/astrology/timezone_util.dart';
+import 'package:skvk_application/ui/components/calendar/day_view_popup.dart';
 
 class CalendarMonthView extends ConsumerStatefulWidget {
+  const CalendarMonthView({
+    required this.currentMonth,
+    required this.selectedDate,
+    required this.onDateSelected,
+    required this.latitude,
+    required this.longitude,
+    super.key,
+    this.ayanamsha = 'lahiri',
+  });
   final DateTime currentMonth;
   final DateTime selectedDate;
   final Function(DateTime) onDateSelected;
   final double latitude;
   final double longitude;
   final String ayanamsha;
-
-  const CalendarMonthView({
-    super.key,
-    required this.currentMonth,
-    required this.selectedDate,
-    required this.onDateSelected,
-    required this.latitude,
-    required this.longitude,
-    this.ayanamsha = 'lahiri',
-  });
 
   @override
   ConsumerState<CalendarMonthView> createState() => _CalendarMonthViewState();
@@ -64,12 +65,14 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
 
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _animationController.forward();
   }
@@ -83,7 +86,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
   /// Show detailed day view popup for the selected date
   void _showDetailedDayView(BuildContext context, DateTime date) {
-    // Check if month data is still loading
     if (_isMonthDataLoading) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -97,17 +99,21 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     // Find the day data from already cached month data
     Map<String, dynamic>? dayData;
 
-    LoggingHelper.logDebug(
-      '_monthData is null: ${_monthData == null}, _isMonthDataLoading: $_isMonthDataLoading',
-      source: 'CalendarMonthView',
+    unawaited(
+      LoggingHelper.logDebug(
+        '_monthData is null: ${_monthData == null}, _isMonthDataLoading: $_isMonthDataLoading',
+        source: 'CalendarMonthView',
+      ),
     );
 
     if (_monthData != null) {
       final daysRaw = _monthData!['days'];
       final days = _convertToListOfMaps(daysRaw);
-      LoggingHelper.logDebug(
-        'Month data has ${days.length} days, looking for day ${date.day} in month ${date.month}',
-        source: 'CalendarMonthView',
+      unawaited(
+        LoggingHelper.logDebug(
+          'Month data has ${days.length} days, looking for day ${date.day} in month ${date.month}',
+          source: 'CalendarMonthView',
+        ),
       );
 
       try {
@@ -121,27 +127,32 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         );
         // Transform nested API response to flat structure expected by DayViewPopup
         dayData = _flattenDayData(rawDayData);
-        LoggingHelper.logDebug(
-          'Found day data: ${dayData['tithiName'] ?? 'N/A'}',
-          source: 'CalendarMonthView',
+        unawaited(
+          LoggingHelper.logDebug(
+            'Found day data: ${dayData['tithiName'] ?? 'N/A'}',
+            source: 'CalendarMonthView',
+          ),
         );
-      } catch (e) {
-        LoggingHelper.logWarning(
-          'Day not found in cached data: $e',
-          source: 'CalendarMonthView',
+      } on Exception catch (e) {
+        unawaited(
+          LoggingHelper.logWarning(
+            'Day not found in cached data: $e',
+            source: 'CalendarMonthView',
+          ),
         );
         dayData = null;
       }
     } else {
-      LoggingHelper.logDebug(
-        'Month data is null, cannot extract day data',
-        source: 'CalendarMonthView',
+      unawaited(
+        LoggingHelper.logDebug(
+          'Month data is null, cannot extract day data',
+          source: 'CalendarMonthView',
+        ),
       );
     }
 
     showDialog(
       context: context,
-      barrierDismissible: true,
       builder: (context) => DayViewPopup(
         selectedDate: date,
         latitude: widget.latitude,
@@ -176,7 +187,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         _isMonthDataLoading = true;
       });
 
-      // Get device location with fallback to country-level location
       final locationService = SimpleLocationService();
       final locationResult =
           await locationService.getDeviceLocationWithFallback();
@@ -190,16 +200,14 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       final latitude = locationResult.latitude!;
       final longitude = locationResult.longitude!;
 
-      // Get timezone from device or use default
       await TimezoneUtil.initialize();
       final timezoneId = _getTimezoneId(latitude, longitude);
 
-      // Get region from location or use default
       final region = widget.ayanamsha; // Use ayanamsha as region identifier
 
       // Fetch calendar month data from API through bridge (handles timezone conversions)
       // Ayanamsha is required for accurate nakshatra, tithi, yoga, karana calculations (sidereal zodiac)
-      final bridge = AstrologyServiceBridge.instance;
+      final bridge = AstrologyServiceBridge.instance();
       final monthData = await bridge.getCalendarMonth(
         year: widget.currentMonth.year,
         month: widget.currentMonth.month,
@@ -216,13 +224,13 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
           _isMonthDataLoading = false;
         });
       }
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       if (mounted) {
         setState(() {
           _isMonthDataLoading = false;
         });
       }
-      LoggingHelper.logError(
+      await LoggingHelper.logError(
         'Error loading month data: $e',
         error: e,
         stackTrace: stackTrace,
@@ -256,7 +264,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
       // Default to India timezone
       return 'Asia/Kolkata';
-    } catch (e) {
+    } on Exception {
       return 'Asia/Kolkata'; // Default fallback
     }
   }
@@ -286,13 +294,12 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   @override
   Widget build(BuildContext context) {
     final firstDayOfMonth =
-        DateTime(widget.currentMonth.year, widget.currentMonth.month, 1);
+        DateTime(widget.currentMonth.year, widget.currentMonth.month);
     final lastDayOfMonth =
         DateTime(widget.currentMonth.year, widget.currentMonth.month + 1, 0);
     final firstDayOfWeek = firstDayOfMonth.weekday;
     final daysInMonth = lastDayOfMonth.day;
 
-    // Calculate total cells needed (including empty cells for days before month starts)
     final totalCells = firstDayOfWeek - 1 + daysInMonth;
     final weeks = (totalCells / 7).ceil();
 
@@ -318,11 +325,9 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                   ? _buildLoadingState(context)
                   : LayoutBuilder(
                       builder: (context, constraints) {
-                        // Calculate responsive cell size based on available space
                         final availableWidth = constraints.maxWidth;
                         final availableHeight = constraints.maxHeight;
 
-                        // Calculate cell dimensions based on available space
                         final spacing =
                             ResponsiveSystem.spacing(context, baseSpacing: 4);
                         final cellWidth = (availableWidth - (6 * spacing)) / 7;
@@ -332,7 +337,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                         // Use the smaller dimension to maintain square cells
                         final cellSize =
                             cellWidth < cellHeight ? cellWidth : cellHeight;
-                        final aspectRatio = 1.0; // Square cells
 
                         return GridView.builder(
                           controller: _scrollController,
@@ -342,7 +346,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                             crossAxisCount: 7,
                             crossAxisSpacing: spacing,
                             mainAxisSpacing: spacing,
-                            childAspectRatio: aspectRatio,
                           ),
                           itemCount: weeks * 7,
                           itemBuilder: (context, index) {
@@ -351,8 +354,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                               return const SizedBox.shrink();
                             }
                             final day = dayIndex + 1;
-                            final date = DateTime(widget.currentMonth.year,
-                                widget.currentMonth.month, day);
+                            final date = DateTime(
+                              widget.currentMonth.year,
+                              widget.currentMonth.month,
+                              day,
+                            );
 
                             return _buildDayCell(context, date, day, cellSize);
                           },
@@ -379,7 +385,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
 
     return Row(
@@ -389,7 +395,9 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         IconButton(
           onPressed: () {
             final previousMonth = DateTime(
-                widget.currentMonth.year, widget.currentMonth.month - 1);
+              widget.currentMonth.year,
+              widget.currentMonth.month - 1,
+            );
             widget.onDateSelected(previousMonth);
           },
           icon: Icon(
@@ -424,7 +432,9 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         IconButton(
           onPressed: () {
             final nextMonth = DateTime(
-                widget.currentMonth.year, widget.currentMonth.month + 1);
+              widget.currentMonth.year,
+              widget.currentMonth.month + 1,
+            );
             widget.onDateSelected(nextMonth);
           },
           icon: Icon(
@@ -461,7 +471,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   }
 
   Widget _buildDayCell(
-      BuildContext context, DateTime date, int day, double cellSize) {
+    BuildContext context,
+    DateTime date,
+    int day,
+    double cellSize,
+  ) {
     final isSelected = date.day == widget.selectedDate.day &&
         date.month == widget.selectedDate.month &&
         date.year == widget.selectedDate.year;
@@ -482,18 +496,19 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                 ? ThemeHelpers.getPrimaryColor(context)
                 : isToday
                     ? ThemeHelpers.getPrimaryColor(context)
-                        .withAlpha((0.2 * 255).round())
+                        .withValues(alpha: 0.2)
                     : Colors.transparent,
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
             border: isToday && !isSelected
                 ? Border.all(
                     color: ThemeHelpers.getPrimaryColor(context),
-                    width: ResponsiveSystem.borderWidth(context, baseWidth: 2))
+                    width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
+                  )
                 : null,
             boxShadow: [
               BoxShadow(
-                color: ThemeHelpers.getShadowColor(context)
-                    .withAlpha((0.1 * 255).round()),
+                color:
+                    ThemeHelpers.getShadowColor(context).withValues(alpha: 0.1),
                 blurRadius: 2,
                 offset: const Offset(0, 1),
               ),
@@ -515,7 +530,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                               : isToday
                                   ? ThemeHelpers.getPrimaryColor(context)
                                   : ThemeHelpers.getPrimaryTextColor(
-                                      context),
+                                      context,
+                                    ),
                           fontWeight: isSelected || isToday
                               ? FontWeight.bold
                               : FontWeight.normal,
@@ -538,8 +554,11 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   }
 
   Widget _buildHinduInfo(
-      BuildContext context, DateTime date, bool isSelected, double cellSize) {
-    // Get current language and astrology name service
+    BuildContext context,
+    DateTime date,
+    bool isSelected,
+    double cellSize,
+  ) {
     final languagePrefs = ref.read(languageServiceProvider);
     final currentLanguage = languagePrefs.contentLanguage;
     final astrologyNameService = ref.read(astrologyNameServiceProvider);
@@ -560,7 +579,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     if (dayInfo.isNotEmpty) {
       final chips = <Widget>[];
 
-      // Get raw tithi value and convert to localized name
       String tithiRaw = '';
       if (dayInfo['tithi'] is Map) {
         final tithi = dayInfo['tithi'] as Map<String, dynamic>;
@@ -570,14 +588,16 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       }
       if (tithiRaw.isNotEmpty) {
         final tithiName = astrologyNameService.getTithiNameFromString(
-            tithiRaw, currentLanguage);
+          tithiRaw,
+          currentLanguage,
+        );
         if (tithiName.isNotEmpty) {
           chips.add(
-              _buildInfoChip(context, tithiName, isSelected, false, cellSize));
+            _buildInfoChip(context, tithiName, isSelected, false, cellSize),
+          );
         }
       }
 
-      // Get raw nakshatra value and convert to localized name
       String nakshatraRaw = '';
       if (dayInfo['nakshatra'] is Map) {
         final nakshatra = dayInfo['nakshatra'] as Map<String, dynamic>;
@@ -587,10 +607,19 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       }
       if (nakshatraRaw.isNotEmpty) {
         final nakshatraName = astrologyNameService.getNakshatraNameFromString(
-            nakshatraRaw, currentLanguage);
+          nakshatraRaw,
+          currentLanguage,
+        );
         if (nakshatraName.isNotEmpty) {
-          chips.add(_buildInfoChip(
-              context, nakshatraName, isSelected, false, cellSize));
+          chips.add(
+            _buildInfoChip(
+              context,
+              nakshatraName,
+              isSelected,
+              false,
+              cellSize,
+            ),
+          );
         }
       }
       final festivals = dayInfo['festivals'] as List<dynamic>? ?? [];
@@ -598,8 +627,15 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         final firstFestival = festivals.first as Map<String, dynamic>?;
         final festivalName = firstFestival?['name'] as String? ?? '';
         if (festivalName.isNotEmpty) {
-          chips.add(_buildInfoChip(
-              context, festivalName, isSelected, true, cellSize));
+          chips.add(
+            _buildInfoChip(
+              context,
+              festivalName,
+              isSelected,
+              true,
+              cellSize,
+            ),
+          );
         }
       }
       return Column(mainAxisSize: MainAxisSize.min, children: chips);
@@ -609,14 +645,15 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     return FutureBuilder<Map<String, dynamic>>(
       future: _getCalendarInfo(date),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null)
+        if (!snapshot.hasData || snapshot.data == null) {
           return const SizedBox.shrink();
+        }
         final data = snapshot.data!;
-        final tithi = data['tithi'] ?? '';
-        final nakshatra = data['nakshatra'] ?? '';
+        final tithi = data['tithi'] as String? ?? '';
+        final nakshatra = data['nakshatra'] as String? ?? '';
         final festivals = data['festivals'] as List<dynamic>? ?? [];
-        final isAmavasya = data['isAmavasya'] ?? false;
-        final isPurnima = data['isPurnima'] ?? false;
+        final isAmavasya = data['isAmavasya'] as bool? ?? false;
+        final isPurnima = data['isPurnima'] as bool? ?? false;
         if (tithi.isEmpty && festivals.isEmpty && !isAmavasya && !isPurnima) {
           return const SizedBox.shrink();
         }
@@ -628,14 +665,29 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
             if (nakshatra.isNotEmpty)
               _buildInfoChip(context, nakshatra, isSelected, false, cellSize),
             if (isAmavasya)
-              _buildSymbolChip(context, '🌑', _getTranslatedText('new_moon'),
-                  isSelected, cellSize),
+              _buildSymbolChip(
+                context,
+                '🌑',
+                _getTranslatedText('new_moon'),
+                isSelected,
+                cellSize,
+              ),
             if (isPurnima)
-              _buildSymbolChip(context, '🌕', _getTranslatedText('full_moon'),
-                  isSelected, cellSize),
+              _buildSymbolChip(
+                context,
+                '🌕',
+                _getTranslatedText('full_moon'),
+                isSelected,
+                cellSize,
+              ),
             if (festivals.isNotEmpty)
               _buildFestivalChip(
-                  context, festivals.first['name'] ?? '', isSelected, cellSize),
+                context,
+                (festivals.first as Map<String, dynamic>)['name'] as String? ??
+                    '',
+                isSelected,
+                cellSize,
+              ),
           ],
         );
       },
@@ -644,7 +696,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
   Future<Map<String, dynamic>> _getCalendarInfo(DateTime date) async {
     try {
-      // Get current language and astrology name service
       final languagePrefs = ref.read(languageServiceProvider);
       final currentLanguage = languagePrefs.contentLanguage;
       final astrologyNameService = ref.read(astrologyNameServiceProvider);
@@ -665,7 +716,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         );
 
         if (dayData.isNotEmpty) {
-          // Get raw tithi and nakshatra values
           String tithiRaw = '';
           String nakshatraRaw = '';
 
@@ -688,14 +738,17 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
                 '';
           }
 
-          // Convert to localized names
           final tithiName = tithiRaw.isNotEmpty
               ? astrologyNameService.getTithiNameFromString(
-                  tithiRaw, currentLanguage)
+                  tithiRaw,
+                  currentLanguage,
+                )
               : '';
           final nakshatraName = nakshatraRaw.isNotEmpty
               ? astrologyNameService.getNakshatraNameFromString(
-                  nakshatraRaw, currentLanguage)
+                  nakshatraRaw,
+                  currentLanguage,
+                )
               : '';
 
           return {
@@ -707,8 +760,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
           };
         }
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError(
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
         'Error getting calendar info: $e',
         error: e,
         stackTrace: stackTrace,
@@ -716,7 +769,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       );
     }
 
-    // Return empty data if not found
     return {
       'tithi': '',
       'nakshatra': '',
@@ -727,8 +779,13 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   }
 
   // Helper methods for building info chips
-  Widget _buildInfoChip(BuildContext context, String text, bool isSelected,
-      bool isImportant, double cellSize) {
+  Widget _buildInfoChip(
+    BuildContext context,
+    String text,
+    bool isSelected,
+    bool isImportant,
+    double cellSize,
+  ) {
     return Container(
       margin:
           EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
@@ -740,10 +797,8 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
         color: isSelected
             ? ThemeHelpers.getSurfaceColor(context)
             : isImportant
-                ? ThemeHelpers.getPrimaryColor(context)
-                    .withAlpha((0.2 * 255).round())
-                : ThemeHelpers.getPrimaryColor(context)
-                    .withAlpha((0.1 * 255).round()),
+                ? ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.2)
+                : ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(cellSize * 0.03), // 3% of cell size
       ),
       child: Text(
@@ -762,8 +817,13 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
   }
 
-  Widget _buildSymbolChip(BuildContext context, String symbol, String tooltip,
-      bool isSelected, double cellSize) {
+  Widget _buildSymbolChip(
+    BuildContext context,
+    String symbol,
+    String tooltip,
+    bool isSelected,
+    double cellSize,
+  ) {
     return Container(
       margin:
           EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
@@ -774,8 +834,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeHelpers.getSurfaceColor(context)
-            : ThemeHelpers.getPrimaryColor(context)
-                .withAlpha((0.2 * 255).round()),
+            : ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(cellSize * 0.03), // 3% of cell size
       ),
       child: Text(
@@ -791,8 +850,12 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     );
   }
 
-  Widget _buildFestivalChip(BuildContext context, String festivalName,
-      bool isSelected, double cellSize) {
+  Widget _buildFestivalChip(
+    BuildContext context,
+    String festivalName,
+    bool isSelected,
+    double cellSize,
+  ) {
     return Container(
       margin:
           EdgeInsets.symmetric(vertical: cellSize * 0.01), // 1% of cell size
@@ -803,8 +866,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeHelpers.getSurfaceColor(context)
-            : ThemeHelpers.getSecondaryColor(context)
-                .withAlpha((0.2 * 255).round()),
+            : ThemeHelpers.getSecondaryColor(context).withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(cellSize * 0.03), // 3% of cell size
       ),
       child: Text(
@@ -830,11 +892,12 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
 
     final translationService = ref.read(translationServiceProvider);
 
-    // Get festival abbreviation based on user's language preference
     final festivalKey =
         'festival_${festivalName.toLowerCase().replaceAll(' ', '_')}';
-    final translatedFestival = translationService.translate(festivalKey,
-        fallback: festivalName.substring(0, maxLength));
+    final translatedFestival = translationService.translate(
+      festivalKey,
+      fallback: festivalName.substring(0, maxLength),
+    );
 
     return translatedFestival;
   }
@@ -863,7 +926,7 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     if (value is String) {
       try {
         return DateTime.parse(value);
-      } catch (e) {
+      } on Exception {
         return null;
       }
     }
@@ -877,7 +940,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
   Map<String, dynamic> _flattenDayData(Map<String, dynamic> rawDayData) {
     final flattened = <String, dynamic>{};
 
-    // Get current language and astrology name service
     final languagePrefs = ref.read(languageServiceProvider);
     final currentLanguage = languagePrefs.contentLanguage;
     final astrologyNameService = ref.read(astrologyNameServiceProvider);
@@ -891,9 +953,10 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       final tithi =
           Map<String, dynamic>.from(tithiValue.cast<String, dynamic>());
       final tithiNameRaw = tithi['name'] as String? ?? '';
-      // Convert "Tithi 11" or "11" to localized name
       flattened['tithiName'] = astrologyNameService.getTithiNameFromString(
-          tithiNameRaw, currentLanguage);
+        tithiNameRaw,
+        currentLanguage,
+      );
     }
 
     // Extract nakshatra name and convert to localized name
@@ -902,7 +965,6 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       final nakshatra =
           Map<String, dynamic>.from(nakshatraValue.cast<String, dynamic>());
       final nakshatraNameRaw = nakshatra['name'] as String? ?? '';
-      // Convert "Nakshatra 11" or "11" to localized name
       flattened['nakshatraName'] = astrologyNameService
           .getNakshatraNameFromString(nakshatraNameRaw, currentLanguage);
     }
@@ -912,9 +974,10 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
     if (yogaValue is Map) {
       final yoga = Map<String, dynamic>.from(yogaValue.cast<String, dynamic>());
       final yogaNameRaw = yoga['name'] as String? ?? '';
-      // Convert "Yoga 11" or "11" to localized name
       flattened['yogaName'] = astrologyNameService.getYogaNameFromString(
-          yogaNameRaw, currentLanguage);
+        yogaNameRaw,
+        currentLanguage,
+      );
     }
 
     // Extract karana name and convert to localized name
@@ -923,9 +986,10 @@ class _CalendarMonthViewState extends ConsumerState<CalendarMonthView>
       final karana =
           Map<String, dynamic>.from(karanaValue.cast<String, dynamic>());
       final karanaNameRaw = karana['name'] as String? ?? '';
-      // Convert "Karana 11" or "11" to localized name
       flattened['karanaName'] = astrologyNameService.getKaranaNameFromString(
-          karanaNameRaw, currentLanguage);
+        karanaNameRaw,
+        currentLanguage,
+      );
     }
 
     // Extract paksha (if available, otherwise derive from tithi)

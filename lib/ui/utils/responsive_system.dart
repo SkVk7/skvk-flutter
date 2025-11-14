@@ -46,10 +46,10 @@ enum ScreenSize {
 
 /// Centralized responsive system
 class ResponsiveSystem {
-  static ResponsiveSystem? _instance;
-  static ResponsiveSystem get instance => _instance ??= ResponsiveSystem._();
-
   ResponsiveSystem._();
+
+  factory ResponsiveSystem.instance() => _instance ??= ResponsiveSystem._();
+  static ResponsiveSystem? _instance;
 
   /// Get screen size category
   /// Considers both width and aspect ratio for better responsiveness
@@ -58,12 +58,12 @@ class ResponsiveSystem {
     final width = size.width;
     final height = size.height;
     final aspectRatio = width / height;
-    
+
     // Consider aspect ratio: wider screens (landscape) get adjusted categories
     // Tall screens (portrait) use standard categories
     final isLandscape = aspectRatio > 1.0;
     final isVeryWide = aspectRatio > 2.0; // Ultra-wide or foldable devices
-    
+
     if (width < ResponsiveBreakpoints.mobile) {
       // For very wide mobile screens in landscape, treat as tablet
       if (isVeryWide && isLandscape) return ScreenSize.tablet;
@@ -109,17 +109,17 @@ class ResponsiveSystem {
     return EdgeInsets.symmetric(
       horizontal: responsive(
         context,
-        mobile: 16.0,
-        tablet: 24.0,
-        desktop: 32.0,
-        largeDesktop: 48.0,
+        mobile: 16,
+        tablet: 24,
+        desktop: 32,
+        largeDesktop: 48,
       ),
       vertical: responsive(
         context,
-        mobile: 8.0,
-        tablet: 12.0,
-        desktop: 16.0,
-        largeDesktop: 20.0,
+        mobile: 8,
+        tablet: 12,
+        desktop: 16,
+        largeDesktop: 20,
       ),
     );
   }
@@ -129,10 +129,10 @@ class ResponsiveSystem {
     return EdgeInsets.all(
       responsive(
         context,
-        mobile: 8.0,
-        tablet: 12.0,
-        desktop: 16.0,
-        largeDesktop: 20.0,
+        mobile: 8,
+        tablet: 12,
+        desktop: 16,
+        largeDesktop: 20,
       ),
     );
   }
@@ -330,7 +330,7 @@ class ResponsiveSystem {
   static double aspectRatio(BuildContext context) {
     return ResponsiveSystem.responsive(
       context,
-      mobile: 1.0,
+      mobile: 1,
       tablet: 1.2,
       desktop: 1.4,
       largeDesktop: 1.6,
@@ -365,14 +365,11 @@ class ResponsiveSystem {
     final width = size.width;
     final height = size.height;
     final aspectRatio = width / height;
-    
-    // Get base scale from screen size category
+
     final baseScale = _getBaseScaleFactor(screenSize);
-    
-    // Calculate dynamic scale adjustment based on aspect ratio
-    // This makes the UI adapt to the actual screen shape, not just width
-    double aspectRatioAdjustment = 1.0;
-    
+
+    double aspectRatioAdjustment = 1;
+
     if (aspectRatio < 0.6) {
       // Very tall screens (portrait phones, aspectRatio < 0.6)
       // Reduce scale slightly to fit more content vertically
@@ -398,20 +395,20 @@ class ResponsiveSystem {
       aspectRatioAdjustment = 1.04;
     }
     // For aspectRatio 1.0-1.3 (square to slightly wide), use 1.0 (no adjustment)
-    
-    // Also consider screen density for better scaling
+
     final pixelRatio = MediaQuery.of(context).devicePixelRatio;
-    final densityAdjustment = pixelRatio > 3.0 ? 1.05 : (pixelRatio > 2.0 ? 1.02 : 1.0);
-    
+    final densityAdjustment =
+        pixelRatio > 3.0 ? 1.05 : (pixelRatio > 2.0 ? 1.02 : 1.0);
+
     // Combine all factors: base scale × aspect ratio adjustment × density adjustment
     return baseScale * aspectRatioAdjustment * densityAdjustment;
   }
-  
+
   /// Get base scale factor for screen size category
   static double _getBaseScaleFactor(ScreenSize screenSize) {
     switch (screenSize) {
       case ScreenSize.mobile:
-        return 1.0;
+        return 1;
       case ScreenSize.tablet:
         return 1.1;
       case ScreenSize.desktop:
@@ -429,8 +426,7 @@ class ResponsiveSystem {
     final width = size.width;
     final height = size.height;
     final aspectRatio = width / height;
-    
-    // Calculate outer padding based on screen dimensions and aspect ratio
+
     // For wider screens, use more padding; for taller screens, use less
     double outerPadding;
     if (aspectRatio > 2.0) {
@@ -446,27 +442,27 @@ class ResponsiveSystem {
       // Portrait or square - use smaller padding
       outerPadding = width * 0.08; // 8% of width
     }
-    
+
     // Ensure minimum padding
     final minPadding = responsive(
       context,
-      mobile: 16.0,
-      tablet: 24.0,
-      desktop: 32.0,
-      largeDesktop: 48.0,
+      mobile: 16,
+      tablet: 24,
+      desktop: 32,
+      largeDesktop: 48,
     );
-    outerPadding = outerPadding < minPadding ? minPadding : outerPadding;
-    
-    // Calculate dialog width: screen width - (padding * 2)
+    outerPadding =
+        outerPadding < minPadding ? minPadding.toDouble() : outerPadding;
+
     final dialogWidth = width - (outerPadding * 2);
-    
+
     // Ensure minimum and maximum dialog widths
     final minWidth = responsive(
       context,
-      mobile: 280.0,
-      tablet: 320.0,
-      desktop: 400.0,
-      largeDesktop: 480.0,
+      mobile: 280,
+      tablet: 320,
+      desktop: 400,
+      largeDesktop: 480,
     );
     final maxWidth = responsive(
       context,
@@ -475,9 +471,9 @@ class ResponsiveSystem {
       desktop: width * 0.75,
       largeDesktop: width * 0.65,
     );
-    
-    if (dialogWidth < minWidth) return minWidth;
-    if (dialogWidth > maxWidth) return maxWidth;
+
+    if (dialogWidth < minWidth) return minWidth.toDouble();
+    if (dialogWidth > maxWidth) return maxWidth.toDouble();
     return dialogWidth;
   }
 
@@ -487,8 +483,7 @@ class ResponsiveSystem {
     final dialogWidth = ResponsiveSystem.dialogWidth(context);
     final size = MediaQuery.of(context).size;
     final aspectRatio = size.width / size.height;
-    
-    // Calculate inner padding as percentage of dialog width
+
     // Adjust based on aspect ratio
     double paddingPercentage;
     if (aspectRatio > 2.0) {
@@ -498,22 +493,27 @@ class ResponsiveSystem {
     } else {
       paddingPercentage = 0.05; // 5% for normal/portrait screens
     }
-    
+
     final horizontalPadding = dialogWidth * paddingPercentage;
-    final verticalPadding = horizontalPadding * 0.8; // Slightly less vertical padding
-    
+    final verticalPadding =
+        horizontalPadding * 0.8; // Slightly less vertical padding
+
     // Ensure minimum padding
     final minPadding = responsive(
       context,
-      mobile: 16.0,
-      tablet: 20.0,
-      desktop: 24.0,
-      largeDesktop: 28.0,
+      mobile: 16,
+      tablet: 20,
+      desktop: 24,
+      largeDesktop: 28,
     );
-    
+
     return EdgeInsets.symmetric(
-      horizontal: horizontalPadding < minPadding ? minPadding : horizontalPadding,
-      vertical: verticalPadding < minPadding * 0.8 ? minPadding * 0.8 : verticalPadding,
+      horizontal: horizontalPadding < minPadding
+          ? minPadding.toDouble()
+          : horizontalPadding,
+      vertical: verticalPadding < minPadding * 0.8
+          ? (minPadding * 0.8).toDouble()
+          : verticalPadding,
     );
   }
 
@@ -527,30 +527,31 @@ class ResponsiveSystem {
   }) {
     final dialogWidth = ResponsiveSystem.dialogWidth(context);
     final padding = ResponsiveSystem.dialogPadding(context);
-    final spacing = spacingBetween ?? ResponsiveSystem.spacing(context, baseSpacing: 12);
-    
-    // Available width = dialog width - (horizontal padding * 2) - (spacing between buttons * (buttonCount - 1))
+    final spacing =
+        spacingBetween ?? ResponsiveSystem.spacing(context, baseSpacing: 12);
+
+    // Available width = dialog width - (horizontal padding * 2) - (spacing between buttons * (buttonCount - 1)
     // Subtract a small buffer (4px per button) to account for rounding errors and ensure buttons fit
     final buffer = buttonCount * 4.0;
-    final availableWidth = dialogWidth - 
-        (padding.horizontal * 2) - 
-        (spacing * (buttonCount - 1)) - 
+    final availableWidth = dialogWidth -
+        (padding.horizontal * 2) -
+        (spacing * (buttonCount - 1)) -
         buffer;
-    
-    // Button width = available width / button count
-    // This width will be used for the SizedBox, and the button's internal padding is inside this width
+
     final buttonWidth = availableWidth / buttonCount;
-    
+
     // Ensure minimum button width
     final minButtonWidth = responsive(
       context,
-      mobile: 100.0,
-      tablet: 120.0,
-      desktop: 140.0,
-      largeDesktop: 160.0,
+      mobile: 100,
+      tablet: 120,
+      desktop: 140,
+      largeDesktop: 160,
     );
-    
-    return buttonWidth < minButtonWidth ? minButtonWidth : buttonWidth;
+
+    return buttonWidth < minButtonWidth
+        ? minButtonWidth.toDouble()
+        : buttonWidth;
   }
 
   /// Get responsive action button constraints for dialogs
@@ -565,7 +566,7 @@ class ResponsiveSystem {
       buttonCount: buttonCount,
       spacingBetween: spacingBetween,
     );
-    
+
     return BoxConstraints(
       minWidth: buttonWidth,
       maxWidth: buttonWidth,
@@ -576,23 +577,21 @@ class ResponsiveSystem {
 /// Responsive widget that adapts to screen size
 /// Automatically rebuilds when screen size changes (browser resize, split screen, etc.)
 class ResponsiveWidget extends StatelessWidget {
+  const ResponsiveWidget({
+    required this.mobile,
+    super.key,
+    this.tablet,
+    this.desktop,
+    this.largeDesktop,
+  });
   final Widget mobile;
   final Widget? tablet;
   final Widget? desktop;
   final Widget? largeDesktop;
 
-  const ResponsiveWidget({
-    super.key,
-    required this.mobile,
-    this.tablet,
-    this.desktop,
-    this.largeDesktop,
-  });
-
   @override
   Widget build(BuildContext context) {
     // MediaQuery.of(context) automatically triggers rebuilds when screen size changes
-    // This ensures seamless readjustment during browser resize, split screen, etc.
     return ResponsiveSystem.responsive(
       context,
       mobile: mobile,
@@ -606,12 +605,12 @@ class ResponsiveWidget extends StatelessWidget {
 /// Responsive builder that rebuilds automatically when screen size changes
 /// Use this for widgets that need to respond to dynamic screen size changes
 class ResponsiveBuilder extends StatelessWidget {
-  final Widget Function(BuildContext context, ScreenSize screenSize, Size screenDimensions, double aspectRatio) builder;
-
   const ResponsiveBuilder({
-    super.key,
     required this.builder,
+    super.key,
   });
+  final Widget Function(BuildContext context, ScreenSize screenSize,
+      Size screenDimensions, double aspectRatio,) builder;
 
   @override
   Widget build(BuildContext context) {
@@ -619,8 +618,7 @@ class ResponsiveBuilder extends StatelessWidget {
     final size = MediaQuery.of(context).size;
     final screenSize = ResponsiveSystem.getScreenSize(context);
     final aspectRatio = size.width / size.height;
-    
-    // This widget rebuilds automatically when screen dimensions change
+
     // Perfect for browser resize, split screen, orientation changes, etc.
     return builder(context, screenSize, size, aspectRatio);
   }
@@ -629,24 +627,27 @@ class ResponsiveBuilder extends StatelessWidget {
 /// Layout builder that responds to screen size changes in real-time
 /// Provides smooth transitions during resize operations
 class ResponsiveLayoutBuilder extends StatelessWidget {
-  final Widget Function(BuildContext context, ScreenSize screenSize, Size screenDimensions, double aspectRatio, Orientation orientation) builder;
-
   const ResponsiveLayoutBuilder({
-    super.key,
     required this.builder,
+    super.key,
   });
+  final Widget Function(
+      BuildContext context,
+      ScreenSize screenSize,
+      Size screenDimensions,
+      double aspectRatio,
+      Orientation orientation,) builder;
 
   @override
   Widget build(BuildContext context) {
     // LayoutBuilder + MediaQuery ensures real-time updates during resize
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Get current screen dimensions (updates in real-time)
         final size = MediaQuery.of(context).size;
         final screenSize = ResponsiveSystem.getScreenSize(context);
         final aspectRatio = size.width / size.height;
         final orientation = MediaQuery.of(context).orientation;
-        
+
         // Rebuilds automatically when:
         // - Browser window is resized
         // - Split screen mode is activated/deactivated
@@ -660,22 +661,21 @@ class ResponsiveLayoutBuilder extends StatelessWidget {
 
 /// Responsive container with adaptive sizing
 class ResponsiveContainer extends StatelessWidget {
-  final Widget child;
-  final EdgeInsets? padding;
-  final EdgeInsets? margin;
-  final double? width;
-  final double? height;
-  final BoxDecoration? decoration;
-
   const ResponsiveContainer({
-    super.key,
     required this.child,
+    super.key,
     this.padding,
     this.margin,
     this.width,
     this.height,
     this.decoration,
   });
+  final Widget child;
+  final EdgeInsets? padding;
+  final EdgeInsets? margin;
+  final double? width;
+  final double? height;
+  final BoxDecoration? decoration;
 
   @override
   Widget build(BuildContext context) {
@@ -692,6 +692,16 @@ class ResponsiveContainer extends StatelessWidget {
 
 /// Responsive text widget
 class ResponsiveText extends StatelessWidget {
+  const ResponsiveText(
+    this.text, {
+    required this.baseFontSize,
+    super.key,
+    this.fontWeight,
+    this.color,
+    this.textAlign,
+    this.maxLines,
+    this.overflow,
+  });
   final String text;
   final double baseFontSize;
   final FontWeight? fontWeight;
@@ -699,17 +709,6 @@ class ResponsiveText extends StatelessWidget {
   final TextAlign? textAlign;
   final int? maxLines;
   final TextOverflow? overflow;
-
-  const ResponsiveText(
-    this.text, {
-    super.key,
-    required this.baseFontSize,
-    this.fontWeight,
-    this.color,
-    this.textAlign,
-    this.maxLines,
-    this.overflow,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -732,16 +731,15 @@ class ResponsiveText extends StatelessWidget {
 
 /// Responsive icon widget
 class ResponsiveIcon extends StatelessWidget {
+  const ResponsiveIcon(
+    this.icon, {
+    required this.baseSize,
+    super.key,
+    this.color,
+  });
   final IconData icon;
   final double baseSize;
   final Color? color;
-
-  const ResponsiveIcon(
-    this.icon, {
-    super.key,
-    required this.baseSize,
-    this.color,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -758,14 +756,13 @@ class ResponsiveIcon extends StatelessWidget {
 
 /// Responsive spacing widget
 class ResponsiveSpacing extends StatelessWidget {
-  final double baseSpacing;
-  final bool isVertical;
-
   const ResponsiveSpacing({
-    super.key,
     required this.baseSpacing,
+    super.key,
     this.isVertical = true,
   });
+  final double baseSpacing;
+  final bool isVertical;
 
   @override
   Widget build(BuildContext context) {
@@ -874,20 +871,26 @@ extension ResponsiveSystemExtensions on ResponsiveSystem {
   }
 
   /// Get responsive expanded height for SliverAppBar
-  static double expandedHeight(BuildContext context,
-      {double baseHeight = 120}) {
+  static double expandedHeight(
+    BuildContext context, {
+    double baseHeight = 120,
+  }) {
     return ResponsiveSystem.spacing(context, baseSpacing: baseHeight);
   }
 
   /// Get responsive content top padding to prevent overlap with SliverAppBar
-  static double contentTopPadding(BuildContext context,
-      {double basePadding = 20}) {
+  static double contentTopPadding(
+    BuildContext context, {
+    double basePadding = 20,
+  }) {
     return ResponsiveSystem.spacing(context, baseSpacing: basePadding);
   }
 
   /// Get responsive section spacing
-  static double sectionSpacing(BuildContext context,
-      {double baseSpacing = 40}) {
+  static double sectionSpacing(
+    BuildContext context, {
+    double baseSpacing = 40,
+  }) {
     return ResponsiveSystem.spacing(context, baseSpacing: baseSpacing);
   }
 
@@ -928,7 +931,7 @@ extension ResponsiveSystemExtensions on ResponsiveSystem {
 
   /// Get responsive text scale factor
   static double textScaleFactor(BuildContext context) {
-    return MediaQuery.of(context).textScaler.scale(1.0);
+    return MediaQuery.of(context).textScaler.scale(1);
   }
 
   /// Get responsive brightness

@@ -4,12 +4,13 @@
 /// Similar to production streaming apps like Spotify, Apple Music.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:async';
-import '../../../core/services/audio/audio_controller.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/core/services/audio/audio_controller.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Scrollable lyrics view widget with auto-scroll
 class LyricsView extends ConsumerStatefulWidget {
@@ -60,10 +61,10 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     if (!_scrollController.hasClients || _userScrolling) return;
     if (activeIndex < 0 || activeIndex >= totalLines) return;
 
-    // Calculate the position to scroll to (center the active line)
     final itemHeight = ResponsiveSystem.spacing(context, baseSpacing: 80);
     final screenHeight = MediaQuery.of(context).size.height;
-    final targetOffset = (activeIndex * itemHeight) - (screenHeight / 2) + (itemHeight / 2);
+    final targetOffset =
+        (activeIndex * itemHeight) - (screenHeight / 2) + (itemHeight / 2);
 
     // Smooth scroll to the active line
     _scrollController.animateTo(
@@ -87,7 +88,8 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
             Icon(
               Icons.music_note,
               size: ResponsiveSystem.iconSize(context, baseSize: 64),
-              color: ThemeHelpers.getSecondaryTextColor(context).withValues(alpha: 0.5),
+              color: ThemeHelpers.getSecondaryTextColor(context)
+                  .withValues(alpha: 0.5),
             ),
             ResponsiveSystem.sizedBox(
               context,
@@ -97,7 +99,8 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
               'No lyrics available',
               style: TextStyle(
                 fontSize: ResponsiveSystem.fontSize(context, baseSize: 18),
-                color: ThemeHelpers.getSecondaryTextColor(context).withValues(alpha: 0.7),
+                color: ThemeHelpers.getSecondaryTextColor(context)
+                    .withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -147,21 +150,28 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
             style: TextStyle(
               fontSize: ResponsiveSystem.fontSize(
                 context,
-                baseSize: isActive ? 22 : isPast ? 16 : 17,
+                baseSize: isActive
+                    ? 22
+                    : isPast
+                        ? 16
+                        : 17,
               ),
-              fontWeight: isActive ? FontWeight.bold : (isPast ? FontWeight.normal : FontWeight.w500),
+              fontWeight: isActive
+                  ? FontWeight.bold
+                  : (isPast ? FontWeight.normal : FontWeight.w500),
               color: isActive
                   ? ThemeHelpers.getPrimaryColor(context)
                   : isPast
-                      ? ThemeHelpers.getSecondaryTextColor(context).withValues(alpha: 0.6)
-                      : ThemeHelpers.getPrimaryTextColor(context).withValues(alpha: 0.8),
+                      ? ThemeHelpers.getSecondaryTextColor(context)
+                          .withValues(alpha: 0.6)
+                      : ThemeHelpers.getPrimaryTextColor(context)
+                          .withValues(alpha: 0.8),
               height: 1.8,
               letterSpacing: isActive ? 0.5 : 0.0,
             ),
             child: Text(
               lyric.text,
               textAlign: TextAlign.center,
-              maxLines: null,
             ),
           ),
         );
@@ -169,4 +179,3 @@ class _LyricsViewState extends ConsumerState<LyricsView> {
     );
   }
 }
-

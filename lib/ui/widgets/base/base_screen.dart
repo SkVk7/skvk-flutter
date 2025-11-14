@@ -6,11 +6,12 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../mixins/screen_base_mixin.dart';
-import '../../components/common/loading_widget.dart';
-import '../../components/common/error_widget.dart' as error_widget;
-import '../../../core/base/base_state.dart';
-import '../../../core/errors/failures.dart';
+import 'package:skvk_application/core/base/base_state.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/ui/components/common/error_widget.dart'
+    as error_widget;
+import 'package:skvk_application/ui/components/common/loading_widget.dart';
+import 'package:skvk_application/ui/mixins/screen_base_mixin.dart';
 
 /// Base screen widget with common functionality
 abstract class BaseScreen extends ConsumerStatefulWidget {
@@ -18,8 +19,8 @@ abstract class BaseScreen extends ConsumerStatefulWidget {
 }
 
 /// Base screen state with common functionality
-abstract class BaseScreenState<T extends BaseScreen>
-    extends ConsumerState<T> with ScreenBaseMixin {
+abstract class BaseScreenState<T extends BaseScreen> extends ConsumerState<T>
+    with ScreenBaseMixin {
   /// Build the screen content
   Widget buildContent(BuildContext context);
 
@@ -118,4 +119,3 @@ abstract class BaseAsyncScreenState<T extends BaseAsyncScreen, D>
     return buildEmpty(context);
   }
 }
-

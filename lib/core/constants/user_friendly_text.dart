@@ -19,7 +19,7 @@ class UserFriendlyText {
   static const String profile = 'My Profile';
 
   // Quick Actions
-  static const String todaysGuidance = 'Today\'s Guidance';
+  static const String todaysGuidance = "Today's Guidance";
   static const String myBirthChart = 'My Birth Chart';
 
   // Technical Terms (User-Friendly Alternatives)

@@ -4,24 +4,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Profile Photo - Profile photo with hover animation
 @immutable
 class ProfilePhoto extends StatefulWidget {
-  final VoidCallback onTap;
-  final String? tooltip;
-  final String? imageUrl;
-  final IconData? fallbackIcon;
-
   const ProfilePhoto({
-    super.key,
     required this.onTap,
+    super.key,
     this.tooltip,
     this.imageUrl,
     this.fallbackIcon,
   });
+  final VoidCallback onTap;
+  final String? tooltip;
+  final String? imageUrl;
+  final IconData? fallbackIcon;
 
   @override
   State<ProfilePhoto> createState() => _ProfilePhotoState();
@@ -41,12 +40,14 @@ class _ProfilePhotoState extends State<ProfilePhoto>
       vsync: this,
     );
     _scaleAnimation = Tween<double>(
-      begin: 1.0,
+      begin: 1,
       end: 1.1,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   @override
@@ -96,17 +97,22 @@ class _ProfilePhotoState extends State<ProfilePhoto>
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: ThemeHelpers.getPrimaryColor(context),
-                      width: ResponsiveSystem.borderWidth(context, baseWidth: 2),
+                      width:
+                          ResponsiveSystem.borderWidth(context, baseWidth: 2),
                     ),
                     boxShadow: _isHovered
                         ? [
                             BoxShadow(
                               color: ThemeHelpers.getPrimaryColor(context)
                                   .withValues(alpha: 0.3),
-                              blurRadius: ResponsiveSystem.spacing(context,
-                                  baseSpacing: 8),
-                              spreadRadius: ResponsiveSystem.spacing(context,
-                                  baseSpacing: 2),
+                              blurRadius: ResponsiveSystem.spacing(
+                                context,
+                                baseSpacing: 8,
+                              ),
+                              spreadRadius: ResponsiveSystem.spacing(
+                                context,
+                                baseSpacing: 2,
+                              ),
                             ),
                           ]
                         : null,
@@ -130,4 +136,3 @@ class _ProfilePhotoState extends State<ProfilePhoto>
     );
   }
 }
-

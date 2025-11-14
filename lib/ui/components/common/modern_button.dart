@@ -4,12 +4,24 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Modern Button - Reusable button with icon and loading state
 @immutable
 class ModernButton extends StatelessWidget {
+  const ModernButton({
+    required this.text,
+    super.key,
+    this.onPressed,
+    this.isLoading = false,
+    this.backgroundColor,
+    this.textColor,
+    this.width,
+    this.height,
+    this.icon,
+    this.padding,
+  });
   final String text;
   final VoidCallback? onPressed;
   final bool isLoading;
@@ -20,23 +32,12 @@ class ModernButton extends StatelessWidget {
   final IconData? icon;
   final EdgeInsetsGeometry? padding;
 
-  const ModernButton({
-    super.key,
-    required this.text,
-    this.onPressed,
-    this.isLoading = false,
-    this.backgroundColor,
-    this.textColor,
-    this.width,
-    this.height,
-    this.icon,
-    this.padding,
-  });
-
   @override
   Widget build(BuildContext context) {
-    final primaryColor = backgroundColor ?? ThemeHelpers.getPrimaryColor(context);
-    final buttonTextColor = textColor ?? ThemeHelpers.getPrimaryTextColor(context);
+    final primaryColor =
+        backgroundColor ?? ThemeHelpers.getPrimaryColor(context);
+    final buttonTextColor =
+        textColor ?? ThemeHelpers.getPrimaryTextColor(context);
     final isEnabled = onPressed != null && !isLoading;
 
     return Semantics(
@@ -47,16 +48,17 @@ class ModernButton extends StatelessWidget {
         onTap: isEnabled ? onPressed : null,
         child: Container(
           width: width ?? double.infinity,
-          height: height ?? ResponsiveSystem.buttonHeight(context, baseHeight: 48),
-          padding: padding ?? ResponsiveSystem.symmetric(
-            context,
-            horizontal: ResponsiveSystem.spacing(context, baseSpacing: 24),
-            vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
-          ),
+          height:
+              height ?? ResponsiveSystem.buttonHeight(context, baseHeight: 48),
+          padding: padding ??
+              ResponsiveSystem.symmetric(
+                context,
+                horizontal: ResponsiveSystem.spacing(context, baseSpacing: 24),
+                vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
+              ),
           decoration: BoxDecoration(
-            color: isEnabled
-                ? primaryColor
-                : primaryColor.withValues(alpha: 0.5),
+            color:
+                isEnabled ? primaryColor : primaryColor.withValues(alpha: 0.5),
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
           ),
           child: Row(
@@ -98,4 +100,3 @@ class ModernButton extends StatelessWidget {
     );
   }
 }
-

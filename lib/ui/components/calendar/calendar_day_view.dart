@@ -1,19 +1,18 @@
 library;
 
-import '../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/validation/error_message_helper.dart';
+import 'package:skvk_application/core/constants/app_constants.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/utils/validation/error_message_helper.dart';
 
 class CalendarDayView extends StatefulWidget {
-  final DateTime selectedDate;
-  final Function(DateTime) onDateChanged;
-
   const CalendarDayView({
-    super.key,
     required this.selectedDate,
     required this.onDateChanged,
+    super.key,
   });
+  final DateTime selectedDate;
+  final Function(DateTime) onDateChanged;
 
   @override
   State<CalendarDayView> createState() => _CalendarDayViewState();
@@ -37,12 +36,9 @@ class _CalendarDayViewState extends State<CalendarDayView> {
         _errorMessage = null;
       });
 
-      // Note: There is no standalone getCalendarDay API endpoint.
-      // Only getCalendarMonth and getCalendarYear exist.
       // To implement standalone fetching, we would need to:
       // 1. Call getCalendarMonth API for the selected date's month
       // 2. Extract the specific day from the month response
-      // This is inefficient for a single day view, so it's not implemented.
       // The month panchang data is included in getCalendarMonth response.
       setState(() {
         _calendarData = {
@@ -57,8 +53,7 @@ class _CalendarDayViewState extends State<CalendarDayView> {
         };
         _isLoading = false;
       });
-    } catch (e) {
-      // Convert technical error to user-friendly message
+    } on Exception catch (e) {
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       setState(() {
         _errorMessage = userFriendlyMessage;
@@ -155,14 +150,20 @@ class _CalendarDayViewState extends State<CalendarDayView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: TextStyle(
-                  color: ThemeHelpers.getSecondaryTextColor(context))),
+          Text(
+            label,
+            style: TextStyle(
+              color: ThemeHelpers.getSecondaryTextColor(context),
+            ),
+          ),
           ResponsiveSystem.sizedBox(context, height: 4),
-          Text(value,
-              style: TextStyle(
-                  color: ThemeHelpers.getPrimaryTextColor(context),
-                  fontWeight: FontWeight.bold)),
+          Text(
+            value,
+            style: TextStyle(
+              color: ThemeHelpers.getPrimaryTextColor(context),
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -174,14 +175,22 @@ class _CalendarDayViewState extends State<CalendarDayView> {
       child: Row(
         children: [
           SizedBox(
-              width: ResponsiveSystem.spacing(context, baseSpacing: 120),
-              child: Text(label,
-                  style: TextStyle(
-                      color: ThemeHelpers.getSecondaryTextColor(context)))),
+            width: ResponsiveSystem.spacing(context, baseSpacing: 120),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: ThemeHelpers.getSecondaryTextColor(context),
+              ),
+            ),
+          ),
           Expanded(
-              child: Text(value,
-                  style: TextStyle(
-                      color: ThemeHelpers.getPrimaryTextColor(context)))),
+            child: Text(
+              value,
+              style: TextStyle(
+                color: ThemeHelpers.getPrimaryTextColor(context),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -4,7 +4,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Koota Info Helper - Provides koota information and utility methods
 class KootaInfoHelper {
@@ -15,7 +15,7 @@ class KootaInfoHelper {
         return {
           'maxScore': 1,
           'description':
-              'Varna Koota represents the spiritual and ego compatibility between partners. It indicates how well the couple\'s spiritual values and social status align.',
+              "Varna Koota represents the spiritual and ego compatibility between partners. It indicates how well the couple's spiritual values and social status align.",
           'significance':
               'This koota is crucial for long-term harmony. Higher scores indicate better spiritual alignment and mutual respect in the relationship.',
         };
@@ -110,9 +110,8 @@ class KootaInfoHelper {
       'Gana',
       'Bhakoot',
       'Nadi',
-      'totalPoints'
+      'totalPoints',
     ];
     return kootaKeys.contains(key);
   }
 }
-

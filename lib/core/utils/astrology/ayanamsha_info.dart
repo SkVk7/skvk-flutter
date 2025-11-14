@@ -6,14 +6,6 @@ library;
 
 /// Information about ayanamsha types
 class AyanamshaInfo {
-  final String type;
-  final String name;
-  final String description;
-  final List<String> regions;
-  final List<String> traditions;
-  final String usage;
-  final bool isRecommended;
-
   const AyanamshaInfo({
     required this.type,
     required this.name,
@@ -23,6 +15,13 @@ class AyanamshaInfo {
     required this.usage,
     this.isRecommended = false,
   });
+  final String type;
+  final String name;
+  final String description;
+  final List<String> regions;
+  final List<String> traditions;
+  final String usage;
+  final bool isRecommended;
 }
 
 /// Helper class for ayanamsha information
@@ -51,7 +50,7 @@ class AyanamshaInfoHelper {
         'North India',
         'South India',
         'East India',
-        'West India'
+        'West India',
       ],
       traditions: ['Vedic', 'Modern Indian', 'Government Official'],
       usage: 'Standard for most Indian astrologers and government calculations',
@@ -66,7 +65,7 @@ class AyanamshaInfoHelper {
         'Karnataka',
         'Tamil Nadu',
         'Kerala',
-        'Andhra Pradesh'
+        'Andhra Pradesh',
       ],
       traditions: ['Vedic', 'South Indian', 'Raman Tradition'],
       usage: 'Popular among South Indian astrologers and Raman followers',
@@ -92,7 +91,7 @@ class AyanamshaInfoHelper {
       type: 'yukteshwar',
       name: 'Sri Yukteshwar Ayanamsha',
       description:
-          'Based on Sri Yukteshwar\'s calculations, used by some traditional schools',
+          "Based on Sri Yukteshwar's calculations, used by some traditional schools",
       regions: ['India', 'Traditional Centers'],
       traditions: ['Traditional Vedic', 'Yukteshwar School'],
       usage: 'Used by followers of Sri Yukteshwar and traditional schools',
@@ -157,7 +156,7 @@ class AyanamshaInfoHelper {
     try {
       return _ayanamshaInfo
           .firstWhere((info) => info.type == type.toLowerCase());
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -170,16 +169,20 @@ class AyanamshaInfoHelper {
   /// Get ayanamsha types by region
   static List<AyanamshaInfo> getAyanamshaByRegion(String region) {
     return _ayanamshaInfo
-        .where((info) => info.regions
-            .any((r) => r.toLowerCase().contains(region.toLowerCase())))
+        .where(
+          (info) => info.regions
+              .any((r) => r.toLowerCase().contains(region.toLowerCase())),
+        )
         .toList();
   }
 
   /// Get ayanamsha types by tradition
   static List<AyanamshaInfo> getAyanamshaByTradition(String tradition) {
     return _ayanamshaInfo
-        .where((info) => info.traditions
-            .any((t) => t.toLowerCase().contains(tradition.toLowerCase())))
+        .where(
+          (info) => info.traditions
+              .any((t) => t.toLowerCase().contains(tradition.toLowerCase())),
+        )
         .toList();
   }
 

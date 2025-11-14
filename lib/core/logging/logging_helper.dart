@@ -4,7 +4,7 @@
 /// Automatically handles try-catch blocks and provides structured logging.
 library;
 
-import 'app_logger.dart';
+import 'package:skvk_application/core/logging/app_logger.dart';
 
 /// Helper class for easy logging integration
 class LoggingHelper {
@@ -112,7 +112,7 @@ class LoggingHelper {
       }
 
       return result;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       await logError(
         'Operation failed: $operation',
         source: source,
@@ -144,7 +144,7 @@ class LoggingHelper {
       }
 
       return result;
-    } catch (e, stackTrace) {
+    } on Exception catch (e, stackTrace) {
       logError(
         'Operation failed: $operation',
         source: source,

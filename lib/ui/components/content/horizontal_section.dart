@@ -5,19 +5,11 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Configuration for a horizontal section
 class HorizontalSectionConfig {
-  final String title;
-  final IconData icon;
-  final List<Widget> items;
-  final int totalCount;
-  final int displayLimit;
-  final VoidCallback? onSeeAll;
-  final bool showSeeAll;
-
   const HorizontalSectionConfig({
     required this.title,
     required this.icon,
@@ -27,18 +19,24 @@ class HorizontalSectionConfig {
     this.onSeeAll,
     this.showSeeAll = true,
   });
+  final String title;
+  final IconData icon;
+  final List<Widget> items;
+  final int totalCount;
+  final int displayLimit;
+  final VoidCallback? onSeeAll;
+  final bool showSeeAll;
 }
 
 /// Horizontal Section Widget
 ///
 /// Displays a horizontal scrolling list with a title, icon, and optional "See All" button
 class HorizontalSection extends StatelessWidget {
-  final HorizontalSectionConfig config;
-
   const HorizontalSection({
-    super.key,
     required this.config,
+    super.key,
   });
+  final HorizontalSectionConfig config;
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +73,8 @@ class HorizontalSection extends StatelessWidget {
                     Text(
                       config.title,
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 20),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 20),
                         fontWeight: FontWeight.bold,
                         color: ThemeHelpers.getPrimaryTextColor(context),
                       ),
@@ -90,7 +89,8 @@ class HorizontalSection extends StatelessWidget {
                     child: Text(
                       'See All',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         color: ThemeHelpers.getPrimaryColor(context),
                       ),
                     ),
@@ -126,4 +126,3 @@ class HorizontalSection extends StatelessWidget {
     );
   }
 }
-

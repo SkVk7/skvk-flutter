@@ -5,13 +5,12 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'base_state.dart';
-import '../errors/failures.dart';
-import '../utils/either.dart';
+import 'package:skvk_application/core/base/base_state.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// Base state notifier with common functionality
-abstract class BaseStateNotifier<T extends BaseState>
-    extends StateNotifier<T> {
+abstract class BaseStateNotifier<T extends BaseState> extends StateNotifier<T> {
   BaseStateNotifier(super.state);
 
   /// Handle result and update state
@@ -37,7 +36,7 @@ abstract class BaseStateNotifier<T extends BaseState>
   }
 
   /// Set loading state
-  void setLoading(bool isLoading) {
+  void setLoading({required bool isLoading}) {
     // Override in subclasses to handle loading state
   }
 
@@ -80,4 +79,3 @@ abstract class BaseAsyncNotifier<T> extends StateNotifier<AsyncState<T>> {
     state = AsyncState<T>.initial();
   }
 }
-

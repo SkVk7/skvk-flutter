@@ -5,21 +5,20 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Time Field - Reusable time picker field
 class TimeField extends StatelessWidget {
-  final String label;
-  final TimeOfDay selectedTime;
-  final ValueChanged<TimeOfDay> onTimeChanged;
-
   const TimeField({
-    super.key,
     required this.label,
     required this.selectedTime,
     required this.onTimeChanged,
+    super.key,
   });
+  final String label;
+  final TimeOfDay selectedTime;
+  final ValueChanged<TimeOfDay> onTimeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +79,8 @@ class TimeField extends StatelessWidget {
                   child: Text(
                     selectedTime.format(context),
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 16),
                       color: ThemeHelpers.getPrimaryTextColor(context),
                     ),
                   ),
@@ -98,4 +98,3 @@ class TimeField extends StatelessWidget {
     );
   }
 }
-

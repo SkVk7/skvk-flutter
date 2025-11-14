@@ -4,24 +4,22 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Language Dropdown - Dropdown for language selection
 @immutable
 class LanguageDropdown extends StatelessWidget {
-  final ValueChanged<String>? onLanguageChanged;
-
   const LanguageDropdown({
     super.key,
     this.onLanguageChanged,
   });
+  final ValueChanged<String>? onLanguageChanged;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       tooltip: 'Language',
-      // Remove background circle, only icon, size +8% (24 * 1.08 = 25.92)
       icon: Icon(
         Icons.public,
         color: ThemeHelpers.getAppBarTextColor(context),
@@ -102,4 +100,3 @@ class LanguageDropdown extends StatelessWidget {
     );
   }
 }
-

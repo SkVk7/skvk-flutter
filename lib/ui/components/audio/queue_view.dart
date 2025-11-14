@@ -5,11 +5,11 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/audio/player_queue_service.dart';
-import '../../../core/models/audio/track.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/audio/player_queue_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Queue View - Shows current queue with reorder support
 class QueueView extends ConsumerStatefulWidget {
@@ -65,12 +65,6 @@ class _QueueViewState extends ConsumerState<QueueView> {
 
 /// Queue Item Widget
 class _QueueItem extends StatelessWidget {
-  final Track track;
-  final int index;
-  final bool isCurrent;
-  final VoidCallback onTap;
-  final VoidCallback onRemove;
-
   const _QueueItem({
     required super.key,
     required this.track,
@@ -79,6 +73,11 @@ class _QueueItem extends StatelessWidget {
     required this.onTap,
     required this.onRemove,
   });
+  final Track track;
+  final int index;
+  final bool isCurrent;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -161,4 +160,3 @@ class _QueueItem extends StatelessWidget {
     );
   }
 }
-

@@ -12,22 +12,23 @@ class LightTheme {
   static const Color primary = Color(0xFF8B6F47); // Rich temple gold brown
   static const Color primaryVariant = Color(0xFF6B5435); // Darker gold brown
   static const Color accent = Color(0xFFD97706); // Warm saffron/orange
-  
+
   // Background & Surface - Warm off-white
   static const Color background = Color(0xFFF8F5F0); // Warm off-white (ivory)
   static const Color surface = Color(0xFFFFFFFF); // Pure white
   static const Color surfaceVariant = Color(0xFFEFEBE5); // Light beige
-  
+
   // Text Colors - High contrast dark brown
   static const Color onPrimary = Color(0xFFFFFFFF); // White on primary
-  static const Color onBackground = Color(0xFF2C2416); // Dark brown (excellent contrast)
+  static const Color onBackground =
+      Color(0xFF2C2416); // Dark brown (excellent contrast)
   static const Color onSurface = Color(0xFF2C2416); // Dark brown
   static const Color onSurfaceVariant = Color(0xFF5C4A3A); // Medium brown
-  
+
   // Error Colors
   static const Color error = Color(0xFFC62828); // Deep red
   static const Color onError = Color(0xFFFFFFFF); // White on error
-  
+
   // Interactive Elements
   static const Color outline = Color(0xFFB8A082); // Muted gold border
   static const Color outlineVariant = Color(0xFFD4C4B0); // Lighter gold border
@@ -37,30 +38,22 @@ class LightTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       scaffoldBackgroundColor: background,
-      
+
       // Color Scheme
       colorScheme: const ColorScheme.light(
         primary: primary,
-        onPrimary: onPrimary,
         primaryContainer: primaryVariant,
         onPrimaryContainer: onPrimary,
-        
         secondary: surfaceVariant,
         onSecondary: onSurface,
         secondaryContainer: surfaceVariant,
         onSecondaryContainer: onSurface,
-        
         tertiary: accent,
         onTertiary: onPrimary,
-        
         error: error,
-        onError: onError,
-        
-        surface: surface,
         onSurface: onSurface,
         surfaceContainerHighest: surfaceVariant,
         onSurfaceVariant: onSurfaceVariant,
-        
         outline: outline,
         outlineVariant: outlineVariant,
       ),
@@ -91,7 +84,6 @@ class LightTheme {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(
             color: outline,
-            width: 1,
           ),
         ),
         color: surface,
@@ -175,7 +167,8 @@ class LightTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         labelStyle: GoogleFonts.inter(
           color: onSurfaceVariant,
           fontSize: 14,
@@ -196,7 +189,7 @@ class LightTheme {
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: onSurface,
-          letterSpacing: -1.0,
+          letterSpacing: -1,
         ),
         displayMedium: GoogleFonts.inter(
           fontSize: 28,
@@ -329,4 +322,3 @@ class LightTheme {
     );
   }
 }
-

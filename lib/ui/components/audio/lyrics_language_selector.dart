@@ -5,25 +5,24 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/content/content_api_service.dart';
-import '../../../core/services/content/content_language_service.dart';
-import '../../../core/services/audio/global_audio_player_controller.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
+import 'package:skvk_application/core/services/content/content_api_service.dart';
+import 'package:skvk_application/core/services/content/content_language_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Lyrics Language Selector Widget
 class LyricsLanguageSelector extends ConsumerStatefulWidget {
+  const LyricsLanguageSelector({
+    required this.trackId,
+    required this.currentLanguage,
+    super.key,
+    this.onLanguageChanged,
+  });
   final String trackId;
   final String currentLanguage;
   final Function(String)? onLanguageChanged;
-
-  const LyricsLanguageSelector({
-    super.key,
-    required this.trackId,
-    required this.currentLanguage,
-    this.onLanguageChanged,
-  });
 
   @override
   ConsumerState<LyricsLanguageSelector> createState() =>
@@ -39,7 +38,6 @@ class _LyricsLanguageSelectorState
   @override
   void initState() {
     super.initState();
-    // Load available languages on demand when dropdown is opened
   }
 
   Future<void> _loadAvailableLanguages() async {
@@ -51,7 +49,7 @@ class _LyricsLanguageSelectorState
 
     try {
       final languagesData =
-          await ContentApiService.instance.getAvailableLanguages(
+          await ContentApiService.instance().getAvailableLanguages(
         contentId: widget.trackId,
         contentType: 'lyrics',
       );
@@ -65,8 +63,8 @@ class _LyricsLanguageSelectorState
           _isLoading = false;
         });
       }
-    } catch (e) {
-      LoggingHelper.logError(
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
         'Failed to load available languages for lyrics',
         source: 'LyricsLanguageSelector',
         error: e,
@@ -84,7 +82,7 @@ class _LyricsLanguageSelectorState
     try {
       final lang = ContentLanguage.fromCode(code);
       return lang.displayName;
-    } catch (e) {
+    } on Exception {
       return code.toUpperCase();
     }
   }
@@ -106,7 +104,6 @@ class _LyricsLanguageSelectorState
           color: ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.9),
           border: Border.all(
             color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.3),
-            width: 1,
           ),
         ),
         child: Row(
@@ -201,7 +198,7 @@ class _LyricsLanguageSelectorState
           );
         }).toList();
       },
-      onSelected: (String languageCode) async {
+      onSelected: (languageCode) async {
         if (languageCode == widget.currentLanguage) return;
 
         final playerController = ref.read(globalAudioPlayerProvider.notifier);
@@ -216,20 +213,22 @@ class _LyricsLanguageSelectorState
           );
           // Notify parent of language change
           widget.onLanguageChanged?.call(languageCode);
-        } catch (e) {
-          LoggingHelper.logError(
+        } on Exception catch (e) {
+          await LoggingHelper.logError(
             'Failed to load lyrics for language $languageCode',
             source: 'LyricsLanguageSelector',
             error: e,
           );
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to load lyrics in ${_getLanguageDisplayName(languageCode)}'),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          }
+          if (!mounted) return;
+          final currentContext = context;
+          if (!currentContext.mounted) return;
+          ScaffoldMessenger.of(currentContext).showSnackBar(
+            SnackBar(
+              content: Text(
+                  'Failed to load lyrics in ${_getLanguageDisplayName(languageCode)}',),
+              duration: const Duration(seconds: 2),
+            ),
+          );
         } finally {
           if (mounted) {
             setState(() {
@@ -241,4 +240,3 @@ class _LyricsLanguageSelectorState
     );
   }
 }
-

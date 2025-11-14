@@ -4,6 +4,7 @@
 /// Supports multiple Indian languages popular among Hindus
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,14 +28,14 @@ enum LanguageType {
   content,
 }
 
+@immutable
 class LanguagePreferences {
-  final SupportedLanguage headerLanguage;
-  final SupportedLanguage contentLanguage;
-
   const LanguagePreferences({
     required this.headerLanguage,
     required this.contentLanguage,
   });
+  final SupportedLanguage headerLanguage;
+  final SupportedLanguage contentLanguage;
 
   LanguagePreferences copyWith({
     SupportedLanguage? headerLanguage,
@@ -87,7 +88,7 @@ class LanguageService extends Notifier<LanguagePreferences> {
         headerLanguage: SupportedLanguage.values[headerIndex],
         contentLanguage: SupportedLanguage.values[contentIndex],
       );
-    } catch (e) {
+    } on Exception {
       // Keep default values
     }
   }
@@ -98,8 +99,8 @@ class LanguageService extends Notifier<LanguagePreferences> {
       await prefs.setInt(_headerLanguageKey, language.index);
 
       state = state.copyWith(headerLanguage: language);
-    } catch (e) {
-      // Handle error silently
+    } on Exception {
+      // Ignore errors when saving language preference
     }
   }
 
@@ -109,8 +110,8 @@ class LanguageService extends Notifier<LanguagePreferences> {
       await prefs.setInt(_contentLanguageKey, language.index);
 
       state = state.copyWith(contentLanguage: language);
-    } catch (e) {
-      // Handle error silently
+    } on Exception {
+      // Ignore errors when saving language preference
     }
   }
 
@@ -124,13 +125,12 @@ class LanguageService extends Notifier<LanguagePreferences> {
         headerLanguage: language,
         contentLanguage: language,
       );
-    } catch (e) {
-      // Handle error silently
+    } on Exception {
+      // Ignore errors when saving language preference
     }
   }
 }
 
-// Provider for language service
 final languageServiceProvider =
     NotifierProvider<LanguageService, LanguagePreferences>(() {
   return LanguageService();

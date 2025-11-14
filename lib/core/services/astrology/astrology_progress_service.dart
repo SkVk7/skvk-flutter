@@ -6,19 +6,16 @@ library;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../design_system/design_system.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
 
 /// Progress tracking for astrology calculations
 class AstrologyProgressService {
-  static AstrologyProgressService? _instance;
-
   AstrologyProgressService._();
 
-  static AstrologyProgressService get instance {
-    _instance ??= AstrologyProgressService._();
-    return _instance!;
+  factory AstrologyProgressService.instance() {
+    return _instance ??= AstrologyProgressService._();
   }
-
+  static AstrologyProgressService? _instance;
   final StreamController<AstrologyProgress> _progressController =
       StreamController<AstrologyProgress>.broadcast();
 
@@ -26,12 +23,14 @@ class AstrologyProgressService {
 
   /// Start progress tracking for an operation
   void startProgress(String operationName) {
-    _progressController.add(AstrologyProgress(
-      operationName: operationName,
-      progress: 0.0,
-      message: 'Starting $operationName...',
-      isComplete: false,
-    ));
+    _progressController.add(
+      AstrologyProgress(
+        operationName: operationName,
+        progress: 0,
+        message: 'Starting $operationName...',
+        isComplete: false,
+      ),
+    );
   }
 
   /// Update progress
@@ -40,33 +39,39 @@ class AstrologyProgressService {
     required double progress,
     required String message,
   }) {
-    _progressController.add(AstrologyProgress(
-      operationName: operationName,
-      progress: progress.clamp(0.0, 1.0),
-      message: message,
-      isComplete: progress >= 1.0,
-    ));
+    _progressController.add(
+      AstrologyProgress(
+        operationName: operationName,
+        progress: progress.clamp(0.0, 1.0),
+        message: message,
+        isComplete: progress >= 1.0,
+      ),
+    );
   }
 
   /// Complete progress
   void completeProgress(String operationName) {
-    _progressController.add(AstrologyProgress(
-      operationName: operationName,
-      progress: 1.0,
-      message: 'Completed $operationName',
-      isComplete: true,
-    ));
+    _progressController.add(
+      AstrologyProgress(
+        operationName: operationName,
+        progress: 1,
+        message: 'Completed $operationName',
+        isComplete: true,
+      ),
+    );
   }
 
   /// Error progress
   void errorProgress(String operationName, String error) {
-    _progressController.add(AstrologyProgress(
-      operationName: operationName,
-      progress: 0.0,
-      message: 'Error: $error',
-      isComplete: false,
-      hasError: true,
-    ));
+    _progressController.add(
+      AstrologyProgress(
+        operationName: operationName,
+        progress: 0,
+        message: 'Error: $error',
+        isComplete: false,
+        hasError: true,
+      ),
+    );
   }
 
   void dispose() {
@@ -76,13 +81,6 @@ class AstrologyProgressService {
 
 /// Progress data for astrology calculations
 class AstrologyProgress {
-  final String operationName;
-  final double progress;
-  final String message;
-  final bool isComplete;
-  final bool hasError;
-  final DateTime timestamp;
-
   AstrologyProgress({
     required this.operationName,
     required this.progress,
@@ -91,6 +89,12 @@ class AstrologyProgress {
     this.hasError = false,
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
+  final String operationName;
+  final double progress;
+  final String message;
+  final bool isComplete;
+  final bool hasError;
+  final DateTime timestamp;
 
   @override
   String toString() {
@@ -100,22 +104,21 @@ class AstrologyProgress {
 
 /// Progress indicator widget for astrology calculations
 class AstrologyProgressWidget extends ConsumerWidget {
+  const AstrologyProgressWidget({
+    required this.operationName,
+    required this.progress,
+    required this.message,
+    super.key,
+    this.isIndeterminate = false,
+    this.hasError = false,
+    this.onRetry,
+  });
   final String operationName;
   final double progress;
   final String message;
   final bool isIndeterminate;
   final bool hasError;
   final VoidCallback? onRetry;
-
-  const AstrologyProgressWidget({
-    super.key,
-    required this.operationName,
-    required this.progress,
-    required this.message,
-    this.isIndeterminate = false,
-    this.hasError = false,
-    this.onRetry,
-  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -208,7 +211,7 @@ class AstrologyProgressWidget extends ConsumerWidget {
                 Icons.refresh,
                 size: ResponsiveSystem.iconSize(context, baseSize: 20),
               ),
-              label: Text('Retry'),
+              label: const Text('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: ThemeHelpers.getErrorColor(context),
                 foregroundColor: Theme.of(context).colorScheme.onError,
@@ -223,14 +226,13 @@ class AstrologyProgressWidget extends ConsumerWidget {
 
 /// Stream-based progress widget
 class AstrologyProgressStreamWidget extends ConsumerWidget {
-  final Stream<AstrologyProgress> progressStream;
-  final VoidCallback? onRetry;
-
   const AstrologyProgressStreamWidget({
-    super.key,
     required this.progressStream,
+    super.key,
     this.onRetry,
   });
+  final Stream<AstrologyProgress> progressStream;
+  final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -257,18 +259,17 @@ class AstrologyProgressStreamWidget extends ConsumerWidget {
 
 /// Progress overlay for full-screen operations
 class AstrologyProgressOverlay extends ConsumerWidget {
+  const AstrologyProgressOverlay({
+    required this.progressStream,
+    super.key,
+    this.onCancel,
+  });
   final Stream<AstrologyProgress> progressStream;
   final VoidCallback? onCancel;
 
-  const AstrologyProgressOverlay({
-    super.key,
-    required this.progressStream,
-    this.onCancel,
-  });
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Container(
+    return ColoredBox(
       color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.5),
       child: Center(
         child: Container(
@@ -279,11 +280,13 @@ class AstrologyProgressOverlay extends ConsumerWidget {
             borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
             boxShadow: [
               BoxShadow(
-                color: ThemeHelpers.getShadowColor(context)
-                    .withValues(alpha: 0.2),
+                color:
+                    ThemeHelpers.getShadowColor(context).withValues(alpha: 0.2),
                 blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 10),
                 offset: Offset(
-                    0, ResponsiveSystem.spacing(context, baseSpacing: 5)),
+                  0,
+                  ResponsiveSystem.spacing(context, baseSpacing: 5),
+                ),
               ),
             ],
           ),

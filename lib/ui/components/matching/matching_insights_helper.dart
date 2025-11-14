@@ -5,10 +5,10 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../../core/features/matching/providers/matching_provider.dart';
+import 'package:skvk_application/core/features/matching/providers/matching_provider.dart';
 
 /// Matching Insights Helper
-/// 
+///
 /// Reads data from the astrology-service API response only - no business logic
 /// All insights, messages, and icons come from the API
 class MatchingInsightsHelper {
@@ -16,7 +16,8 @@ class MatchingInsightsHelper {
   /// Returns recommendation from API, or fallback if not available
   static String getOverallInsights(MatchingState matchingState) {
     // Use recommendation from API if available
-    if (matchingState.recommendation != null && matchingState.recommendation!.isNotEmpty) {
+    if (matchingState.recommendation != null &&
+        matchingState.recommendation!.isNotEmpty) {
       return matchingState.recommendation!;
     }
     // Fallback if API doesn't provide recommendation
@@ -62,7 +63,8 @@ class MatchingInsightsHelper {
   /// Returns recommendation from API, or fallback if not available
   static String getScoreInterpretation(MatchingState matchingState) {
     // Use recommendation from API if available
-    if (matchingState.recommendation != null && matchingState.recommendation!.isNotEmpty) {
+    if (matchingState.recommendation != null &&
+        matchingState.recommendation!.isNotEmpty) {
       return matchingState.recommendation!;
     }
     // Fallback if API doesn't provide recommendation
@@ -91,8 +93,6 @@ class MatchingInsightsHelper {
       final totalPointsStr = matchingState.kootaDetails!['totalPoints'];
       return int.tryParse(totalPointsStr ?? '0') ?? 0;
     }
-    // If totalScore is not available, return 0 to indicate missing data
     return 0;
   }
 }
-

@@ -6,8 +6,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skvk_application/core/services/audio/player_queue_service.dart';
-import 'package:skvk_application/core/services/audio/models/track.dart';
-import 'package:skvk_application/core/services/audio/models/queue_state.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
 import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
 
 void main() {
@@ -34,8 +33,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
         Track(
@@ -46,8 +43,6 @@ void main() {
           duration: const Duration(minutes: 4),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];
@@ -69,8 +64,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];
@@ -86,8 +79,6 @@ void main() {
           duration: const Duration(minutes: 4),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];
@@ -107,8 +98,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
         Track(
@@ -119,8 +108,6 @@ void main() {
           duration: const Duration(minutes: 4),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];
@@ -156,8 +143,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
         Track(
@@ -168,8 +153,6 @@ void main() {
           duration: const Duration(minutes: 4),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];
@@ -191,8 +174,6 @@ void main() {
           duration: const Duration(minutes: 3),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
         Track(
@@ -203,8 +184,6 @@ void main() {
           duration: const Duration(minutes: 4),
           coverUrl: '',
           sourceUrl: '',
-          isDownloaded: false,
-          localPath: null,
           metadata: {},
         ),
       ];

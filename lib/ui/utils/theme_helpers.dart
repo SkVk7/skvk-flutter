@@ -46,12 +46,18 @@ class ThemeHelpers {
 
   /// Get tertiary text color from theme
   static Color getTertiaryTextColor(BuildContext context) {
-    return Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+    return Theme.of(context)
+        .colorScheme
+        .onSurfaceVariant
+        .withValues(alpha: 0.7);
   }
 
   /// Get hint text color from theme
   static Color getHintTextColor(BuildContext context) {
-    return Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
+    return Theme.of(context)
+        .colorScheme
+        .onSurfaceVariant
+        .withValues(alpha: 0.6);
   }
 
   /// Get border color from theme
@@ -76,14 +82,14 @@ class ThemeHelpers {
 
   /// Get app bar text color from theme
   static Color getAppBarTextColor(BuildContext context) {
-    return Theme.of(context).appBarTheme.foregroundColor ?? 
-           Theme.of(context).colorScheme.onSurface;
+    return Theme.of(context).appBarTheme.foregroundColor ??
+        Theme.of(context).colorScheme.onSurface;
   }
 
   /// Get app bar background color from theme
   static Color getAppBarBackgroundColor(BuildContext context) {
-    return Theme.of(context).appBarTheme.backgroundColor ?? 
-           Theme.of(context).colorScheme.surface;
+    return Theme.of(context).appBarTheme.backgroundColor ??
+        Theme.of(context).colorScheme.surface;
   }
 
   /// Get primary gradient (simple gradient using primary color)
@@ -157,7 +163,8 @@ class ThemeHelpers {
   }
 
   /// Get elevated shadows (returns list of BoxShadow)
-  static List<BoxShadow> getElevatedShadows(BuildContext context, {double elevation = 2.0}) {
+  static List<BoxShadow> getElevatedShadows(BuildContext context,
+      {double elevation = 2.0,}) {
     return [
       BoxShadow(
         color: Theme.of(context).shadowColor.withValues(alpha: 0.3),
@@ -167,5 +174,3 @@ class ThemeHelpers {
     ];
   }
 }
- 
-

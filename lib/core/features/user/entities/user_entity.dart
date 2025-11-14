@@ -6,13 +6,9 @@ library;
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
-// Removed missing user_model import
 
 /// Time of birth data class
 class TimeOfBirth {
-  final int hour;
-  final int minute;
-
   const TimeOfBirth({
     required this.hour,
     required this.minute,
@@ -24,6 +20,8 @@ class TimeOfBirth {
       minute: timeOfDay.minute,
     );
   }
+  final int hour;
+  final int minute;
 
   TimeOfDay toTimeOfDay() {
     return TimeOfDay(hour: hour, minute: minute);
@@ -37,17 +35,6 @@ class TimeOfBirth {
 
 /// User entity representing the core business concept of a user
 class UserEntity extends Equatable {
-  final String id;
-  final String username;
-  final DateTime dateOfBirth;
-  final TimeOfBirth timeOfBirth;
-  final String placeOfBirth;
-  final String sex;
-  final double latitude;
-  final double longitude;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-
   const UserEntity({
     required this.id,
     required this.username,
@@ -60,6 +47,39 @@ class UserEntity extends Equatable {
     this.createdAt,
     this.updatedAt,
   });
+
+  /// Create from JSON
+  factory UserEntity.fromJson(Map<String, dynamic> json) {
+    return UserEntity(
+      id: json['id'] as String,
+      username: json['username'] as String,
+      dateOfBirth: DateTime.parse(json['dateOfBirth'] as String),
+      timeOfBirth: TimeOfBirth(
+        hour: (json['timeOfBirth'] as Map<String, dynamic>)['hour'] as int,
+        minute: (json['timeOfBirth'] as Map<String, dynamic>)['minute'] as int,
+      ),
+      placeOfBirth: json['placeOfBirth'] as String,
+      sex: json['sex'] as String,
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+    );
+  }
+  final String id;
+  final String username;
+  final DateTime dateOfBirth;
+  final TimeOfBirth timeOfBirth;
+  final String placeOfBirth;
+  final String sex;
+  final double latitude;
+  final double longitude;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   /// Create a copy with updated fields
   UserEntity copyWith({
@@ -132,29 +152,6 @@ class UserEntity extends Equatable {
     };
   }
 
-  /// Create from JSON
-  factory UserEntity.fromJson(Map<String, dynamic> json) {
-    return UserEntity(
-      id: json['id'] as String,
-      username: json['username'] as String,
-      dateOfBirth: DateTime.parse(json['dateOfBirth'] as String),
-      timeOfBirth: TimeOfBirth(
-        hour: json['timeOfBirth']['hour'] as int,
-        minute: json['timeOfBirth']['minute'] as int,
-      ),
-      placeOfBirth: json['placeOfBirth'] as String,
-      sex: json['sex'] as String,
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'] as String)
-          : null,
-      updatedAt: json['updatedAt'] != null
-          ? DateTime.parse(json['updatedAt'] as String)
-          : null,
-    );
-  }
-
   @override
   List<Object?> get props => [
         id,
@@ -169,5 +166,3 @@ class UserEntity extends Equatable {
         updatedAt,
       ];
 }
-
-// Removed duplicate TimeOfBirth class definition

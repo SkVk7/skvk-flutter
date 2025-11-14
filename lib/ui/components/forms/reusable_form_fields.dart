@@ -5,12 +5,24 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../common/index.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Generic form field wrapper with consistent styling
 class ReusableFormField extends StatelessWidget {
+  const ReusableFormField({
+    required this.label,
+    required this.child,
+    super.key,
+    this.hintText,
+    this.errorText,
+    this.prefixIcon,
+    this.suffixIcon,
+    this.onSuffixTap,
+    this.isRequired = false,
+    this.helperText,
+  });
   final String label;
   final String? hintText;
   final String? errorText;
@@ -21,25 +33,12 @@ class ReusableFormField extends StatelessWidget {
   final bool isRequired;
   final String? helperText;
 
-  const ReusableFormField({
-    super.key,
-    required this.label,
-    required this.child,
-    this.hintText,
-    this.errorText,
-    this.prefixIcon,
-    this.suffixIcon,
-    this.onSuffixTap,
-    this.isRequired = false,
-    this.helperText,
-  });
-
   @override
   Widget build(BuildContext context) {
     // Use a simple approach without Riverpod dependency for basic functionality
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -57,7 +56,8 @@ class ReusableFormField extends StatelessWidget {
                 ],
         ),
         borderRadius: BorderRadius.circular(
-            ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+          ResponsiveSystem.borderRadius(context, baseRadius: 16),
+        ),
         boxShadow: [
           BoxShadow(
             color: ThemeHelpers.getShadowColor(context).withAlpha(76),
@@ -87,8 +87,10 @@ class ReusableFormField extends StatelessWidget {
                     size: ResponsiveSystem.iconSize(context, baseSize: 20),
                     color: ThemeHelpers.getPrimaryColor(context),
                   ),
-                  ResponsiveSystem.sizedBox(context,
-                      width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                  ResponsiveSystem.sizedBox(
+                    context,
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                  ),
                 ],
                 Text(
                   label,
@@ -99,8 +101,10 @@ class ReusableFormField extends StatelessWidget {
                   ),
                 ),
                 if (isRequired) ...[
-                  ResponsiveSystem.sizedBox(context,
-                      width: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  ResponsiveSystem.sizedBox(
+                    context,
+                    width: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                  ),
                   Text(
                     '*',
                     style: TextStyle(
@@ -123,12 +127,16 @@ class ReusableFormField extends StatelessWidget {
                 ],
               ],
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             child,
             if (helperText != null) ...[
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+              ResponsiveSystem.sizedBox(
+                context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+              ),
               Text(
                 helperText!,
                 style: TextStyle(
@@ -138,8 +146,10 @@ class ReusableFormField extends StatelessWidget {
               ),
             ],
             if (errorText != null) ...[
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+              ResponsiveSystem.sizedBox(
+                context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+              ),
               Text(
                 errorText!,
                 style: TextStyle(
@@ -157,6 +167,17 @@ class ReusableFormField extends StatelessWidget {
 
 /// Reusable text input field
 class ReusableTextInput extends StatelessWidget {
+  const ReusableTextInput({
+    required this.controller,
+    required this.hintText,
+    super.key,
+    this.prefixIcon,
+    this.keyboardType = TextInputType.text,
+    this.enabled = true,
+    this.onChanged,
+    this.maxLines = 1,
+    this.maxLength,
+  });
   final TextEditingController controller;
   final String hintText;
   final IconData? prefixIcon;
@@ -165,18 +186,6 @@ class ReusableTextInput extends StatelessWidget {
   final Function(String)? onChanged;
   final int? maxLines;
   final int? maxLength;
-
-  const ReusableTextInput({
-    super.key,
-    required this.controller,
-    required this.hintText,
-    this.prefixIcon,
-    this.keyboardType = TextInputType.text,
-    this.enabled = true,
-    this.onChanged,
-    this.maxLines = 1,
-    this.maxLength,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +237,8 @@ class ReusableTextInput extends StatelessWidget {
         ),
         filled: true,
         fillColor: surfaceColor,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }
@@ -236,12 +246,6 @@ class ReusableTextInput extends StatelessWidget {
 
 /// Reusable date picker field
 class ReusableDatePicker extends StatelessWidget {
-  final DateTime? selectedDate;
-  final Function(DateTime)? onDateChanged;
-  final bool enabled;
-  final DateTime? firstDate;
-  final DateTime? lastDate;
-
   const ReusableDatePicker({
     super.key,
     this.selectedDate,
@@ -250,6 +254,11 @@ class ReusableDatePicker extends StatelessWidget {
     this.firstDate,
     this.lastDate,
   });
+  final DateTime? selectedDate;
+  final Function(DateTime)? onDateChanged;
+  final bool enabled;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
 
   @override
   Widget build(BuildContext context) {
@@ -261,13 +270,12 @@ class ReusableDatePicker extends StatelessWidget {
     return InkWell(
       onTap: enabled ? () => _selectDate(context) : null,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: surfaceColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: primaryColor.withValues(alpha: 0.3),
-            width: 1,
           ),
         ),
         child: Row(
@@ -315,16 +323,15 @@ class ReusableDatePicker extends StatelessWidget {
 
 /// Reusable time picker field
 class ReusableTimePicker extends StatelessWidget {
-  final TimeOfDay? selectedTime;
-  final Function(TimeOfDay)? onTimeChanged;
-  final bool enabled;
-
   const ReusableTimePicker({
     super.key,
     this.selectedTime,
     this.onTimeChanged,
     this.enabled = true,
   });
+  final TimeOfDay? selectedTime;
+  final Function(TimeOfDay)? onTimeChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -336,13 +343,12 @@ class ReusableTimePicker extends StatelessWidget {
     return InkWell(
       onTap: enabled ? () => _selectTime(context) : null,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: surfaceColor,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: primaryColor.withValues(alpha: 0.3),
-            width: 1,
           ),
         ),
         child: Row(
@@ -388,22 +394,21 @@ class ReusableTimePicker extends StatelessWidget {
 
 /// Reusable dropdown field
 class ReusableDropdown<T> extends StatelessWidget {
+  const ReusableDropdown({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    required this.itemBuilder,
+    required this.hintText,
+    super.key,
+    this.enabled = true,
+  });
   final T value;
   final List<T> items;
   final Function(T?) onChanged;
   final String Function(T) itemBuilder;
   final String hintText;
   final bool enabled;
-
-  const ReusableDropdown({
-    super.key,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    required this.itemBuilder,
-    required this.hintText,
-    this.enabled = true,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -425,9 +430,10 @@ class ReusableDropdown<T> extends StatelessWidget {
         ),
         filled: true,
         fillColor: surfaceColor,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-      items: items.map((T item) {
+      items: items.map((item) {
         return DropdownMenuItem<T>(
           value: item,
           child: Text(
@@ -445,14 +451,13 @@ class ReusableDropdown<T> extends StatelessWidget {
 
 /// Reusable action buttons container
 class ReusableActionButtons extends StatelessWidget {
-  final List<ReusableActionButton> buttons;
-  final MainAxisAlignment alignment;
-
   const ReusableActionButtons({
-    super.key,
     required this.buttons,
+    super.key,
     this.alignment = MainAxisAlignment.spaceEvenly,
   });
+  final List<ReusableActionButton> buttons;
+  final MainAxisAlignment alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -465,6 +470,16 @@ class ReusableActionButtons extends StatelessWidget {
 
 /// Reusable action button
 class ReusableActionButton extends StatelessWidget {
+  const ReusableActionButton({
+    required this.text,
+    required this.onPressed,
+    super.key,
+    this.icon,
+    this.backgroundColor,
+    this.textColor,
+    this.isLoading = false,
+    this.isEnabled = true,
+  });
   final String text;
   final VoidCallback onPressed;
   final IconData? icon;
@@ -472,17 +487,6 @@ class ReusableActionButton extends StatelessWidget {
   final Color? textColor;
   final bool isLoading;
   final bool isEnabled;
-
-  const ReusableActionButton({
-    super.key,
-    required this.text,
-    required this.onPressed,
-    this.icon,
-    this.backgroundColor,
-    this.textColor,
-    this.isLoading = false,
-    this.isEnabled = true,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -499,18 +503,17 @@ class ReusableActionButton extends StatelessWidget {
 
 /// Reusable section title
 class ReusableSectionTitle extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final IconData? icon;
-  final EdgeInsets? padding;
-
   const ReusableSectionTitle({
-    super.key,
     required this.title,
+    super.key,
     this.subtitle,
     this.icon,
     this.padding,
   });
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final EdgeInsets? padding;
 
   @override
   Widget build(BuildContext context) {
@@ -527,8 +530,10 @@ class ReusableSectionTitle extends StatelessWidget {
               size: ResponsiveSystem.iconSize(context, baseSize: 24),
               color: ThemeHelpers.getPrimaryColor(context),
             ),
-            ResponsiveSystem.sizedBox(context,
-                width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            ResponsiveSystem.sizedBox(
+              context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 8),
+            ),
           ],
           Expanded(
             child: Column(
@@ -543,9 +548,10 @@ class ReusableSectionTitle extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  ResponsiveSystem.sizedBox(context,
-                      height:
-                          ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                  ResponsiveSystem.sizedBox(
+                    context,
+                    height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+                  ),
                   Text(
                     subtitle!,
                     style: TextStyle(

@@ -5,23 +5,22 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/audio/playlist_service.dart';
-import '../../../core/services/audio/player_queue_service.dart';
-import '../../../core/services/audio/global_audio_player_controller.dart';
-import '../../../core/models/audio/track.dart';
-import '../../../core/services/audio/models/playlist.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
+import 'package:skvk_application/core/services/audio/models/playlist.dart';
+import 'package:skvk_application/core/services/audio/player_queue_service.dart';
+import 'package:skvk_application/core/services/audio/playlist_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Playlist Detail - Shows tracks in playlist
 class PlaylistDetail extends ConsumerStatefulWidget {
-  final String playlistId;
-
   const PlaylistDetail({
-    super.key,
     required this.playlistId,
+    super.key,
   });
+  final String playlistId;
 
   @override
   ConsumerState<PlaylistDetail> createState() => _PlaylistDetailState();
@@ -45,17 +44,16 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
 
     try {
       final playlists = ref.read(playlistServiceProvider);
-      
+
       _playlist = playlists.firstWhere(
         (p) => p.id == widget.playlistId,
-        orElse: () => playlists.isNotEmpty ? playlists.first : throw Exception('Playlist not found'),
+        orElse: () => playlists.isNotEmpty
+            ? playlists.first
+            : throw Exception('Playlist not found'),
       );
 
-      // Load tracks from playlist
       final playlistService = ref.read(playlistServiceProvider.notifier);
       _tracks = await playlistService.getTracksForPlaylist(widget.playlistId);
-    } catch (e) {
-      // Handle error
     } finally {
       if (mounted) {
         setState(() {
@@ -71,13 +69,11 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
     final queueService = ref.read(playerQueueServiceProvider.notifier);
     final playerController = ref.read(globalAudioPlayerProvider.notifier);
 
-    // Load queue
-    await queueService.loadQueue(_tracks, startIndex: 0, autoplay: true);
+    await queueService.loadQueue(_tracks);
 
     // Play first track
     final currentTrack = queueService.currentTrack;
     if (currentTrack != null) {
-      // Convert Track to AudioTrack
       final audioTrack = AudioTrack(
         id: currentTrack.id,
         title: currentTrack.title,
@@ -146,7 +142,8 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
                 foregroundColor: ThemeHelpers.getPrimaryTextColor(context),
                 padding: ResponsiveSystem.symmetric(
                   context,
-                  horizontal: ResponsiveSystem.spacing(context, baseSpacing: 24),
+                  horizontal:
+                      ResponsiveSystem.spacing(context, baseSpacing: 24),
                   vertical: ResponsiveSystem.spacing(context, baseSpacing: 12),
                 ),
                 shape: RoundedRectangleBorder(
@@ -171,17 +168,20 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
                       children: [
                         Icon(
                           LucideIcons.music,
-                          size: ResponsiveSystem.iconSize(context, baseSize: 48),
+                          size:
+                              ResponsiveSystem.iconSize(context, baseSize: 48),
                           color: ThemeHelpers.getSecondaryTextColor(context),
                         ),
                         ResponsiveSystem.sizedBox(
                           context,
-                          height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                          height: ResponsiveSystem.spacing(context,
+                              baseSpacing: 16,),
                         ),
                         Text(
                           'No tracks in playlist',
                           style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                            fontSize: ResponsiveSystem.fontSize(context,
+                                baseSize: 16,),
                             color: ThemeHelpers.getSecondaryTextColor(context),
                           ),
                         ),
@@ -193,7 +193,8 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
                   itemCount: _tracks.length,
                   onReorder: (oldIndex, newIndex) async {
                     if (newIndex > oldIndex) newIndex--;
-                    final playlistService = ref.read(playlistServiceProvider.notifier);
+                    final playlistService =
+                        ref.read(playlistServiceProvider.notifier);
                     await playlistService.reorderPlaylist(
                       widget.playlistId,
                       oldIndex,
@@ -207,11 +208,13 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
                       key: ValueKey(track.id),
                       track: track,
                       onTap: () async {
-                        final queueService = ref.read(playerQueueServiceProvider.notifier);
-                        final playerController = ref.read(globalAudioPlayerProvider.notifier);
+                        final queueService =
+                            ref.read(playerQueueServiceProvider.notifier);
+                        final playerController =
+                            ref.read(globalAudioPlayerProvider.notifier);
 
-                        // Load queue starting from this track
-                        await queueService.loadQueue(_tracks, startIndex: index, autoplay: true);
+                        await queueService.loadQueue(_tracks,
+                            startIndex: index,);
 
                         // Play track
                         final audioTrack = AudioTrack(
@@ -227,8 +230,10 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
                         await playerController.playPause();
                       },
                       onRemove: () async {
-                        final playlistService = ref.read(playlistServiceProvider.notifier);
-                        await playlistService.removeFromPlaylist(widget.playlistId, track.id);
+                        final playlistService =
+                            ref.read(playlistServiceProvider.notifier);
+                        await playlistService.removeFromPlaylist(
+                            widget.playlistId, track.id,);
                         await _loadPlaylist();
                       },
                     );
@@ -242,16 +247,15 @@ class _PlaylistDetailState extends ConsumerState<PlaylistDetail> {
 
 /// Playlist Track Item Widget
 class _PlaylistTrackItem extends StatelessWidget {
-  final Track track;
-  final VoidCallback onTap;
-  final VoidCallback onRemove;
-
   const _PlaylistTrackItem({
     required super.key,
     required this.track,
     required this.onTap,
     required this.onRemove,
   });
+  final Track track;
+  final VoidCallback onTap;
+  final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -326,4 +330,3 @@ class _PlaylistTrackItem extends StatelessWidget {
     );
   }
 }
-

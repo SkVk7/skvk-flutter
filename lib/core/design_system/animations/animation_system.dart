@@ -8,10 +8,10 @@ import 'package:flutter/material.dart';
 
 /// Centralized animation system for consistent animations across the app
 class AnimationSystem {
-  static AnimationSystem? _instance;
-  static AnimationSystem get instance => _instance ??= AnimationSystem._();
+  factory AnimationSystem() => _instance ??= AnimationSystem._();
 
   AnimationSystem._();
+  static AnimationSystem? _instance;
 
   // Animation Durations
   static const Duration fast = Duration(milliseconds: 150);
@@ -28,22 +28,22 @@ class AnimationSystem {
   static const Curve fastOutSlowIn = Curves.fastOutSlowIn;
 
   // Scale Animation Values
-  static const double scaleNormal = 1.0;
+  static const double scaleNormal = 1;
   static const double scalePressed = 0.95;
   static const double scaleHover = 1.02;
   static const double scalePulse = 1.1;
 
   // Rotation Animation Values
-  static const double rotationNormal = 0.0;
+  static const double rotationNormal = 0;
   static const double rotationPressed = 0.1;
 
   // Elevation Animation Values
-  static const double elevationNormal = 0.0;
-  static const double elevationHover = 8.0;
-  static const double elevationPressed = 4.0;
+  static const double elevationNormal = 0;
+  static const double elevationHover = 8;
+  static const double elevationPressed = 4;
 
   // Opacity Animation Values
-  static const double opacityNormal = 1.0;
+  static const double opacityNormal = 1;
   static const double opacityDisabled = 0.6;
   static const double opacityHover = 0.8;
 
@@ -69,10 +69,12 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: curve,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: curve,
+      ),
+    );
   }
 
   /// Create a rotation animation
@@ -85,10 +87,12 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: curve,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: curve,
+      ),
+    );
   }
 
   /// Create an elevation animation
@@ -101,10 +105,12 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: curve,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: curve,
+      ),
+    );
   }
 
   /// Create an opacity animation
@@ -117,10 +123,12 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: curve,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: curve,
+      ),
+    );
   }
 
   /// Create a pulse animation controller
@@ -144,10 +152,12 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: curve,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: curve,
+      ),
+    );
   }
 
   /// Create a ripple animation controller
@@ -171,10 +181,12 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: curve,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: curve,
+      ),
+    );
   }
 
   /// Create a stagger animation controller
@@ -199,14 +211,16 @@ class AnimationSystem {
     return Tween<double>(
       begin: begin,
       end: end,
-    ).animate(CurvedAnimation(
-      parent: controller,
-      curve: Interval(
-        delay,
-        (delay + 0.3).clamp(0.0, 1.0),
-        curve: curve,
+    ).animate(
+      CurvedAnimation(
+        parent: controller,
+        curve: Interval(
+          delay,
+          (delay + 0.3).clamp(0.0, 1.0),
+          curve: curve,
+        ),
       ),
-    ));
+    );
   }
 }
 
@@ -266,8 +280,9 @@ class AnimationUtils {
   static void stopPulse({
     required AnimationController pulseController,
   }) {
-    pulseController.stop();
-    pulseController.reset();
+    pulseController
+      ..stop()
+      ..reset();
   }
 
   /// Start stagger animation
@@ -287,7 +302,6 @@ class AnimationUtils {
 
 /// Predefined animation configurations
 class AnimationConfigs {
-  // Button animations
   static const Map<String, dynamic> buttonPress = {
     'duration': AnimationSystem.fast,
     'curve': AnimationSystem.easeInOut,

@@ -4,24 +4,22 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Theme Dropdown - Dropdown for theme selection
 @immutable
 class ThemeDropdown extends StatelessWidget {
-  final ValueChanged<String>? onThemeChanged;
-
   const ThemeDropdown({
     super.key,
     this.onThemeChanged,
   });
+  final ValueChanged<String>? onThemeChanged;
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
       tooltip: 'Theme',
-      // Remove background circle, only icon, size +8% (24 * 1.08 = 25.92)
       icon: Icon(
         Icons.palette,
         color: ThemeHelpers.getAppBarTextColor(context),
@@ -108,4 +106,3 @@ class ThemeDropdown extends StatelessWidget {
     );
   }
 }
-

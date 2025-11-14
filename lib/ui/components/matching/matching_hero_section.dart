@@ -5,31 +5,32 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Matching Hero Section - Input screen hero
 class MatchingHeroSection extends StatelessWidget {
-  final TranslationService translationService;
-
   const MatchingHeroSection({
-    super.key,
     required this.translationService,
+    super.key,
   });
+  final TranslationService translationService;
 
   @override
   Widget build(BuildContext context) {
     final primaryGradient = ThemeHelpers.getPrimaryGradient(context);
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
           bottomRight: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
         ),
       ),
       child: Container(
@@ -48,8 +49,10 @@ class MatchingHeroSection extends StatelessWidget {
               size: ResponsiveSystem.iconSize(context, baseSize: 40),
               color: ThemeHelpers.getPrimaryTextColor(context),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             // Main title
             Text(
               '💕 ${translationService.translateHeader('kundali_matching', fallback: 'Kundali Matching')}',
@@ -62,8 +65,10 @@ class MatchingHeroSection extends StatelessWidget {
                 color: ThemeHelpers.getPrimaryTextColor(context),
               ),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+            ),
             // Subtitle
             Text(
               'Find your perfect partner',
@@ -86,25 +91,26 @@ class MatchingHeroSection extends StatelessWidget {
 
 /// Matching Results Hero Section - Results screen hero
 class MatchingResultsHeroSection extends StatelessWidget {
-  final double? compatibilityScore;
-
   const MatchingResultsHeroSection({
     super.key,
     this.compatibilityScore,
   });
+  final double? compatibilityScore;
 
   @override
   Widget build(BuildContext context) {
     final primaryGradient = ThemeHelpers.getPrimaryGradient(context);
 
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
           bottomRight: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
         ),
       ),
       child: Container(
@@ -122,8 +128,10 @@ class MatchingResultsHeroSection extends StatelessWidget {
               size: ResponsiveSystem.iconSize(context, baseSize: 48),
               color: ThemeHelpers.getPrimaryTextColor(context),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
             Text(
               'Matching Results',
               textAlign: TextAlign.center,
@@ -135,8 +143,10 @@ class MatchingResultsHeroSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+            ),
             Text(
               '${(compatibilityScore ?? 0).toStringAsFixed(0)}% Compatible',
               textAlign: TextAlign.center,
@@ -155,4 +165,3 @@ class MatchingResultsHeroSection extends StatelessWidget {
     );
   }
 }
-

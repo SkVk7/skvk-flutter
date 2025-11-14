@@ -6,28 +6,26 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/design_system/design_system.dart';
-import '../../../core/services/content/content_language_service.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/services/content/content_language_service.dart';
 
 /// Content language dropdown widget
 class ContentLanguageDropdown extends ConsumerWidget {
-  final Function(String)? onLanguageChanged;
-  final List<String>?
-      availableLanguages; // Filter to only show available languages
+  // Filter to only show available languages
 
   const ContentLanguageDropdown({
     super.key,
     this.onLanguageChanged,
     this.availableLanguages,
   });
+  final Function(String)? onLanguageChanged;
+  final List<String>? availableLanguages;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final languagePrefs = ref.watch(contentLanguageServiceProvider);
 
     // Filter languages to only show available ones from R2
-    // If availableLanguages is provided, only show those languages in the dropdown
-    // This way users can see exactly which languages are available for the current book
     final languagesToShow =
         availableLanguages != null && availableLanguages!.isNotEmpty
             ? ContentLanguage.values
@@ -35,13 +33,12 @@ class ContentLanguageDropdown extends ConsumerWidget {
                 .toList()
             : ContentLanguage.values; // Fallback to all if not specified
 
-    // If no available languages, show disabled icon with tooltip
     if (languagesToShow.isEmpty) {
       return IconButton(
         icon: Icon(
           Icons.language,
-          color: ThemeHelpers.getAppBarTextColor(context)
-              .withValues(alpha: 0.5),
+          color:
+              ThemeHelpers.getAppBarTextColor(context).withValues(alpha: 0.5),
           size: ResponsiveSystem.iconSize(context, baseSize: 24),
         ),
         tooltip: 'No languages available for this book',
@@ -60,17 +57,15 @@ class ContentLanguageDropdown extends ConsumerWidget {
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
       ),
       color: ThemeHelpers.getSurfaceColor(context),
-      onSelected: (String value) async {
-        // Update language state first
+      onSelected: (value) async {
         final language = ContentLanguage.fromCode(value);
         await ref
             .read(contentLanguageServiceProvider.notifier)
             .setContentLanguage(language);
-        // Then call the callback
         onLanguageChanged?.call(value);
       },
-      itemBuilder: (BuildContext context) {
-        return languagesToShow.map((ContentLanguage language) {
+      itemBuilder: (context) {
+        return languagesToShow.map((language) {
           final isSelected = languagePrefs.selectedLanguage == language;
           return PopupMenuItem<String>(
             value: language.code,

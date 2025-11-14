@@ -8,17 +8,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skvk_application/core/services/audio/audio_controller.dart';
 import 'package:skvk_application/core/models/audio/track.dart';
 import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
-import 'package:skvk_application/core/services/audio/models/lyric_line.dart';
 
 void main() {
   group('AudioController', () {
     late ProviderContainer container;
-    late GlobalAudioPlayerController globalController;
     late AudioController controller;
 
     setUp(() {
       container = ProviderContainer();
-      globalController = container.read(globalAudioPlayerProvider.notifier);
+      // GlobalAudioPlayerController is initialized but not directly used in these tests
+      container.read(globalAudioPlayerProvider.notifier);
       controller = container.read(audioControllerProvider.notifier);
     });
 

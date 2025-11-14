@@ -6,8 +6,6 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:skvk_application/core/services/audio/playlist_service.dart';
-import 'package:skvk_application/core/services/audio/models/playlist.dart';
-import 'package:skvk_application/core/services/audio/models/track.dart';
 
 void main() {
   group('PlaylistService', () {

@@ -3,22 +3,18 @@
 /// Represents a playlist with tracks
 library;
 
-/// Playlist model
-class Playlist {
-  final String id;
-  final String name;
-  final String? description;
-  final List<String> trackIds;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+import 'package:flutter/foundation.dart';
 
+/// Playlist model
+@immutable
+class Playlist {
   const Playlist({
     required this.id,
     required this.name,
-    this.description,
     required this.trackIds,
     required this.createdAt,
     required this.updatedAt,
+    this.description,
   });
 
   /// Create Playlist from JSON
@@ -32,6 +28,12 @@ class Playlist {
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
+  final String id;
+  final String name;
+  final String? description;
+  final List<String> trackIds;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   /// Convert Playlist to JSON
   Map<String, dynamic> toJson() {
@@ -69,14 +71,12 @@ class Playlist {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Playlist &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is Playlist && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'Playlist(id: $id, name: $name, tracks: ${trackIds.length})';
+  String toString() =>
+      'Playlist(id: $id, name: $name, tracks: ${trackIds.length})';
 }
-

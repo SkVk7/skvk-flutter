@@ -4,22 +4,21 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Section Title - Responsive section title with overflow handling
 @immutable
 class SectionTitle extends StatelessWidget {
-  final String title;
-  final double? baseFontSize;
-  final double? letterSpacingPercent;
-
   const SectionTitle({
-    super.key,
     required this.title,
+    super.key,
     this.baseFontSize,
     this.letterSpacingPercent,
   });
+  final String title;
+  final double? baseFontSize;
+  final double? letterSpacingPercent;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,8 @@ class SectionTitle extends StatelessWidget {
           mobile: ResponsiveSystem.fontSize(context, baseSize: fontSize - 1),
           tablet: ResponsiveSystem.fontSize(context, baseSize: fontSize),
           desktop: ResponsiveSystem.fontSize(context, baseSize: fontSize + 2),
-          largeDesktop: ResponsiveSystem.fontSize(context, baseSize: fontSize + 4),
+          largeDesktop:
+              ResponsiveSystem.fontSize(context, baseSize: fontSize + 4),
         ),
         // Increased font weight by +8% (w600 → w650, using w700 for bolder)
         fontWeight: FontWeight.w700,
@@ -45,13 +45,17 @@ class SectionTitle extends StatelessWidget {
         // Responsive letter spacing (percentage of fontSize) - increased by +6%
         letterSpacing: ResponsiveSystem.responsive(
           context,
-          mobile: ResponsiveSystem.fontSize(context, baseSize: fontSize - 1) * (letterSpacing * 1.06),
-          tablet: ResponsiveSystem.fontSize(context, baseSize: fontSize) * (letterSpacing * 1.06),
-          desktop: ResponsiveSystem.fontSize(context, baseSize: fontSize + 2) * (letterSpacing * 1.06),
-          largeDesktop: ResponsiveSystem.fontSize(context, baseSize: fontSize + 4) * (letterSpacing * 1.06),
+          mobile: ResponsiveSystem.fontSize(context, baseSize: fontSize - 1) *
+              (letterSpacing * 1.06),
+          tablet: ResponsiveSystem.fontSize(context, baseSize: fontSize) *
+              (letterSpacing * 1.06),
+          desktop: ResponsiveSystem.fontSize(context, baseSize: fontSize + 2) *
+              (letterSpacing * 1.06),
+          largeDesktop:
+              ResponsiveSystem.fontSize(context, baseSize: fontSize + 4) *
+                  (letterSpacing * 1.06),
         ),
       ),
     );
   }
 }
-

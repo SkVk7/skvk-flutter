@@ -28,11 +28,13 @@ class HoroscopeInsightsGenerator {
     final planetHouse = planetData['house'] as int?;
     final planetNakshatra = planetData['nakshatra'] as String?;
 
-    if (signName == 'Unknown' || planetHouse == null || planetNakshatra == null) {
+    if (signName == 'Unknown' ||
+        planetHouse == null ||
+        planetNakshatra == null) {
       return 0.5;
     }
 
-    double strength = 0.0;
+    double strength = 0;
     strength += _getSignStrength(planet, signName);
     strength += _getHouseStrength(planetHouse.toString());
     strength += _getNakshatraStrength(planetNakshatra);
@@ -60,7 +62,7 @@ class HoroscopeInsightsGenerator {
       'Venus',
       'Saturn',
       'Rahu',
-      'Ketu'
+      'Ketu',
     ];
 
     for (final otherPlanetName in planetNames) {
@@ -71,7 +73,8 @@ class HoroscopeInsightsGenerator {
 
       final aspect = _calculateAspect(planetData, otherPlanetData);
       if (aspect.isNotEmpty) {
-        aspects.add('${_getPlanetName(otherPlanetName.toLowerCase())}: $aspect');
+        aspects
+            .add('${_getPlanetName(otherPlanetName.toLowerCase())}: $aspect');
       }
     }
 
@@ -91,11 +94,11 @@ class HoroscopeInsightsGenerator {
     final sunAspects = calculatePlanetaryAspects(birthChart, 'sun');
 
     final sunRashiName = sunRashi ?? 'Unknown';
-    String baseInterpretation = _getSunSignInterpretation(sunRashiName);
-    String houseInfluence = _getHouseInfluence(sunHouse?.toString());
-    String nakshatraInfluence = _getNakshatraInfluence(sunNakshatra);
-    String strengthInfluence = _getStrengthInfluence(sunStrength);
-    String aspectInfluence = _getAspectInfluence(sunAspects);
+    final String baseInterpretation = _getSunSignInterpretation(sunRashiName);
+    final String houseInfluence = _getHouseInfluence(sunHouse?.toString());
+    final String nakshatraInfluence = _getNakshatraInfluence(sunNakshatra);
+    final String strengthInfluence = _getStrengthInfluence(sunStrength);
+    final String aspectInfluence = _getAspectInfluence(sunAspects);
 
     return '$baseInterpretation $houseInfluence $nakshatraInfluence $strengthInfluence $aspectInfluence';
   }
@@ -112,11 +115,11 @@ class HoroscopeInsightsGenerator {
     final moonAspects = calculatePlanetaryAspects(birthChart, 'moon');
 
     final moonRashiName = moonRashi ?? 'Unknown';
-    String baseInterpretation = _getMoonSignInterpretation(moonRashiName);
-    String houseInfluence = _getHouseInfluence(moonHouse?.toString());
-    String nakshatraInfluence = _getNakshatraInfluence(moonNakshatra);
-    String strengthInfluence = _getStrengthInfluence(moonStrength);
-    String aspectInfluence = _getAspectInfluence(moonAspects);
+    final String baseInterpretation = _getMoonSignInterpretation(moonRashiName);
+    final String houseInfluence = _getHouseInfluence(moonHouse?.toString());
+    final String nakshatraInfluence = _getNakshatraInfluence(moonNakshatra);
+    final String strengthInfluence = _getStrengthInfluence(moonStrength);
+    final String aspectInfluence = _getAspectInfluence(moonAspects);
 
     return '$baseInterpretation $houseInfluence $nakshatraInfluence $strengthInfluence $aspectInfluence';
   }
@@ -133,11 +136,11 @@ class HoroscopeInsightsGenerator {
     final marsAspects = calculatePlanetaryAspects(birthChart, 'mars');
 
     final marsRashiName = marsRashi ?? 'Unknown';
-    String baseInterpretation = _getMarsSignInterpretation(marsRashiName);
-    String houseInfluence = _getHouseInfluence(marsHouse?.toString());
-    String nakshatraInfluence = _getNakshatraInfluence(marsNakshatra);
-    String strengthInfluence = _getStrengthInfluence(marsStrength);
-    String aspectInfluence = _getAspectInfluence(marsAspects);
+    final String baseInterpretation = _getMarsSignInterpretation(marsRashiName);
+    final String houseInfluence = _getHouseInfluence(marsHouse?.toString());
+    final String nakshatraInfluence = _getNakshatraInfluence(marsNakshatra);
+    final String strengthInfluence = _getStrengthInfluence(marsStrength);
+    final String aspectInfluence = _getAspectInfluence(marsAspects);
 
     return '$baseInterpretation $houseInfluence $nakshatraInfluence $strengthInfluence $aspectInfluence';
   }
@@ -156,11 +159,12 @@ class HoroscopeInsightsGenerator {
     final jupiterAspects = calculatePlanetaryAspects(birthChart, 'jupiter');
 
     final jupiterRashiName = jupiterRashi ?? 'Unknown';
-    String baseInterpretation = _getJupiterSignInterpretation(jupiterRashiName);
-    String houseInfluence = _getHouseInfluence(jupiterHouse?.toString());
-    String nakshatraInfluence = _getNakshatraInfluence(jupiterNakshatra);
-    String strengthInfluence = _getStrengthInfluence(jupiterStrength);
-    String aspectInfluence = _getAspectInfluence(jupiterAspects);
+    final String baseInterpretation =
+        _getJupiterSignInterpretation(jupiterRashiName);
+    final String houseInfluence = _getHouseInfluence(jupiterHouse?.toString());
+    final String nakshatraInfluence = _getNakshatraInfluence(jupiterNakshatra);
+    final String strengthInfluence = _getStrengthInfluence(jupiterStrength);
+    final String aspectInfluence = _getAspectInfluence(jupiterAspects);
 
     return '$baseInterpretation $houseInfluence $nakshatraInfluence $strengthInfluence $aspectInfluence';
   }
@@ -179,11 +183,12 @@ class HoroscopeInsightsGenerator {
     final venusAspects = calculatePlanetaryAspects(birthChart, 'venus');
 
     final venusRashiName = venusRashi ?? 'Unknown';
-    String baseInterpretation = _getVenusSignInterpretation(venusRashiName);
-    String houseInfluence = _getHouseInfluence(venusHouse?.toString());
-    String nakshatraInfluence = _getNakshatraInfluence(venusNakshatra);
-    String strengthInfluence = _getStrengthInfluence(venusStrength);
-    String aspectInfluence = _getAspectInfluence(venusAspects);
+    final String baseInterpretation =
+        _getVenusSignInterpretation(venusRashiName);
+    final String houseInfluence = _getHouseInfluence(venusHouse?.toString());
+    final String nakshatraInfluence = _getNakshatraInfluence(venusNakshatra);
+    final String strengthInfluence = _getStrengthInfluence(venusStrength);
+    final String aspectInfluence = _getAspectInfluence(venusAspects);
 
     return '$baseInterpretation $houseInfluence $nakshatraInfluence $strengthInfluence $aspectInfluence';
   }
@@ -383,7 +388,7 @@ class HoroscopeInsightsGenerator {
       case 'fourth':
       case 'seventh':
       case 'tenth':
-        return 1.0;
+        return 1;
       case 'second':
       case 'fifth':
       case 'eighth':
@@ -404,7 +409,9 @@ class HoroscopeInsightsGenerator {
   }
 
   static String _calculateAspect(
-      Map<String, dynamic> planet1, Map<String, dynamic> planet2) {
+    Map<String, dynamic> planet1,
+    Map<String, dynamic> planet2,
+  ) {
     final longitude1 = planet1['longitude'] as double? ?? 0.0;
     final longitude2 = planet2['longitude'] as double? ?? 0.0;
     final diff = (longitude2 - longitude1).abs() % 360.0;
@@ -551,13 +558,15 @@ class HoroscopeInsightsGenerator {
       'Venus',
       'Saturn',
       'Rahu',
-      'Ketu'
+      'Ketu',
     ];
     return validPlanets.contains(name);
   }
 
   static String? _calculateHouseLordFromAscendant(
-      int houseNumber, String ascendantRashi) {
+    int houseNumber,
+    String ascendantRashi,
+  ) {
     const rashiLords = {
       'Aries': 'Mars',
       'Taurus': 'Venus',
@@ -585,7 +594,7 @@ class HoroscopeInsightsGenerator {
       'Sagittarius',
       'Capricorn',
       'Aquarius',
-      'Pisces'
+      'Pisces',
     ];
     final ascendantIndex = rashiNames
         .indexWhere((r) => r.toLowerCase() == ascendantRashi.toLowerCase());
@@ -696,7 +705,7 @@ class HoroscopeInsightsGenerator {
       case 'aries':
         return 'Your wisdom and growth expand through leadership and new initiatives.';
       case 'taurus':
-        return 'Your wisdom and growth come from building solid foundations and appreciating life\'s pleasures.';
+        return "Your wisdom and growth come from building solid foundations and appreciating life's pleasures.";
       case 'gemini':
         return 'Your wisdom and growth expand through learning and communication.';
       case 'cancer':
@@ -840,7 +849,7 @@ class HoroscopeInsightsGenerator {
       case 'aquarius':
         return 'You build wealth through innovation and humanitarian service. Your originality helps you create unique financial opportunities.';
       case 'pisces':
-        return 'You build wealth through compassion and intuition. Your sensitivity helps you understand others\' needs and create value.';
+        return "You build wealth through compassion and intuition. Your sensitivity helps you understand others' needs and create value.";
       default:
         return 'Your wealth potential reflects your natural abilities and the best ways for you to create and manage financial resources.';
     }
@@ -877,4 +886,3 @@ class HoroscopeInsightsGenerator {
     }
   }
 }
-

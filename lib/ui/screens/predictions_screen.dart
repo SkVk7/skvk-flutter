@@ -1,25 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-// UI Utils - Use only these for consistency
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-// Core imports
-import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
-import '../../core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
+import 'package:skvk_application/core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/profile_completion_checker.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/dialogs/index.dart';
 // Features imports
-import '../components/predictions/daily_predictions_tab.dart';
-// UI Components - Reusable components
-import '../components/common/index.dart';
-import '../components/dialogs/index.dart';
-// Core imports
-import '../../core/services/language/translation_service.dart';
-import '../../core/services/user/user_service.dart';
-import '../../core/utils/either.dart';
-import '../../core/utils/validation/profile_completion_checker.dart';
-import '../../core/logging/logging_helper.dart';
-import 'user_edit_screen.dart';
-import '../utils/screen_handlers.dart';
+import 'package:skvk_application/ui/components/predictions/daily_predictions_tab.dart';
+import 'package:skvk_application/ui/screens/user_edit_screen.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 class PredictionsScreen extends ConsumerStatefulWidget {
   const PredictionsScreen({super.key});
@@ -36,7 +32,6 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
   void initState() {
     super.initState();
 
-    // Initialize animation controller
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -49,9 +44,7 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
   }
 
   Future<void> _checkProfileAndShowPopup() async {
-    // Check if user profile is complete before showing predictions
     // The DailyPredictionsTab will handle the actual profile checking
-    // This method is kept for future enhancements if needed
   }
 
   @override
@@ -65,12 +58,10 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundGradient = BackgroundGradients.getBackgroundGradient(
       isDark: isDark,
-      isEvening: false,
-      useSacredFire: false,
     );
 
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: backgroundGradient,
         ),
@@ -96,15 +87,15 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
               actions: [
                 // Language Dropdown Widget
                 LanguageDropdown(
-                  onLanguageChanged: (value) {
-                    LoggingHelper.logInfo('Language changed to: $value');
+                  onLanguageChanged: (value) async {
+                    await LoggingHelper.logInfo('Language changed to: $value');
                     ScreenHandlers.handleLanguageChange(ref, value);
                   },
                 ),
                 // Theme Dropdown Widget
                 ThemeDropdown(
-                  onThemeChanged: (value) {
-                    LoggingHelper.logInfo('Theme changed to: $value');
+                  onThemeChanged: (value) async {
+                    await LoggingHelper.logInfo('Theme changed to: $value');
                     ScreenHandlers.handleThemeChange(ref, value);
                   },
                 ),
@@ -117,7 +108,10 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
                   child: ProfilePhoto(
                     key: const ValueKey('profile_icon'),
                     onTap: () => _handleProfileTap(
-                        context, ref, ref.watch(translationServiceProvider)),
+                      context,
+                      ref,
+                      ref.watch(translationServiceProvider),
+                    ),
                     tooltip:
                         ref.watch(translationServiceProvider).translateContent(
                               'my_profile',
@@ -136,7 +130,6 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
                   ),
                 ),
                 background: _buildHeroSection(),
-                collapseMode: CollapseMode.parallax,
               ),
             ),
 
@@ -152,14 +145,16 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
 
   Widget _buildHeroSection() {
     final primaryGradient = ThemeHelpers.getPrimaryGradient(context);
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
           bottomRight: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 30)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 30),
+          ),
         ),
       ),
       child: Container(
@@ -179,8 +174,10 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
               size: ResponsiveSystem.iconSize(context, baseSize: 40),
               color: ThemeHelpers.getPrimaryTextColor(context),
             ),
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
 
             // Subtitle only (title is handled by SliverAppBar)
             Text(
@@ -201,34 +198,44 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
     );
   }
 
-
   /// Handle profile icon tap - show popup if profile incomplete, otherwise navigate to profile
-  Future<void> _handleProfileTap(BuildContext context, WidgetRef ref,
-      TranslationService translationService) async {
+  Future<void> _handleProfileTap(
+    BuildContext context,
+    WidgetRef ref,
+    TranslationService translationService,
+  ) async {
+    if (!mounted) return;
     final currentContext = context;
     try {
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.getCurrentUser();
+      if (!mounted) return;
       final user =
           ResultHelper.isSuccess(result) ? ResultHelper.getValue(result) : null;
 
       // Use ProfileCompletionChecker to determine if user has real profile data
       if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
-        // Show "Complete Your Profile" popup instead of directly navigating
-        _showProfileCompletionPopup(currentContext, translationService);
+        if (currentContext.mounted) {
+          _showProfileCompletionPopup(currentContext, translationService);
+        }
       } else {
-        // Navigate to profile view screen
-        _navigateToProfile(currentContext);
+        if (currentContext.mounted) {
+          _navigateToProfile(currentContext);
+        }
       }
-    } catch (e) {
+    } on Exception {
       // On error, show profile completion popup
-      _showProfileCompletionPopup(currentContext, translationService);
+      if (currentContext.mounted) {
+        _showProfileCompletionPopup(currentContext, translationService);
+      }
     }
   }
 
   /// Show profile completion popup
   void _showProfileCompletionPopup(
-      BuildContext context, TranslationService translationService) {
+    BuildContext context,
+    TranslationService translationService,
+  ) {
     showDialog(
       context: context,
       builder: (context) => ProfileCompletionDialog(
@@ -246,21 +253,29 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
 
   /// Navigate to user edit screen with hero animation
   void _navigateToUser(BuildContext context) {
-    // Get the screen size for positioning
     final screenSize = MediaQuery.of(context).size;
 
-    // Calculate approximate position of profile icon (top right)
     final sourcePosition = Offset(
       screenSize.width -
-          ResponsiveSystem.spacing(context,
-              baseSpacing: 60), // Approximate position of profile icon
-      ResponsiveSystem.spacing(context,
-          baseSpacing: 60), // Approximate Y position
+          ResponsiveSystem.spacing(
+            context,
+            baseSpacing: 60,
+          ), // Approximate position of profile icon
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 60,
+      ), // Approximate Y position
     );
     final sourceSize = Size(
-        ResponsiveSystem.spacing(context, baseSpacing: 40),
-        ResponsiveSystem.spacing(context,
-            baseSpacing: 40)); // Approximate size of profile icon
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 40,
+      ),
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 40,
+      ),
+    ); // Approximate size of profile icon
 
     // Use hero navigation with zoom-out effect from profile icon
     HeroNavigationWithRipple.pushWithRipple(
@@ -268,10 +283,8 @@ class _PredictionsScreenState extends ConsumerState<PredictionsScreen>
       const UserEditScreen(),
       sourcePosition,
       sourceSize,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
       rippleColor: ThemeHelpers.getPrimaryColor(context),
-      rippleRadius: 100.0,
+      rippleRadius: 100,
     );
   }
 

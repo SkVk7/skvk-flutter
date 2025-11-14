@@ -3,8 +3,8 @@
 /// Abstract interface for user data operations following Clean Architecture
 library;
 
-import '../models/user/user_model.dart';
-import '../utils/either.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// Abstract user repository interface
 abstract class UserRepositoryInterface {

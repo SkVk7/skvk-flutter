@@ -4,10 +4,25 @@
 /// including tithi, nakshatra, festivals, and auspicious symbols
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import '../../../core/design_system/design_system.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
 
 class CalendarDayBox extends StatefulWidget {
+  const CalendarDayBox({
+    required this.date,
+    required this.selectedDate,
+    required this.onDateSelected,
+    required this.onDateDetailRequested,
+    required this.latitude,
+    required this.longitude,
+    super.key,
+    this.ayanamsha = 'lahiri',
+    this.showFestivals = true,
+    this.showAuspiciousTimes = true,
+    this.showCalendarInfo = true,
+  });
   final DateTime date;
   final DateTime selectedDate;
   final Function(DateTime) onDateSelected;
@@ -18,20 +33,6 @@ class CalendarDayBox extends StatefulWidget {
   final bool showFestivals;
   final bool showAuspiciousTimes;
   final bool showCalendarInfo;
-
-  const CalendarDayBox({
-    super.key,
-    required this.date,
-    required this.selectedDate,
-    required this.onDateSelected,
-    required this.onDateDetailRequested,
-    required this.latitude,
-    required this.longitude,
-    this.ayanamsha = 'lahiri',
-    this.showFestivals = true,
-    this.showAuspiciousTimes = true,
-    this.showCalendarInfo = true,
-  });
 
   @override
   State<CalendarDayBox> createState() => _CalendarDayBoxState();
@@ -63,20 +64,24 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
     );
 
     _scaleAnimation = Tween<double>(
-      begin: 1.0,
+      begin: 1,
       end: 1.05,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
   }
 
   Future<void> _loadCalendarData() async {
@@ -85,13 +90,9 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
         _isLoading = true;
       });
 
-      // Note: There is no standalone getCalendarDay API endpoint.
-      // Only getCalendarMonth and getCalendarYear exist.
-      // This widget is used in calendar grids where month data is already loaded.
       // To implement standalone fetching, we would need to:
       // 1. Call getCalendarMonth API for the date's month
       // 2. Extract the specific day from the month response
-      // This is inefficient for individual day boxes in a grid, so it's not implemented.
       // The parent calendar_month_view already loads month data and extracts day info.
       setState(() {
         _calendarData = {
@@ -111,8 +112,8 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
         _isLoading = false;
       });
 
-      _animationController.forward();
-    } catch (e) {
+      unawaited(_animationController.forward());
+    } on Exception {
       setState(() {
         _isLoading = false;
       });
@@ -153,13 +154,12 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
   }
 
   Widget _buildDayBox(BuildContext context, bool isSelected, bool isToday) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeHelpers.getPrimaryColor(context)
             : isToday
-                ? ThemeHelpers.getPrimaryColor(context)
-                    .withAlpha((0.2 * 255).round())
+                ? ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.2)
                 : ThemeHelpers.getSurfaceColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
@@ -168,17 +168,19 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
               : isToday
                   ? ThemeHelpers.getPrimaryColor(context)
                   : ThemeHelpers.getSecondaryTextColor(context)
-                      .withAlpha((0.3 * 255).round()),
+                      .withValues(alpha: 0.3),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
         boxShadow: isSelected
             ? [
                 BoxShadow(
                   color: ThemeHelpers.getPrimaryColor(context)
-                      .withAlpha((0.3 * 255).round()),
+                      .withValues(alpha: 0.3),
                   blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
                   offset: Offset(
-                      0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                    0,
+                    ResponsiveSystem.spacing(context, baseSpacing: 4),
+                  ),
                 ),
               ]
             : null,
@@ -227,7 +229,10 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
   }
 
   Widget _buildCalendarInfo(
-      BuildContext context, bool isSelected, bool isToday) {
+    BuildContext context,
+    bool isSelected,
+    bool isToday,
+  ) {
     if (_calendarData == null) return const SizedBox.shrink();
 
     return Column(
@@ -254,7 +259,11 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
   }
 
   Widget _buildInfoChip(
-      BuildContext context, String text, IconData icon, bool isSelected) {
+    BuildContext context,
+    String text,
+    IconData icon,
+    bool isSelected,
+  ) {
     return Container(
       padding: ResponsiveSystem.symmetric(
         context,
@@ -264,8 +273,7 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
       decoration: BoxDecoration(
         color: isSelected
             ? ThemeHelpers.getSurfaceColor(context)
-            : ThemeHelpers.getPrimaryColor(context)
-                .withAlpha((0.1 * 255).round()),
+            : ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 4),
       ),
       child: Row(
@@ -374,7 +382,6 @@ class _CalendarDayBoxState extends State<CalendarDayBox>
   }
 
   String _getNakshatraAbbreviation(String nakshatra) {
-    // Return first 3 characters of nakshatra name
     if (nakshatra.length <= 3) return nakshatra;
     return nakshatra.substring(0, 3);
   }

@@ -40,8 +40,7 @@ class AnimationCurves {
 }
 
 /// Mini player height constant
-const double kMiniPlayerHeight = 72.0;
+const double kMiniPlayerHeight = 72;
 
 /// Extended mini player height (when showing more info)
-const double kMiniPlayerHeightExtended = 84.0;
-
+const double kMiniPlayerHeightExtended = 84;

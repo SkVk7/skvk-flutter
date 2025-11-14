@@ -5,24 +5,22 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-// UI Components - Reusable components
-import '../../components/common/index.dart';
-import '../../../core/design_system/design_system.dart';
-import '../../../core/services/astrology/astrology_service_bridge.dart';
-import '../../../core/services/location/simple_location_service.dart';
-import '../../../core/utils/astrology/timezone_util.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/services/astrology/astrology_service_bridge.dart';
+import 'package:skvk_application/core/services/location/simple_location_service.dart';
+import 'package:skvk_application/core/utils/astrology/timezone_util.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
 
 class FestivalsPanel extends StatefulWidget {
-  final DateTime selectedDate;
-  final double latitude;
-  final double longitude;
-
   const FestivalsPanel({
-    super.key,
     required this.selectedDate,
     required this.latitude,
     required this.longitude,
+    super.key,
   });
+  final DateTime selectedDate;
+  final double latitude;
+  final double longitude;
 
   @override
   State<FestivalsPanel> createState() => _FestivalsPanelState();
@@ -45,7 +43,6 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
         _isLoading = true;
       });
 
-      // Get device location with fallback
       final locationService = SimpleLocationService();
       final locationResult =
           await locationService.getDeviceLocationWithFallback();
@@ -59,13 +56,12 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
       final latitude = locationResult.latitude!;
       final longitude = locationResult.longitude!;
 
-      // Get timezone from device or use default
       await TimezoneUtil.initialize();
       final timezoneId =
           AstrologyServiceBridge.getTimezoneFromLocation(latitude, longitude);
 
       // Fetch calendar month data from API to extract festivals
-      final bridge = AstrologyServiceBridge.instance;
+      final bridge = AstrologyServiceBridge.instance();
       final monthData = await bridge.getCalendarMonth(
         year: widget.selectedDate.year,
         month: widget.selectedDate.month,
@@ -73,7 +69,6 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
         latitude: latitude,
         longitude: longitude,
         timezoneId: timezoneId,
-        ayanamsha: 'lahiri',
       );
 
       // Extract festivals from month data
@@ -84,12 +79,11 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
         final days = monthData['days'] as Map<String, dynamic>? ?? {};
         final selectedDayKey = widget.selectedDate.day.toString();
 
-        // Get festivals for selected day
         if (days.containsKey(selectedDayKey)) {
           final dayData = days[selectedDayKey] as Map<String, dynamic>? ?? {};
           final dayFestivals = dayData['festivals'] as List<dynamic>? ?? [];
 
-          for (var festival in dayFestivals) {
+          for (final festival in dayFestivals) {
             if (festival is Map<String, dynamic>) {
               festivals.add({
                 'name': festival['name'] ?? 'Festival',
@@ -101,7 +95,6 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
           }
         }
 
-        // Get upcoming festivals (next 7 days)
         final today = DateTime.now();
         for (int i = 1; i <= 7; i++) {
           final futureDate = today.add(Duration(days: i));
@@ -112,7 +105,7 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
               final dayData = days[dayKey] as Map<String, dynamic>? ?? {};
               final dayFestivals = dayData['festivals'] as List<dynamic>? ?? [];
 
-              for (var festival in dayFestivals) {
+              for (final festival in dayFestivals) {
                 if (festival is Map<String, dynamic>) {
                   upcoming.add({
                     'name': festival['name'] ?? 'Festival',
@@ -132,7 +125,7 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
         _upcomingFestivals = upcoming;
         _isLoading = false;
       });
-    } catch (e) {
+    } on Exception {
       setState(() {
         _festivals = [];
         _upcomingFestivals = [];
@@ -179,7 +172,7 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
             ),
             ResponsiveSystem.sizedBox(context, width: 8),
             Text(
-              'Today\'s Festivals',
+              "Today's Festivals",
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: ThemeHelpers.getPrimaryTextColor(context),
                     fontWeight: FontWeight.bold,
@@ -244,17 +237,17 @@ class _FestivalsPanelState extends State<FestivalsPanel> {
   }
 
   Widget _buildFestivalItem(
-      BuildContext context, Map<String, dynamic> festival) {
+    BuildContext context,
+    Map<String, dynamic> festival,
+  ) {
     return Container(
       margin: ResponsiveSystem.only(context, bottom: 8),
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
-        color: ThemeHelpers.getPrimaryColor(context)
-            .withAlpha((0.1 * 255).round()),
+        color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeHelpers.getPrimaryColor(context)
-              .withAlpha((0.3 * 255).round()),
+          color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.3),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
         ),
       ),

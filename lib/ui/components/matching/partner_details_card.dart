@@ -5,9 +5,23 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../common/index.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+
 /// Partner Details Card - Displays partner information in results screen
 class PartnerDetailsCard extends StatelessWidget {
+  // "Groom Details" or "Bride Details"
+
+  const PartnerDetailsCard({
+    required this.name,
+    required this.dateOfBirth,
+    required this.timeOfBirth,
+    required this.placeOfBirth,
+    required this.title,
+    super.key,
+    this.nakshatram,
+    this.raasi,
+    this.pada,
+  });
   final String name;
   final DateTime dateOfBirth;
   final TimeOfDay timeOfBirth;
@@ -15,19 +29,7 @@ class PartnerDetailsCard extends StatelessWidget {
   final String? nakshatram;
   final String? raasi;
   final String? pada;
-  final String title; // "Groom Details" or "Bride Details"
-
-  const PartnerDetailsCard({
-    super.key,
-    required this.name,
-    required this.dateOfBirth,
-    required this.timeOfBirth,
-    required this.placeOfBirth,
-    this.nakshatram,
-    this.raasi,
-    this.pada,
-    required this.title,
-  });
+  final String title;
 
   @override
   Widget build(BuildContext context) {
@@ -74,4 +76,3 @@ class PartnerDetailsCard extends StatelessWidget {
     );
   }
 }
-

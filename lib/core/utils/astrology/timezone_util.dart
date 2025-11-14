@@ -3,8 +3,8 @@
 /// Handles timezone conversions between local and UTC datetime.
 library;
 
-import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 /// Timezone utility for datetime conversions
 class TimezoneUtil {
@@ -22,11 +22,12 @@ class TimezoneUtil {
   static tz.Location _getLocation(String timezoneId) {
     if (!_initialized) {
       throw StateError(
-          'TimezoneUtil not initialized. Call initialize() first.');
+        'TimezoneUtil not initialized. Call initialize() first.',
+      );
     }
     try {
       return tz.getLocation(timezoneId);
-    } catch (e) {
+    } on Exception {
       throw ArgumentError('Invalid timezone ID: $timezoneId');
     }
   }
@@ -72,7 +73,7 @@ class TimezoneUtil {
     try {
       tz.getLocation(timezoneId);
       return true;
-    } catch (e) {
+    } on Exception {
       return false;
     }
   }

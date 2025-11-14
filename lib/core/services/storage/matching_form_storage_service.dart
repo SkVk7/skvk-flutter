@@ -6,10 +6,17 @@ library;
 
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Service to store and retrieve matching form data
 class MatchingFormStorageService {
+  // Private constructor for singleton
+  MatchingFormStorageService._();
+
+  /// Get singleton instance
+  factory MatchingFormStorageService.instance() {
+    return _instance ??= MatchingFormStorageService._();
+  }
   static MatchingFormStorageService? _instance;
   SharedPreferences? _prefs;
 
@@ -19,25 +26,17 @@ class MatchingFormStorageService {
   static const String _ayanamshaKey = 'matching_ayanamsha';
   static const String _houseSystemKey = 'matching_house_system';
 
-  // Private constructor for singleton
-  MatchingFormStorageService._();
-
-  /// Get singleton instance
-  static MatchingFormStorageService get instance {
-    _instance ??= MatchingFormStorageService._();
-    return _instance!;
-  }
-
   /// Initialize the service
   Future<void> initialize() async {
     try {
       _prefs = await SharedPreferences.getInstance();
-      LoggingHelper.logInfo('Matching Form Storage Service initialized');
-    } catch (e) {
-      LoggingHelper.logError(
-          'Failed to initialize matching form storage service',
-          source: 'MatchingFormStorageService',
-          error: e);
+      await LoggingHelper.logInfo('Matching Form Storage Service initialized');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to initialize matching form storage service',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
       rethrow;
     }
   }
@@ -64,10 +63,13 @@ class MatchingFormStorageService {
       };
 
       await _prefs!.setString(_groomDataKey, json.encode(groomData));
-      LoggingHelper.logInfo('Groom data saved successfully');
-    } catch (e) {
-      LoggingHelper.logError('Failed to save groom data',
-          source: 'MatchingFormStorageService', error: e);
+      await LoggingHelper.logInfo('Groom data saved successfully');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to save groom data',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
     }
   }
 
@@ -93,10 +95,13 @@ class MatchingFormStorageService {
       };
 
       await _prefs!.setString(_brideDataKey, json.encode(brideData));
-      LoggingHelper.logInfo('Bride data saved successfully');
-    } catch (e) {
-      LoggingHelper.logError('Failed to save bride data',
-          source: 'MatchingFormStorageService', error: e);
+      await LoggingHelper.logInfo('Bride data saved successfully');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to save bride data',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
     }
   }
 
@@ -105,10 +110,13 @@ class MatchingFormStorageService {
     try {
       await _ensureInitialized();
       await _prefs!.setString(_ayanamshaKey, ayanamsha);
-      LoggingHelper.logInfo('Ayanamsha saved successfully');
-    } catch (e) {
-      LoggingHelper.logError('Failed to save ayanamsha',
-          source: 'MatchingFormStorageService', error: e);
+      await LoggingHelper.logInfo('Ayanamsha saved successfully');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to save ayanamsha',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
     }
   }
 
@@ -121,9 +129,12 @@ class MatchingFormStorageService {
         return json.decode(groomDataString);
       }
       return null;
-    } catch (e) {
-      LoggingHelper.logError('Failed to get groom data',
-          source: 'MatchingFormStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get groom data',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
       return null;
     }
   }
@@ -137,9 +148,12 @@ class MatchingFormStorageService {
         return json.decode(brideDataString);
       }
       return null;
-    } catch (e) {
-      LoggingHelper.logError('Failed to get bride data',
-          source: 'MatchingFormStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get bride data',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
       return null;
     }
   }
@@ -149,9 +163,12 @@ class MatchingFormStorageService {
     try {
       await _ensureInitialized();
       return _prefs!.getString(_ayanamshaKey);
-    } catch (e) {
-      LoggingHelper.logError('Failed to get ayanamsha',
-          source: 'MatchingFormStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get ayanamsha',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
       return null;
     }
   }
@@ -161,10 +178,13 @@ class MatchingFormStorageService {
     try {
       await _ensureInitialized();
       await _prefs!.setString(_houseSystemKey, houseSystem);
-      LoggingHelper.logInfo('House system saved successfully');
-    } catch (e) {
-      LoggingHelper.logError('Failed to save house system',
-          source: 'MatchingFormStorageService', error: e);
+      await LoggingHelper.logInfo('House system saved successfully');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to save house system',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
     }
   }
 
@@ -173,9 +193,12 @@ class MatchingFormStorageService {
     try {
       await _ensureInitialized();
       return _prefs!.getString(_houseSystemKey);
-    } catch (e) {
-      LoggingHelper.logError('Failed to get house system',
-          source: 'MatchingFormStorageService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to get house system',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
       return null;
     }
   }
@@ -188,10 +211,13 @@ class MatchingFormStorageService {
       await _prefs!.remove(_brideDataKey);
       await _prefs!.remove(_ayanamshaKey);
       await _prefs!.remove(_houseSystemKey);
-      LoggingHelper.logInfo('All matching form data cleared');
-    } catch (e) {
-      LoggingHelper.logError('Failed to clear matching form data',
-          source: 'MatchingFormStorageService', error: e);
+      await LoggingHelper.logInfo('All matching form data cleared');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to clear matching form data',
+        source: 'MatchingFormStorageService',
+        error: e,
+      );
     }
   }
 

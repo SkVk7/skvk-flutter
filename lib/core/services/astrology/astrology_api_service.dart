@@ -8,21 +8,17 @@
 library;
 
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
-import '../../../core/config/app_config.dart';
-import '../../../core/services/shared/cache_service.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/config/app_config.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/shared/cache_service.dart';
 
 /// Astrology API Service
 ///
 /// Provides methods to call astrology API endpoints.
 /// All methods return Map<String, dynamic> (raw JSON).
 class AstrologyApiService {
-  static AstrologyApiService? _instance;
-  final String baseUrl;
-  final http.Client _client;
-  final CacheService _cache;
-
   AstrologyApiService._({
     required this.baseUrl,
     required http.Client client,
@@ -40,15 +36,18 @@ class AstrologyApiService {
     return AstrologyApiService._(
       baseUrl: apiBaseUrl,
       client: client ?? http.Client(),
-      cache: cache ?? CacheService.instance,
+      cache: cache ?? CacheService.instance(),
     );
   }
 
   /// Get singleton instance
-  static AstrologyApiService get instance {
-    _instance ??= AstrologyApiService.create();
-    return _instance!;
+  factory AstrologyApiService.instance() {
+    return _instance ??= AstrologyApiService.create();
   }
+  static AstrologyApiService? _instance;
+  final String baseUrl;
+  final http.Client _client;
+  final CacheService _cache;
 
   /// Get full birth chart from API
   ///
@@ -60,15 +59,13 @@ class AstrologyApiService {
     required double latitude,
     required double longitude,
     required String timezoneId,
-    String ayanamsha = "lahiri",
-    String houseSystem = "placidus",
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) async {
     try {
-      // Create cache key (API always returns complete full birth chart)
       final cacheKey = 'birth_data_${utcBirthDateTime.toIso8601String()}_'
           '${latitude}_${longitude}_${ayanamsha}_$houseSystem';
 
-      // Check cache
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -98,13 +95,12 @@ class AstrologyApiService {
           'Accept': 'application/json',
         },
       ).timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('API request timeout');
         },
       );
 
-      // Handle response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -121,8 +117,9 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Error getting birth data: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError('Error getting birth data: $e',
+          error: e, stackTrace: stackTrace, source: 'AstrologyApiService',);
       rethrow;
     }
   }
@@ -136,21 +133,19 @@ class AstrologyApiService {
     required String groomTimeOfBirth,
     required double groomLatitude,
     required double groomLongitude,
-    String? groomTimezoneId,
     required String brideDateOfBirth,
     required String brideTimeOfBirth,
     required double brideLatitude,
     required double brideLongitude,
+    String? groomTimezoneId,
     String? brideTimezoneId,
-    String ayanamsha = "lahiri",
-    String houseSystem = "placidus",
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) async {
     try {
-      // Create cache key for compatibility result (includes house system for proper caching)
       final cacheKey = 'compatibility_${groomDateOfBirth}_${groomTimeOfBirth}_'
           '${brideDateOfBirth}_${brideTimeOfBirth}_${ayanamsha}_$houseSystem';
 
-      // Check cache for compatibility result
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -170,7 +165,6 @@ class AstrologyApiService {
         'houseSystem': houseSystem,
       };
 
-      // Add timezone IDs if provided
       if (groomTimezoneId != null && groomTimezoneId.isNotEmpty) {
         queryParameters['groomTimezoneId'] = groomTimezoneId;
       }
@@ -188,22 +182,21 @@ class AstrologyApiService {
           'Accept': 'application/json',
         },
       ).timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('API request timeout');
         },
       );
 
-      // Handle response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
-        // Check if response contains an error (backend might return error in 200 response)
         if (data.containsKey('code') && data.containsKey('message')) {
-          // This is an error response wrapped in 200 status
           final errorMessage =
               data['userMessage'] ?? data['message'] ?? 'Unknown API error';
-          LoggingHelper.logWarning('API returned error in 200 response: $errorMessage', source: 'AstrologyApiService');
+          await LoggingHelper.logWarning(
+              'API returned error in 200 response: $errorMessage',
+              source: 'AstrologyApiService',);
           throw Exception('API error: $errorMessage');
         }
 
@@ -225,13 +218,15 @@ class AstrologyApiService {
           final errorMessage =
               errorData['userMessage'] ?? errorData['message'] ?? response.body;
           throw Exception('API error: ${response.statusCode} - $errorMessage');
-        } catch (e) {
+        } on Exception {
           throw Exception(
-              'API error: ${response.statusCode} - ${response.body}');
+            'API error: ${response.statusCode} - ${response.body}',
+          );
         }
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Error calculating compatibility: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError('Error calculating compatibility: $e',
+          error: e, stackTrace: stackTrace, source: 'AstrologyApiService',);
       rethrow;
     }
   }
@@ -247,16 +242,14 @@ class AstrologyApiService {
     required double currentLongitude,
     required String predictionType,
     String? targetDate,
-    String ayanamsha = "lahiri",
-    String houseSystem = "placidus",
+    String ayanamsha = 'lahiri',
+    String houseSystem = 'placidus',
   }) async {
     try {
-      // Create cache key
       final cacheKey = 'predictions_${birthDateTime}_${birthLatitude}_'
           '${birthLongitude}_${currentLatitude}_${currentLongitude}_${predictionType}_'
           '${targetDate ?? 'none'}_${ayanamsha}_$houseSystem';
 
-      // Check cache
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -274,7 +267,6 @@ class AstrologyApiService {
         'houseSystem': houseSystem,
       };
 
-      // Add targetDate if provided
       if (targetDate != null && targetDate.isNotEmpty) {
         queryParameters['targetDate'] = targetDate;
       }
@@ -288,13 +280,12 @@ class AstrologyApiService {
           'Accept': 'application/json',
         },
       ).timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('API request timeout');
         },
       );
 
-      // Handle response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -307,15 +298,15 @@ class AstrologyApiService {
           cacheKey,
           data,
           duration: cacheDuration,
-          cacheType: CacheType.predictions,
         );
 
         return data;
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Error getting predictions: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError('Error getting predictions: $e',
+          error: e, stackTrace: stackTrace, source: 'AstrologyApiService',);
       rethrow;
     }
   }
@@ -331,14 +322,12 @@ class AstrologyApiService {
     required double latitude,
     required double longitude,
     required String timezoneId,
-    String ayanamsha = "lahiri",
+    String ayanamsha = 'lahiri',
   }) async {
     try {
-      // Create cache key (includes ayanamsha for accurate nakshatra calculations)
       final cacheKey =
           'year_${year}_${region}_${latitude}_${longitude}_${timezoneId}_$ayanamsha';
 
-      // Check cache
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -360,13 +349,12 @@ class AstrologyApiService {
           'Accept': 'application/json',
         },
       ).timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('API request timeout');
         },
       );
 
-      // Handle response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -383,8 +371,9 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Error getting calendar year: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError('Error getting calendar year: $e',
+          error: e, stackTrace: stackTrace, source: 'AstrologyApiService',);
       rethrow;
     }
   }
@@ -401,14 +390,12 @@ class AstrologyApiService {
     required double latitude,
     required double longitude,
     required String timezoneId,
-    String ayanamsha = "lahiri",
+    String ayanamsha = 'lahiri',
   }) async {
     try {
-      // Create cache key (includes ayanamsha for accurate nakshatra calculations)
       final cacheKey =
           'month_${year}_${month}_${region}_${latitude}_${longitude}_${timezoneId}_$ayanamsha';
 
-      // Check cache
       final cachedData = _cache.get(cacheKey);
       if (cachedData != null) {
         return cachedData;
@@ -431,13 +418,12 @@ class AstrologyApiService {
           'Accept': 'application/json',
         },
       ).timeout(
-        Duration(seconds: 30),
+        const Duration(seconds: 30),
         onTimeout: () {
           throw Exception('API request timeout');
         },
       );
 
-      // Handle response
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
 
@@ -454,8 +440,9 @@ class AstrologyApiService {
       } else {
         throw Exception('API error: ${response.statusCode} - ${response.body}');
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Error getting calendar month: $e', error: e, stackTrace: stackTrace, source: 'AstrologyApiService');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError('Error getting calendar month: $e',
+          error: e, stackTrace: stackTrace, source: 'AstrologyApiService',);
       rethrow;
     }
   }
@@ -467,21 +454,25 @@ class AstrologyApiService {
       case 'daily':
       case 'day':
         return const Duration(
-            hours: 24); // Same prediction for entire day - 1 API call per day
+          hours: 24,
+        ); // Same prediction for entire day - 1 API call per day
       case 'dasha':
       case 'dashas':
         return const Duration(
-            hours: 24); // Cache for 1 day to reduce corner case scenarios
+          hours: 24,
+        ); // Cache for 1 day to reduce corner case scenarios
       case 'hourly':
       case 'hour':
         return const Duration(hours: 1); // Same prediction for that hour
       case 'transit':
       case 'transits':
         return const Duration(
-            hours: 24); // Transit predictions - cache for 24 hours
+          hours: 24,
+        ); // Transit predictions - cache for 24 hours
       default:
         return const Duration(
-            hours: 24); // Default: 24 hours (1 API call per day)
+          hours: 24,
+        ); // Default: 24 hours (1 API call per day)
     }
   }
 }

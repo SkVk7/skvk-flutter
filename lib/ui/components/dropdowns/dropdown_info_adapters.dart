@@ -4,15 +4,14 @@
 /// for different types of information (house systems, ayanamsa, etc.)
 library;
 
-import '../../../core/utils/astrology/house_system_info.dart';
-import '../../../core/utils/astrology/ayanamsha_info.dart';
-import 'dropdown_widgets.dart';
+import 'package:skvk_application/core/utils/astrology/ayanamsha_info.dart';
+import 'package:skvk_application/core/utils/astrology/house_system_info.dart';
+import 'package:skvk_application/ui/components/dropdowns/dropdown_widgets.dart';
 
 /// Adapter for HouseSystemInfo to implement DropdownItemInfo
 class HouseSystemInfoAdapter implements DropdownItemInfo {
-  final HouseSystemInfo _info;
-
   const HouseSystemInfoAdapter(this._info);
+  final HouseSystemInfo _info;
 
   @override
   String get name => _info.name;
@@ -29,9 +28,8 @@ class HouseSystemInfoAdapter implements DropdownItemInfo {
 
 /// Adapter for AyanamshaInfo to implement DropdownItemInfo
 class AyanamshaInfoAdapter implements DropdownItemInfo {
-  final AyanamshaInfo _info;
-
   const AyanamshaInfoAdapter(this._info);
+  final AyanamshaInfo _info;
 
   @override
   String get name => _info.name;

@@ -1,0 +1,41 @@
+# CodeRabbit Configuration for Performance Analysis
+# Focus on UI screens and components for performance bottlenecks
+
+focus:
+  - "Performance bottlenecks in Flutter UI"
+  - "Expensive operations in build methods"
+  - "Pixel overflow issues"
+  - "Memory leaks and unnecessary rebuilds"
+  - "List operations and caching opportunities"
+
+paths:
+  include:
+    - "lib/ui/screens/**"
+    - "lib/ui/components/**"
+    - "lib/main.dart"
+  
+  exclude:
+    - "**/test/**"
+    - "**/build/**"
+    - "**/android/**"
+    - "**/ios/**"
+    - "**/macos/**"
+    - "**/web/**"
+
+rules:
+  - name: "Performance: Expensive Build Operations"
+    description: "Flag expensive operations (firstWhere, where, map, toList) in build methods"
+    severity: high
+    
+  - name: "Performance: Missing Caching"
+    description: "Identify opportunities to cache computed values"
+    severity: medium
+    
+  - name: "Performance: Pixel Overflow"
+    description: "Check for missing Expanded/Flexible widgets in Rows/Columns"
+    severity: high
+    
+  - name: "Performance: Unnecessary Rebuilds"
+    description: "Identify widgets that rebuild too frequently"
+    severity: medium
+

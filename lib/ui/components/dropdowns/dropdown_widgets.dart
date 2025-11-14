@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
 
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
 
 /// Information interface for dropdown items
 abstract class DropdownItemInfo {
@@ -19,20 +19,19 @@ abstract class DropdownItemInfo {
 
 /// Dropdown item widget
 class DropdownItem<T> extends StatelessWidget {
-  final T value;
-  final DropdownItemInfo info;
-  final Color primaryColor;
-  final Color primaryTextColor;
-  final Color secondaryTextColor;
-
   const DropdownItem({
-    super.key,
     required this.value,
     required this.info,
     required this.primaryColor,
     required this.primaryTextColor,
     required this.secondaryTextColor,
+    super.key,
   });
+  final T value;
+  final DropdownItemInfo info;
+  final Color primaryColor;
+  final Color primaryTextColor;
+  final Color secondaryTextColor;
 
   @override
   Widget build(BuildContext context) {
@@ -56,15 +55,21 @@ class DropdownItem<T> extends StatelessWidget {
                 ),
               ),
               if (info.isRecommended) ...[
-                ResponsiveSystem.sizedBox(context,
-                    width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                ),
                 Container(
-                  padding: ResponsiveSystem.symmetric(context,
-                      horizontal: 6, vertical: 2),
+                  padding: ResponsiveSystem.symmetric(
+                    context,
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: primaryColor,
                     borderRadius: BorderRadius.circular(
-                        ResponsiveSystem.borderRadius(context, baseRadius: 4)),
+                      ResponsiveSystem.borderRadius(context, baseRadius: 4),
+                    ),
                   ),
                   child: Text(
                     'RECOMMENDED',
@@ -79,8 +84,10 @@ class DropdownItem<T> extends StatelessWidget {
               ],
             ],
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 2)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 2),
+          ),
           Text(
             info.description,
             style: TextStyle(
@@ -90,36 +97,48 @@ class DropdownItem<T> extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 2)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 2),
+          ),
           Wrap(
             spacing: ResponsiveSystem.spacing(context, baseSpacing: 4),
             runSpacing: ResponsiveSystem.spacing(context, baseSpacing: 2),
             children: info.regions
                 .take(3)
-                .map((region) => Container(
-                      padding: ResponsiveSystem.symmetric(context,
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(
-                            ResponsiveSystem.borderRadius(context,
-                                baseRadius: 4)),
-                        border: Border.all(
-                          color: primaryColor.withValues(alpha: 0.3),
-                          width: ResponsiveSystem.borderWidth(context,
-                              baseWidth: 1),
+                .map(
+                  (region) => Container(
+                    padding: ResponsiveSystem.symmetric(
+                      context,
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveSystem.borderRadius(
+                          context,
+                          baseRadius: 4,
                         ),
                       ),
-                      child: Text(
-                        region,
-                        style: TextStyle(
-                          fontSize:
-                              ResponsiveSystem.fontSize(context, baseSize: 10),
-                          color: primaryColor,
+                      border: Border.all(
+                        color: primaryColor.withValues(alpha: 0.3),
+                        width: ResponsiveSystem.borderWidth(
+                          context,
+                          baseWidth: 1,
                         ),
                       ),
-                    ))
+                    ),
+                    child: Text(
+                      region,
+                      style: TextStyle(
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 10),
+                        color: primaryColor,
+                      ),
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ],
@@ -130,6 +149,16 @@ class DropdownItem<T> extends StatelessWidget {
 
 /// List tile for selection dialogs
 class DropdownListTile<T> extends StatelessWidget {
+  const DropdownListTile({
+    required this.value,
+    required this.info,
+    required this.isSelected,
+    required this.primaryColor,
+    required this.primaryTextColor,
+    required this.secondaryTextColor,
+    required this.onTap,
+    super.key,
+  });
   final T value;
   final DropdownItemInfo info;
   final bool isSelected;
@@ -138,24 +167,14 @@ class DropdownListTile<T> extends StatelessWidget {
   final Color secondaryTextColor;
   final VoidCallback onTap;
 
-  const DropdownListTile({
-    super.key,
-    required this.value,
-    required this.info,
-    required this.isSelected,
-    required this.primaryColor,
-    required this.primaryTextColor,
-    required this.secondaryTextColor,
-    required this.onTap,
-  });
-
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: ResponsiveSystem.symmetric(context, vertical: 2),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(
-            ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+          ResponsiveSystem.borderRadius(context, baseRadius: 8),
+        ),
         border: Border.all(
           color:
               isSelected ? primaryColor : primaryColor.withValues(alpha: 0.2),
@@ -178,15 +197,21 @@ class DropdownListTile<T> extends StatelessWidget {
               ),
             ),
             if (info.isRecommended) ...[
-              ResponsiveSystem.sizedBox(context,
-                  width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+              ResponsiveSystem.sizedBox(
+                context,
+                width: ResponsiveSystem.spacing(context, baseSpacing: 8),
+              ),
               Container(
-                padding: ResponsiveSystem.symmetric(context,
-                    horizontal: 6, vertical: 2),
+                padding: ResponsiveSystem.symmetric(
+                  context,
+                  horizontal: 6,
+                  vertical: 2,
+                ),
                 decoration: BoxDecoration(
                   color: primaryColor,
                   borderRadius: BorderRadius.circular(
-                      ResponsiveSystem.borderRadius(context, baseRadius: 4)),
+                    ResponsiveSystem.borderRadius(context, baseRadius: 4),
+                  ),
                 ),
                 child: Text(
                   'RECOMMENDED',
@@ -211,36 +236,50 @@ class DropdownListTile<T> extends StatelessWidget {
               ),
             ),
             if (info.regions.isNotEmpty) ...[
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+              ResponsiveSystem.sizedBox(
+                context,
+                height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+              ),
               Wrap(
                 spacing: ResponsiveSystem.spacing(context, baseSpacing: 4),
                 runSpacing: ResponsiveSystem.spacing(context, baseSpacing: 2),
                 children: info.regions
                     .take(3)
-                    .map((region) => Container(
-                          padding: ResponsiveSystem.symmetric(context,
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: primaryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(
-                                ResponsiveSystem.borderRadius(context,
-                                    baseRadius: 4)),
-                            border: Border.all(
-                              color: primaryColor.withValues(alpha: 0.3),
-                              width: ResponsiveSystem.borderWidth(context,
-                                  baseWidth: 1),
+                    .map(
+                      (region) => Container(
+                        padding: ResponsiveSystem.symmetric(
+                          context,
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                            ResponsiveSystem.borderRadius(
+                              context,
+                              baseRadius: 4,
                             ),
                           ),
-                          child: Text(
-                            region,
-                            style: TextStyle(
-                              fontSize: ResponsiveSystem.fontSize(context,
-                                  baseSize: 10),
-                              color: primaryColor,
+                          border: Border.all(
+                            color: primaryColor.withValues(alpha: 0.3),
+                            width: ResponsiveSystem.borderWidth(
+                              context,
+                              baseWidth: 1,
                             ),
                           ),
-                        ))
+                        ),
+                        child: Text(
+                          region,
+                          style: TextStyle(
+                            fontSize: ResponsiveSystem.fontSize(
+                              context,
+                              baseSize: 10,
+                            ),
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ],
@@ -261,20 +300,19 @@ class DropdownListTile<T> extends StatelessWidget {
 
 /// Current selection display widget
 class CurrentSelection<T> extends StatelessWidget {
-  final T value;
-  final DropdownItemInfo info;
-  final Color primaryColor;
-  final Color primaryTextColor;
-  final Color secondaryTextColor;
-
   const CurrentSelection({
-    super.key,
     required this.value,
     required this.info,
     required this.primaryColor,
     required this.primaryTextColor,
     required this.secondaryTextColor,
+    super.key,
   });
+  final T value;
+  final DropdownItemInfo info;
+  final Color primaryColor;
+  final Color primaryTextColor;
+  final Color secondaryTextColor;
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +321,8 @@ class CurrentSelection<T> extends StatelessWidget {
       decoration: BoxDecoration(
         color: primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(
-            ResponsiveSystem.borderRadius(context, baseRadius: 8)),
+          ResponsiveSystem.borderRadius(context, baseRadius: 8),
+        ),
         border: Border.all(
           color: primaryColor.withValues(alpha: 0.3),
           width: ResponsiveSystem.borderWidth(context, baseWidth: 1),
@@ -299,8 +338,10 @@ class CurrentSelection<T> extends StatelessWidget {
                 size: ResponsiveSystem.iconSize(context, baseSize: 16),
                 color: primaryColor,
               ),
-              ResponsiveSystem.sizedBox(context,
-                  width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+              ResponsiveSystem.sizedBox(
+                context,
+                width: ResponsiveSystem.spacing(context, baseSpacing: 8),
+              ),
               Text(
                 'Current Selection:',
                 style: TextStyle(
@@ -311,8 +352,10 @@ class CurrentSelection<T> extends StatelessWidget {
               ),
             ],
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+          ),
           Text(
             info.name,
             style: TextStyle(
@@ -321,8 +364,10 @@ class CurrentSelection<T> extends StatelessWidget {
               color: primaryColor,
             ),
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+          ),
           Text(
             info.description,
             style: TextStyle(
@@ -331,36 +376,50 @@ class CurrentSelection<T> extends StatelessWidget {
             ),
           ),
           if (info.regions.isNotEmpty) ...[
-            ResponsiveSystem.sizedBox(context,
-                height: ResponsiveSystem.spacing(context, baseSpacing: 4)),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 4),
+            ),
             Wrap(
               spacing: ResponsiveSystem.spacing(context, baseSpacing: 4),
               runSpacing: ResponsiveSystem.spacing(context, baseSpacing: 2),
               children: info.regions
                   .take(3)
-                  .map((region) => Container(
-                        padding: ResponsiveSystem.symmetric(context,
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(
-                              ResponsiveSystem.borderRadius(context,
-                                  baseRadius: 4)),
-                          border: Border.all(
-                            color: primaryColor.withValues(alpha: 0.3),
-                            width: ResponsiveSystem.borderWidth(context,
-                                baseWidth: 1),
+                  .map(
+                    (region) => Container(
+                      padding: ResponsiveSystem.symmetric(
+                        context,
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(
+                          ResponsiveSystem.borderRadius(
+                            context,
+                            baseRadius: 4,
                           ),
                         ),
-                        child: Text(
-                          region,
-                          style: TextStyle(
-                            fontSize: ResponsiveSystem.fontSize(context,
-                                baseSize: 10),
-                            color: primaryColor,
+                        border: Border.all(
+                          color: primaryColor.withValues(alpha: 0.3),
+                          width: ResponsiveSystem.borderWidth(
+                            context,
+                            baseWidth: 1,
                           ),
                         ),
-                      ))
+                      ),
+                      child: Text(
+                        region,
+                        style: TextStyle(
+                          fontSize: ResponsiveSystem.fontSize(
+                            context,
+                            baseSize: 10,
+                          ),
+                          color: primaryColor,
+                        ),
+                      ),
+                    ),
+                  )
                   .toList(),
             ),
           ],
@@ -380,7 +439,7 @@ class DropdownBuilder {
     required Color primaryTextColor,
     required Color secondaryTextColor,
   }) {
-    return values.map((T value) {
+    return values.map((value) {
       final info = getInfo(value);
       return DropdownMenuItem<T>(
         value: value,
@@ -405,7 +464,7 @@ class DropdownBuilder {
     required Color secondaryTextColor,
     required Function(T) onItemSelected,
   }) {
-    return values.map((T value) {
+    return values.map((value) {
       final info = getInfo(value);
       final isSelected = value == selectedValue;
       return DropdownListTile<T>(

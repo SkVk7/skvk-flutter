@@ -6,6 +6,7 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
@@ -24,13 +25,6 @@ enum LogLevel {
 
 /// Log entry structure
 class LogEntry {
-  final DateTime timestamp;
-  final LogLevel level;
-  final String message;
-  final String? stackTrace;
-  final Map<String, dynamic>? metadata;
-  final String? source;
-
   LogEntry({
     required this.timestamp,
     required this.level,
@@ -39,18 +33,6 @@ class LogEntry {
     this.metadata,
     this.source,
   });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'timestamp': timestamp.toIso8601String(),
-      'level': level.name,
-      'levelValue': level.level,
-      'message': message,
-      'stackTrace': stackTrace,
-      'metadata': metadata,
-      'source': source,
-    };
-  }
 
   factory LogEntry.fromJson(Map<String, dynamic> json) {
     return LogEntry(
@@ -65,11 +47,29 @@ class LogEntry {
       source: json['source'] as String?,
     );
   }
+  final DateTime timestamp;
+  final LogLevel level;
+  final String message;
+  final String? stackTrace;
+  final Map<String, dynamic>? metadata;
+  final String? source;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'timestamp': timestamp.toIso8601String(),
+      'level': level.name,
+      'levelValue': level.level,
+      'message': message,
+      'stackTrace': stackTrace,
+      'metadata': metadata,
+      'source': source,
+    };
+  }
 
   String toFormattedString() {
-    final buffer = StringBuffer();
-    buffer.write('[${timestamp.toIso8601String()}] ');
-    buffer.write('[${level.name}] ');
+    final buffer = StringBuffer()
+      ..write('[${timestamp.toIso8601String()}] ')
+      ..write('[${level.name}] ');
     if (source != null) buffer.write('[$source] ');
     buffer.write(message);
 
@@ -87,12 +87,6 @@ class LogEntry {
 
 /// Compressed log file manager
 class CompressedLogFile {
-  final String fileName;
-  final DateTime created;
-  final int originalSize;
-  final int compressedSize;
-  final List<LogEntry> entries;
-
   CompressedLogFile({
     required this.fileName,
     required this.created,
@@ -100,6 +94,11 @@ class CompressedLogFile {
     required this.compressedSize,
     required this.entries,
   });
+  final String fileName;
+  final DateTime created;
+  final int originalSize;
+  final int compressedSize;
+  final List<LogEntry> entries;
 
   Map<String, dynamic> toJson() {
     return {
@@ -118,9 +117,9 @@ class CompressedLogFile {
 
 /// Main application logger with compression and auto-cleanup
 class AppLogger {
-  static final AppLogger _instance = AppLogger._internal();
   factory AppLogger() => _instance;
   AppLogger._internal();
+  static final AppLogger _instance = AppLogger._internal();
 
   static const String _logDirName = 'app_logs';
   static const String _compressedDirName = 'compressed_logs';
@@ -142,20 +141,17 @@ class AppLogger {
   /// Initialize the logging system
   Future<void> initialize() async {
     try {
-      // Get application documents directory
       final appDir = await getApplicationDocumentsDirectory();
       _logDirectory = Directory('${appDir.path}/$_logDirName');
       _compressedDirectory = Directory('${appDir.path}/$_compressedDirName');
 
-      // Create directories if they don't exist
-      if (!await _logDirectory!.exists()) {
-        await _logDirectory!.create(recursive: true);
+      if (!_logDirectory!.existsSync()) {
+        _logDirectory!.createSync(recursive: true);
       }
-      if (!await _compressedDirectory!.exists()) {
-        await _compressedDirectory!.create(recursive: true);
+      if (!_compressedDirectory!.existsSync()) {
+        _compressedDirectory!.createSync(recursive: true);
       }
 
-      // Initialize index file
       _indexFile = File('${_logDirectory!.path}/$_indexFileName');
       await _loadLogIndex();
 
@@ -172,12 +168,14 @@ class AppLogger {
       }
 
       // Log initialization
-      await _log(LogLevel.info, 'AppLogger initialized successfully',
-          source: 'AppLogger');
-    } catch (e) {
+      await _log(
+        LogLevel.info,
+        'AppLogger initialized successfully',
+        source: 'AppLogger',
+      );
+    } on Exception catch (e) {
       // Fallback to console if logging system fails
-      // Using print as last resort since debugPrint is not available
-      print('Failed to initialize AppLogger: $e');
+      developer.log('Failed to initialize AppLogger: $e', name: 'AppLogger');
     }
   }
 
@@ -190,12 +188,16 @@ class AppLogger {
     StackTrace? stackTrace,
   }) async {
     try {
-      await _log(level, message,
-          source: source, metadata: metadata, stackTrace: stackTrace);
-    } catch (e) {
+      await _log(
+        level,
+        message,
+        source: source,
+        metadata: metadata,
+        stackTrace: stackTrace,
+      );
+    } on Exception catch (e) {
       // Fallback to console if logging fails
-      // Using print as last resort since debugPrint is not available
-      print('Logging failed: $e');
+      developer.log('Logging failed: $e', name: 'AppLogger');
     }
   }
 
@@ -222,7 +224,7 @@ class AppLogger {
     // Write to console for development (only for warnings and errors)
     if (level.level >= LogLevel.warning.level) {
       // Using print as last resort for critical logging
-      print(entry.toFormattedString());
+      developer.log(entry.toFormattedString(), name: 'AppLogger');
     }
 
     // Flush buffer if it's getting large
@@ -235,7 +237,7 @@ class AppLogger {
   /// Flush current log buffer to file
   Future<void> _flushLogBuffer() async {
     if (_currentLogBuffer.isEmpty) return;
-    
+
     // Don't flush if not initialized - logs will be buffered until initialization completes
     if (!_isInitialized || _logDirectory == null) {
       return;
@@ -243,9 +245,9 @@ class AppLogger {
 
     try {
       final logFile = File(
-          '${_logDirectory!.path}/log_${_currentLogFileIndex.toString().padLeft(3, '0')}.json');
+        '${_logDirectory!.path}/log_${_currentLogFileIndex.toString().padLeft(3, '0')}.json',
+      );
 
-      // Convert entries to JSON
       final jsonEntries =
           _currentLogBuffer.map((entry) => entry.toJson()).toList();
       final jsonString = json.encode(jsonEntries);
@@ -253,28 +255,32 @@ class AppLogger {
       // Write to file
       await logFile.writeAsString(jsonString);
 
-      // Update index
       await _updateLogIndex(
-          logFile.path, _currentLogBuffer.length, jsonString.length);
+        logFile.path,
+        _currentLogBuffer.length,
+        jsonString.length,
+      );
 
       // Reset buffer
       _currentLogBuffer.clear();
       _currentLogFileSize = 0;
       _currentLogFileIndex++;
 
-      // Check if we need to compress old files
       await _checkCompressionNeeded();
-    } catch (e) {
+    } on Exception catch (e) {
       // Using print as last resort for critical logging
-      print('Failed to flush log buffer: $e');
+      developer.log('Failed to flush log buffer: $e', name: 'AppLogger');
     }
   }
 
   /// Update log index
   Future<void> _updateLogIndex(
-      String filePath, int entryCount, int fileSize) async {
+    String filePath,
+    int entryCount,
+    int fileSize,
+  ) async {
     if (!_isInitialized || _indexFile == null) return;
-    
+
     try {
       final index = await _getLogIndex();
       index[filePath] = {
@@ -284,22 +290,22 @@ class AppLogger {
         'compressed': false,
       };
       await _indexFile!.writeAsString(json.encode(index));
-    } catch (e) {
-      print('Failed to update log index: $e');
+    } on Exception catch (e) {
+      developer.log('Failed to update log index: $e', name: 'AppLogger');
     }
   }
 
   /// Get current log index
   Future<Map<String, dynamic>> _getLogIndex() async {
     if (!_isInitialized || _indexFile == null) return {};
-    
+
     try {
-      if (await _indexFile!.exists()) {
-        final content = await _indexFile!.readAsString();
+      if (_indexFile!.existsSync()) {
+        final content = _indexFile!.readAsStringSync();
         return Map<String, dynamic>.from(json.decode(content));
       }
-    } catch (e) {
-      print('Failed to read log index: $e');
+    } on Exception catch (e) {
+      developer.log('Failed to read log index: $e', name: 'AppLogger');
     }
     return {};
   }
@@ -309,7 +315,7 @@ class AppLogger {
     try {
       final index = await _getLogIndex();
       _currentLogFileIndex = index.length;
-    } catch (e) {
+    } on Exception {
       _currentLogFileIndex = 0;
     }
   }
@@ -319,41 +325,47 @@ class AppLogger {
     try {
       final index = await _getLogIndex();
       final uncompressedFiles = index.entries
-          .where((entry) => !(entry.value['compressed'] ?? false))
+          .where((entry) =>
+              !((entry.value as Map<String, dynamic>)['compressed'] as bool? ??
+                  false),)
           .length;
 
       if (uncompressedFiles >= _compressionThreshold) {
         await _compressOldLogs();
       }
-    } catch (e) {
-      print('Failed to check compression needed: $e');
+    } on Exception catch (e) {
+      developer.log('Failed to check compression needed: $e',
+          name: 'AppLogger',);
     }
   }
 
   /// Compress old log files
   Future<void> _compressOldLogs() async {
-    if (!_isInitialized || _compressedDirectory == null || _indexFile == null) return;
-    
+    if (!_isInitialized || _compressedDirectory == null || _indexFile == null) {
+      return;
+    }
+
     try {
       final index = await _getLogIndex();
       final filesToCompress = index.entries
-          .where((entry) => !(entry.value['compressed'] ?? false))
+          .where((entry) =>
+              !((entry.value as Map<String, dynamic>)['compressed'] as bool? ??
+                  false),)
           .take(_compressionThreshold)
           .toList();
 
       for (final fileEntry in filesToCompress) {
         final filePath = fileEntry.key;
-        final fileInfo = fileEntry.value;
+        final fileInfo = fileEntry.value as Map<String, dynamic>;
 
         final logFile = File(filePath);
-        if (await logFile.exists()) {
+        if (logFile.existsSync()) {
           // Read and parse log entries
-          final content = await logFile.readAsString();
+          final content = logFile.readAsStringSync();
           final entries = (json.decode(content) as List)
               .map((json) => LogEntry.fromJson(json as Map<String, dynamic>))
               .toList();
 
-          // Create compressed file
           final compressedFileName =
               'compressed_${DateTime.now().millisecondsSinceEpoch}.json';
           final compressedFile =
@@ -361,21 +373,22 @@ class AppLogger {
 
           // Simple compression: remove redundant data and format efficiently
           final compressedEntries = entries
-              .map((entry) => {
-                    't': entry.timestamp.millisecondsSinceEpoch,
-                    'l': entry.level.level,
-                    'm': entry.message,
-                    if (entry.source != null) 's': entry.source,
-                    if (entry.metadata != null && entry.metadata!.isNotEmpty)
-                      'd': entry.metadata,
-                    if (entry.stackTrace != null) 'st': entry.stackTrace,
-                  })
+              .map(
+                (entry) => {
+                  't': entry.timestamp.millisecondsSinceEpoch,
+                  'l': entry.level.level,
+                  'm': entry.message,
+                  if (entry.source != null) 's': entry.source,
+                  if (entry.metadata != null && entry.metadata!.isNotEmpty)
+                    'd': entry.metadata,
+                  if (entry.stackTrace != null) 'st': entry.stackTrace,
+                },
+              )
               .toList();
 
           final compressedContent = json.encode(compressedEntries);
           await compressedFile.writeAsString(compressedContent);
 
-          // Update index
           final originalSize = fileInfo['fileSize'] as int;
           final compressedSize = compressedContent.length;
           index[filePath] = {
@@ -387,16 +400,18 @@ class AppLogger {
             'compressionRatio': compressedSize / originalSize,
           };
 
-          // Delete original file
           await logFile.delete();
         }
       }
 
       await _indexFile!.writeAsString(json.encode(index));
-      await log(LogLevel.info, 'Compressed ${filesToCompress.length} log files',
-          source: 'AppLogger');
-    } catch (e) {
-      print('Failed to compress logs: $e');
+      await log(
+        LogLevel.info,
+        'Compressed ${filesToCompress.length} log files',
+        source: 'AppLogger',
+      );
+    } on Exception catch (e) {
+      developer.log('Failed to compress logs: $e', name: 'AppLogger');
     }
   }
 
@@ -419,34 +434,32 @@ class AppLogger {
   /// Clean up old log files
   Future<void> _cleanupOldLogs() async {
     if (!_isInitialized || _indexFile == null) return;
-    
+
     try {
       final cutoffDate =
-          DateTime.now().subtract(Duration(days: _retentionDays));
+          DateTime.now().subtract(const Duration(days: _retentionDays));
       final index = await _getLogIndex();
       final filesToDelete = <String>[];
 
       for (final entry in index.entries) {
-        final created = DateTime.parse(entry.value['created'] as String);
+        final entryValue = entry.value as Map<String, dynamic>;
+        final created = DateTime.parse(entryValue['created'] as String);
         if (created.isBefore(cutoffDate)) {
           filesToDelete.add(entry.key);
 
-          // Also delete compressed file if it exists
-          if (entry.value['compressedFile'] != null) {
-            final compressedFile =
-                File(entry.value['compressedFile'] as String);
-            if (await compressedFile.exists()) {
-              await compressedFile.delete();
+          if (entryValue['compressedFile'] != null) {
+            final compressedFile = File(entryValue['compressedFile'] as String);
+            if (compressedFile.existsSync()) {
+              compressedFile.deleteSync();
             }
           }
         }
       }
 
-      // Delete files
       for (final filePath in filesToDelete) {
         final file = File(filePath);
-        if (await file.exists()) {
-          await file.delete();
+        if (file.existsSync()) {
+          file.deleteSync();
         }
         index.remove(filePath);
       }
@@ -454,11 +467,13 @@ class AppLogger {
       if (filesToDelete.isNotEmpty) {
         await _indexFile!.writeAsString(json.encode(index));
         await log(
-            LogLevel.info, 'Cleaned up ${filesToDelete.length} old log files',
-            source: 'AppLogger');
+          LogLevel.info,
+          'Cleaned up ${filesToDelete.length} old log files',
+          source: 'AppLogger',
+        );
       }
-    } catch (e) {
-      print('Failed to cleanup old logs: $e');
+    } on Exception catch (e) {
+      developer.log('Failed to cleanup old logs: $e', name: 'AppLogger');
     }
   }
 
@@ -474,14 +489,15 @@ class AppLogger {
       int originalSize = 0;
 
       for (final entry in index.values) {
+        final entryMap = entry as Map<String, dynamic>;
         totalFiles++;
-        totalEntries += entry['entryCount'] as int;
-        totalSize += entry['fileSize'] as int;
+        totalEntries += entryMap['entryCount'] as int;
+        totalSize += entryMap['fileSize'] as int;
 
-        if (entry['compressed'] == true) {
+        if (entryMap['compressed'] == true) {
           compressedFiles++;
-          compressedSize += entry['compressedSize'] as int;
-          originalSize += entry['originalSize'] as int;
+          compressedSize += entryMap['compressedSize'] as int;
+          originalSize += entryMap['originalSize'] as int;
         }
       }
 
@@ -498,14 +514,16 @@ class AppLogger {
         'currentBufferSize': _currentLogBuffer.length,
         'currentFileSize': _currentLogFileSize,
       };
-    } catch (e) {
+    } on Exception catch (e) {
       return {'error': e.toString()};
     }
   }
 
   /// Get recent log entries for debugging
-  Future<List<LogEntry>> getRecentLogs(
-      {int count = 100, LogLevel? minLevel}) async {
+  Future<List<LogEntry>> getRecentLogs({
+    int count = 100,
+    LogLevel? minLevel,
+  }) async {
     try {
       final allEntries = <LogEntry>[];
       final index = await _getLogIndex();
@@ -520,24 +538,26 @@ class AppLogger {
       // Read from files
       for (final entry in index.entries) {
         final filePath = entry.key;
-        final fileInfo = entry.value;
+        final fileInfo = entry.value as Map<String, dynamic>;
 
         if (fileInfo['compressed'] == true) {
           // Read compressed file
           final compressedFile = File(fileInfo['compressedFile'] as String);
-          if (await compressedFile.exists()) {
-            final content = await compressedFile.readAsString();
-            final compressedEntries = json.decode(content) as List;
+          if (compressedFile.existsSync()) {
+            final content = compressedFile.readAsStringSync();
+            final compressedEntries = json.decode(content) as List<dynamic>;
 
             for (final compressedEntry in compressedEntries) {
+              final entryMap = compressedEntry as Map<String, dynamic>;
               final entry = LogEntry(
                 timestamp: DateTime.fromMillisecondsSinceEpoch(
-                    compressedEntry['t'] as int),
-                level: LogLevel.values[compressedEntry['l'] as int],
-                message: compressedEntry['m'] as String,
-                source: compressedEntry['s'] as String?,
-                metadata: compressedEntry['d'] as Map<String, dynamic>?,
-                stackTrace: compressedEntry['st'] as String?,
+                  entryMap['t'] as int,
+                ),
+                level: LogLevel.values[entryMap['l'] as int],
+                message: entryMap['m'] as String,
+                source: entryMap['s'] as String?,
+                metadata: entryMap['d'] as Map<String, dynamic>?,
+                stackTrace: entryMap['st'] as String?,
               );
 
               if (minLevel == null || entry.level.level >= minLevel.level) {
@@ -548,12 +568,14 @@ class AppLogger {
         } else {
           // Read regular file
           final file = File(filePath);
-          if (await file.exists()) {
-            final content = await file.readAsString();
+          if (file.existsSync()) {
+            final content = file.readAsStringSync();
             final entries = (json.decode(content) as List)
                 .map((json) => LogEntry.fromJson(json as Map<String, dynamic>))
-                .where((entry) =>
-                    minLevel == null || entry.level.level >= minLevel.level)
+                .where(
+                  (entry) =>
+                      minLevel == null || entry.level.level >= minLevel.level,
+                )
                 .toList();
             allEntries.addAll(entries);
           }
@@ -563,8 +585,8 @@ class AppLogger {
       // Sort by timestamp and return recent entries
       allEntries.sort((a, b) => b.timestamp.compareTo(a.timestamp));
       return allEntries.take(count).toList();
-    } catch (e) {
-      print('Failed to get recent logs: $e');
+    } on Exception catch (e) {
+      developer.log('Failed to get recent logs: $e', name: 'AppLogger');
       return [];
     }
   }
@@ -582,32 +604,59 @@ class AppLogger {
   }
 
   // Convenience methods for different log levels
-  Future<void> debug(String message,
-          {String? source, Map<String, dynamic>? metadata}) =>
+  Future<void> debug(
+    String message, {
+    String? source,
+    Map<String, dynamic>? metadata,
+  }) =>
       log(LogLevel.debug, message, source: source, metadata: metadata);
 
-  Future<void> info(String message,
-          {String? source, Map<String, dynamic>? metadata}) =>
+  Future<void> info(
+    String message, {
+    String? source,
+    Map<String, dynamic>? metadata,
+  }) =>
       log(LogLevel.info, message, source: source, metadata: metadata);
 
-  Future<void> warning(String message,
-          {String? source,
-          Map<String, dynamic>? metadata,
-          StackTrace? stackTrace}) =>
-      log(LogLevel.warning, message,
-          source: source, metadata: metadata, stackTrace: stackTrace);
+  Future<void> warning(
+    String message, {
+    String? source,
+    Map<String, dynamic>? metadata,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        LogLevel.warning,
+        message,
+        source: source,
+        metadata: metadata,
+        stackTrace: stackTrace,
+      );
 
-  Future<void> error(String message,
-          {String? source,
-          Map<String, dynamic>? metadata,
-          StackTrace? stackTrace}) =>
-      log(LogLevel.error, message,
-          source: source, metadata: metadata, stackTrace: stackTrace);
+  Future<void> error(
+    String message, {
+    String? source,
+    Map<String, dynamic>? metadata,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        LogLevel.error,
+        message,
+        source: source,
+        metadata: metadata,
+        stackTrace: stackTrace,
+      );
 
-  Future<void> critical(String message,
-          {String? source,
-          Map<String, dynamic>? metadata,
-          StackTrace? stackTrace}) =>
-      log(LogLevel.critical, message,
-          source: source, metadata: metadata, stackTrace: stackTrace);
+  Future<void> critical(
+    String message, {
+    String? source,
+    Map<String, dynamic>? metadata,
+    StackTrace? stackTrace,
+  }) =>
+      log(
+        LogLevel.critical,
+        message,
+        source: source,
+        metadata: metadata,
+        stackTrace: stackTrace,
+      );
 }

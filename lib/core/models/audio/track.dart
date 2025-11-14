@@ -4,8 +4,69 @@
 /// Used throughout the audio player system.
 library;
 
+import 'package:flutter/foundation.dart';
+
 /// Represents an audio track with metadata
+@immutable
 class Track {
+  const Track({
+    required this.id,
+    required this.title,
+    this.artist,
+    this.subtitle,
+    this.album,
+    this.artworkUrl,
+    this.coverUrl,
+    this.audioUrl,
+    this.sourceUrl,
+    this.duration,
+    this.lyrics,
+    this.metadata,
+  });
+
+  /// Create Track from music map (from API)
+  factory Track.fromMusicMap(Map<String, dynamic> music) {
+    return Track(
+      id: music['id'] as String? ?? '',
+      title: music['title'] as String? ?? music['id'] as String? ?? '',
+      artist: music['artist'] as String?,
+      subtitle: music['subtitle'] as String? ?? music['artist'] as String?,
+      album: music['album'] as String?,
+      artworkUrl:
+          music['coverArtUrl'] as String? ?? music['coverUrl'] as String?,
+      coverUrl: music['coverArtUrl'] as String? ?? music['coverUrl'] as String?,
+      audioUrl: music['audioUrl'] as String?,
+      sourceUrl: music['audioUrl'] as String?,
+      duration: music['duration'] != null
+          ? Duration(milliseconds: music['duration'] as int)
+          : null,
+      metadata: music,
+    );
+  }
+
+  /// Create Track from JSON
+  factory Track.fromJson(Map<String, dynamic> json) {
+    return Track(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      artist: json['artist'] as String?,
+      subtitle: json['subtitle'] as String? ?? '',
+      album: json['album'] as String?,
+      artworkUrl:
+          json['artworkUrl'] as String? ?? json['coverArtUrl'] as String?,
+      coverUrl: json['coverUrl'] as String? ?? json['coverArtUrl'] as String?,
+      audioUrl: json['audioUrl'] as String? ?? json['sourceUrl'] as String?,
+      sourceUrl: json['sourceUrl'] as String? ?? json['audioUrl'] as String?,
+      duration: json['duration'] != null
+          ? Duration(milliseconds: json['duration'] as int)
+          : null,
+      lyrics: json['lyrics'] as String?,
+      metadata: json['metadata'] != null
+          ? Map<String, dynamic>.from(json['metadata'] as Map)
+          : null,
+    );
+  }
+
   /// Unique identifier for the track
   final String id;
 
@@ -41,62 +102,6 @@ class Track {
 
   /// Additional metadata (optional)
   final Map<String, dynamic>? metadata;
-
-  const Track({
-    required this.id,
-    required this.title,
-    this.artist,
-    this.subtitle,
-    this.album,
-    this.artworkUrl,
-    this.coverUrl,
-    this.audioUrl,
-    this.sourceUrl,
-    this.duration,
-    this.lyrics,
-    this.metadata,
-  });
-
-  /// Create Track from music map (from API)
-  factory Track.fromMusicMap(Map<String, dynamic> music) {
-    return Track(
-      id: music['id'] as String? ?? '',
-      title: music['title'] as String? ?? music['id'] as String? ?? '',
-      artist: music['artist'] as String?,
-      subtitle: music['subtitle'] as String? ?? music['artist'] as String?,
-      album: music['album'] as String?,
-      artworkUrl: music['coverArtUrl'] as String? ?? music['coverUrl'] as String?,
-      coverUrl: music['coverArtUrl'] as String? ?? music['coverUrl'] as String?,
-      audioUrl: music['audioUrl'] as String?,
-      sourceUrl: music['audioUrl'] as String?,
-      duration: music['duration'] != null
-          ? Duration(milliseconds: music['duration'] as int)
-          : null,
-      metadata: music,
-    );
-  }
-
-  /// Create Track from JSON
-  factory Track.fromJson(Map<String, dynamic> json) {
-    return Track(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      artist: json['artist'] as String?,
-      subtitle: json['subtitle'] as String? ?? '',
-      album: json['album'] as String?,
-      artworkUrl: json['artworkUrl'] as String? ?? json['coverArtUrl'] as String?,
-      coverUrl: json['coverUrl'] as String? ?? json['coverArtUrl'] as String?,
-      audioUrl: json['audioUrl'] as String? ?? json['sourceUrl'] as String?,
-      sourceUrl: json['sourceUrl'] as String? ?? json['audioUrl'] as String?,
-      duration: json['duration'] != null
-          ? Duration(milliseconds: json['duration'] as int)
-          : null,
-      lyrics: json['lyrics'] as String?,
-      metadata: json['metadata'] != null
-          ? Map<String, dynamic>.from(json['metadata'] as Map)
-          : null,
-    );
-  }
 
   /// Convert Track to JSON
   Map<String, dynamic> toJson() {
@@ -167,4 +172,3 @@ class Track {
   @override
   String toString() => 'Track(id: $id, title: $title)';
 }
-

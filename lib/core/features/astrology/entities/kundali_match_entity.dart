@@ -8,16 +8,6 @@ import 'package:equatable/equatable.dart';
 
 /// Kundali match result entity
 class KundaliMatchEntity extends Equatable {
-  final String userId;
-  final String partnerId;
-  final int totalScore;
-  final Map<String, int> kootaScores;
-  final String compatibilityLevel;
-  final String recommendation;
-  final MatchDetailsEntity matchDetails;
-  final DateTime calculatedAt;
-  final String calculationMethod;
-
   const KundaliMatchEntity({
     required this.userId,
     required this.partnerId,
@@ -29,6 +19,15 @@ class KundaliMatchEntity extends Equatable {
     required this.calculatedAt,
     required this.calculationMethod,
   });
+  final String userId;
+  final String partnerId;
+  final int totalScore;
+  final Map<String, int> kootaScores;
+  final String compatibilityLevel;
+  final String recommendation;
+  final MatchDetailsEntity matchDetails;
+  final DateTime calculatedAt;
+  final String calculationMethod;
 
   @override
   List<Object?> get props => [
@@ -46,13 +45,12 @@ class KundaliMatchEntity extends Equatable {
 
 /// Match details entity
 class MatchDetailsEntity extends Equatable {
-  final PersonAstrologyDataEntity currentUser;
-  final PersonAstrologyDataEntity partner;
-
   const MatchDetailsEntity({
     required this.currentUser,
     required this.partner,
   });
+  final PersonAstrologyDataEntity currentUser;
+  final PersonAstrologyDataEntity partner;
 
   @override
   List<Object?> get props => [currentUser, partner];
@@ -60,12 +58,6 @@ class MatchDetailsEntity extends Equatable {
 
 /// Person astrology data entity for matching
 class PersonAstrologyDataEntity extends Equatable {
-  final int moonNakshatra;
-  final int moonPada;
-  final int moonRashi;
-  final String nakshatraName;
-  final String rashiName;
-
   const PersonAstrologyDataEntity({
     required this.moonNakshatra,
     required this.moonPada,
@@ -73,6 +65,11 @@ class PersonAstrologyDataEntity extends Equatable {
     required this.nakshatraName,
     required this.rashiName,
   });
+  final int moonNakshatra;
+  final int moonPada;
+  final int moonRashi;
+  final String nakshatraName;
+  final String rashiName;
 
   @override
   List<Object?> get props => [

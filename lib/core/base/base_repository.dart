@@ -3,9 +3,9 @@
 /// Provides base classes for repositories following Clean Architecture
 library;
 
-import '../utils/either.dart';
-import '../errors/failures.dart';
-import '../errors/exceptions.dart';
+import 'package:skvk_application/core/errors/exceptions.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// Base repository interface
 /// All repositories should implement this interface
@@ -35,7 +35,7 @@ abstract class BaseRepository {
     try {
       final result = await computation();
       return ResultHelper.success(result);
-    } catch (e) {
+    } on Exception catch (e) {
       return handleException<T>(e, context);
     }
   }
@@ -111,4 +111,3 @@ abstract class BaseRepository {
     );
   }
 }
-

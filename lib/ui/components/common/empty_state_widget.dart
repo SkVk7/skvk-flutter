@@ -4,24 +4,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Empty State Widget - Displays empty state with icon, title, subtitle, and optional action
 @immutable
 class EmptyStateWidget extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final IconData? icon;
-  final Widget? action;
-
   const EmptyStateWidget({
-    super.key,
     required this.title,
+    super.key,
     this.subtitle,
     this.icon,
     this.action,
   });
+  final String title;
+  final String? subtitle;
+  final IconData? icon;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -67,4 +66,3 @@ class EmptyStateWidget extends StatelessWidget {
     );
   }
 }
-

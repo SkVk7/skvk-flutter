@@ -4,33 +4,29 @@
 /// accessible from all screens in the application
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:async';
-// UI Utils - Use only these for consistency
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-// Core imports
-import '../../core/constants/app_constants.dart';
-import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
-import '../utils/screen_handlers.dart';
-
-import '../../core/utils/validation/profile_completion_checker.dart';
-import '../../core/services/user/user_service.dart';
-import '../../core/models/user/user_model.dart';
-import '../../core/utils/either.dart';
-import '../../core/errors/failures.dart';
-import '../../core/features/user/entities/user_entity.dart' as entity;
-
-// UI Components - Reusable components
-import '../components/common/index.dart';
-// Core imports
-import '../../core/services/language/translation_service.dart';
-import '../../core/logging/logging_helper.dart';
-import '../../core/services/astrology/astrology_service_bridge.dart';
-import '../components/user/profile_header_widget.dart';
-import '../components/user/profile_info_card.dart';
-import 'user_edit_screen.dart';
+import 'package:skvk_application/core/constants/app_constants.dart';
+import 'package:skvk_application/core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/core/features/user/entities/user_entity.dart'
+    as entity;
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/services/astrology/astrology_service_bridge.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/profile_completion_checker.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/user/profile_header_widget.dart';
+import 'package:skvk_application/ui/components/user/profile_info_card.dart';
+import 'package:skvk_application/ui/screens/user_edit_screen.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
   const UserProfileScreen({super.key});
@@ -57,16 +53,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Refresh user data when screen becomes active (e.g., after navigation)
-    // Add a small delay to ensure any previous save operations are complete
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        _loadUserData();
-        // Also refresh astrology data to get the latest computed data
-        if (_currentUser != null) {
-          _loadAstrologyData();
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          _loadUserData();
+          if (_currentUser != null) {
+            _loadAstrologyData();
+          }
         }
-      }
-    });
+      }),
+    );
   }
 
   Future<void> _loadUserData() async {
@@ -85,34 +81,37 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       await userService.refreshUserData();
 
       // Wait a bit for the state to be updated
-      await Future.delayed(const Duration(milliseconds: 100));
+      unawaited(Future.delayed(const Duration(milliseconds: 100)));
 
-      // Check the provider state directly
       final userFromState = ref.read(userServiceProvider);
-      LoggingHelper.logDebug(
-          'User from provider state: ${userFromState != null ? 'FOUND' : 'NULL'}',
-          source: 'UserProfile');
+      await LoggingHelper.logDebug(
+        'User from provider state: ${userFromState != null ? 'FOUND' : 'NULL'}',
+        source: 'UserProfile',
+      );
 
       if (userFromState != null) {
-        LoggingHelper.logDebug(
-            'User details: ${userFromState.name}, DOB: ${userFromState.dateOfBirth}, TOB: ${userFromState.timeOfBirth}',
-            source: 'UserProfile');
-        LoggingHelper.logDebug(
-            'Location: ${userFromState.latitude}, ${userFromState.longitude}',
-            source: 'UserProfile');
-        LoggingHelper.logDebug(
-            'User name length: ${userFromState.name.length}, isEmpty: ${userFromState.name.isEmpty}',
-            source: 'UserProfile');
+        await LoggingHelper.logDebug(
+          'User details: ${userFromState.name}, DOB: ${userFromState.dateOfBirth}, TOB: ${userFromState.timeOfBirth}',
+          source: 'UserProfile',
+        );
+        await LoggingHelper.logDebug(
+          'Location: ${userFromState.latitude}, ${userFromState.longitude}',
+          source: 'UserProfile',
+        );
+        await LoggingHelper.logDebug(
+          'User name length: ${userFromState.name.length}, isEmpty: ${userFromState.name.isEmpty}',
+          source: 'UserProfile',
+        );
       } else {
-        LoggingHelper.logDebug('User from state is NULL', source: 'UserProfile');
+        await LoggingHelper.logDebug('User from state is NULL',
+            source: 'UserProfile',);
       }
 
-      // Also try the getCurrentUser method as fallback
       final result = await userService.getCurrentUser().timeout(
         const Duration(seconds: 5),
         onTimeout: () {
           return ResultHelper.failure(
-            UnexpectedFailure(message: 'Request timeout'),
+            const UnexpectedFailure(message: 'Request timeout'),
           );
         },
       );
@@ -121,20 +120,26 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           ? ResultHelper.getValue(result)
           : userFromState;
 
-      LoggingHelper.logDebug(
-          'User loading result: ${ResultHelper.isSuccess(result) ? 'SUCCESS' : 'FAILURE'}',
-          source: 'UserProfile');
+      await LoggingHelper.logDebug(
+        'User loading result: ${ResultHelper.isSuccess(result) ? 'SUCCESS' : 'FAILURE'}',
+        source: 'UserProfile',
+      );
       if (user != null) {
-        LoggingHelper.logDebug(
-            'Final user details: ${user.name}, DOB: ${user.dateOfBirth}, TOB: ${user.timeOfBirth}',
-            source: 'UserProfile');
-        LoggingHelper.logDebug(
-            'Location: ${user.latitude}, ${user.longitude}', source: 'UserProfile');
-        LoggingHelper.logDebug(
-            'User name length: ${user.name.length}, isEmpty: ${user.name.isEmpty}',
-            source: 'UserProfile');
+        await LoggingHelper.logDebug(
+          'Final user details: ${user.name}, DOB: ${user.dateOfBirth}, TOB: ${user.timeOfBirth}',
+          source: 'UserProfile',
+        );
+        await LoggingHelper.logDebug(
+          'Location: ${user.latitude}, ${user.longitude}',
+          source: 'UserProfile',
+        );
+        await LoggingHelper.logDebug(
+          'User name length: ${user.name.length}, isEmpty: ${user.name.isEmpty}',
+          source: 'UserProfile',
+        );
       } else {
-        LoggingHelper.logDebug('No user data received', source: 'UserProfile');
+        await LoggingHelper.logDebug('No user data received',
+            source: 'UserProfile',);
       }
 
       if (mounted) {
@@ -144,18 +149,21 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           _errorMessage = null; // Clear any previous error messages
         });
 
-        // Load astrology data if user exists
         if (user != null) {
-          LoggingHelper.logDebug(
-              'User loaded, starting astrology data load...', source: 'UserProfile');
-          _loadAstrologyData();
+          await LoggingHelper.logDebug(
+            'User loaded, starting astrology data load...',
+            source: 'UserProfile',
+          );
+          unawaited(_loadAstrologyData());
           _startAstrologyRefreshTimer();
         } else {
-          LoggingHelper.logDebug(
-              'No user found, skipping astrology data load', source: 'UserProfile');
+          await LoggingHelper.logDebug(
+            'No user found, skipping astrology data load',
+            source: 'UserProfile',
+          );
         }
       }
-    } catch (e) {
+    } on Exception {
       // Try fallback method using Riverpod provider
       try {
         final userService = ref.read(userServiceProvider.notifier);
@@ -171,7 +179,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             _errorMessage = null;
           });
         }
-      } catch (fallbackError) {
+      } on Exception {
         if (mounted) {
           setState(() {
             _currentUser = null;
@@ -209,23 +217,29 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
       // Use the optimized user service method that handles caching
       final userService = ref.read(userServiceProvider.notifier);
-      LoggingHelper.logDebug('Loading astrology data for user: ${_currentUser!.name}',
-          source: 'UserProfile');
-      LoggingHelper.logDebug(
-          'Birth details: ${_currentUser!.dateOfBirth} ${_currentUser!.timeOfBirth}',
-          source: 'UserProfile');
-      LoggingHelper.logDebug(
-          'Location: ${_currentUser!.latitude}, ${_currentUser!.longitude}',
-          source: 'UserProfile');
+      await LoggingHelper.logDebug(
+        'Loading astrology data for user: ${_currentUser!.name}',
+        source: 'UserProfile',
+      );
+      await LoggingHelper.logDebug(
+        'Birth details: ${_currentUser!.dateOfBirth} ${_currentUser!.timeOfBirth}',
+        source: 'UserProfile',
+      );
+      await LoggingHelper.logDebug(
+        'Location: ${_currentUser!.latitude}, ${_currentUser!.longitude}',
+        source: 'UserProfile',
+      );
 
-      // Check if user service has the user data
       final userServiceState = ref.read(userServiceProvider);
-      LoggingHelper.logDebug(
-          'User service state: ${userServiceState != null ? 'HAS_USER' : 'NO_USER'}',
-          source: 'UserProfile');
+      await LoggingHelper.logDebug(
+        'User service state: ${userServiceState != null ? 'HAS_USER' : 'NO_USER'}',
+        source: 'UserProfile',
+      );
       if (userServiceState != null) {
-        LoggingHelper.logDebug(
-            'User service user: ${userServiceState.name}', source: 'UserProfile');
+        await LoggingHelper.logDebug(
+          'User service user: ${userServiceState.name}',
+          source: 'UserProfile',
+        );
       }
 
       final startTime = DateTime.now();
@@ -233,24 +247,31 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       final endTime = DateTime.now();
       final duration = endTime.difference(startTime);
 
-      LoggingHelper.logDebug('Astrology data loaded in: ${duration.inMilliseconds}ms',
-          source: 'UserProfile');
-      LoggingHelper.logDebug(
-          'Data received: ${astrologyData != null ? 'SUCCESS' : 'NULL'}',
-          source: 'UserProfile');
+      await LoggingHelper.logDebug(
+        'Astrology data loaded in: ${duration.inMilliseconds}ms',
+        source: 'UserProfile',
+      );
+      await LoggingHelper.logDebug(
+        'Data received: ${astrologyData != null ? 'SUCCESS' : 'NULL'}',
+        source: 'UserProfile',
+      );
       if (astrologyData != null) {
-        LoggingHelper.logDebug(
-            'Data keys: ${astrologyData.keys.toList()}', source: 'UserProfile');
+        await LoggingHelper.logDebug(
+          'Data keys: ${astrologyData.keys.toList()}',
+          source: 'UserProfile',
+        );
       } else {
-        LoggingHelper.logDebug(
-            'Attempting fallback: calling astrology library directly...',
-            source: 'UserProfile');
+        await LoggingHelper.logDebug(
+          'Attempting fallback: calling astrology library directly...',
+          source: 'UserProfile',
+        );
         try {
-          final bridge = AstrologyServiceBridge.instance;
+          final bridge = AstrologyServiceBridge.instance();
 
-          // Get timezone from user's location
           final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
-              _currentUser!.latitude, _currentUser!.longitude);
+            _currentUser!.latitude,
+            _currentUser!.longitude,
+          );
 
           final fixedBirthData = await bridge.getBirthData(
             localBirthDateTime: _currentUser!.localBirthDateTime,
@@ -281,7 +302,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                 DateTime.now().toIso8601String(),
           };
 
-          LoggingHelper.logDebug('Fallback data created successfully', source: 'UserProfile');
+          await LoggingHelper.logDebug('Fallback data created successfully',
+              source: 'UserProfile',);
           if (mounted) {
             setState(() {
               _astrologyData = fallbackData;
@@ -289,9 +311,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
             });
           }
           return;
-        } catch (fallbackError) {
-          LoggingHelper.logError('Fallback also failed: $fallbackError',
-              error: fallbackError, stackTrace: StackTrace.current, source: 'UserProfile');
+        } on Exception catch (fallbackError) {
+          await LoggingHelper.logError(
+            'Fallback also failed: $fallbackError',
+            error: fallbackError,
+            stackTrace: StackTrace.current,
+            source: 'UserProfile',
+          );
         }
       }
 
@@ -301,9 +327,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
           _isLoadingAstrology = false;
         });
       }
-    } catch (e) {
-      LoggingHelper.logError('Error loading astrology data: $e',
-          error: e, stackTrace: StackTrace.current, source: 'UserProfile');
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Error loading astrology data: $e',
+        error: e,
+        stackTrace: StackTrace.current,
+        source: 'UserProfile',
+      );
       if (mounted) {
         setState(() {
           _astrologyData = null;
@@ -342,17 +372,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Initialize responsive sizing
     // ResponsiveSystem.init(context); // Removed - not needed
     final translationService = ref.watch(translationServiceProvider);
 
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: BackgroundGradients.getBackgroundGradient(
             isDark: Theme.of(context).brightness == Brightness.dark,
-            isEvening: false,
-            useSacredFire: false,
           ),
         ),
         child: SafeArea(
@@ -365,12 +392,18 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                         strokeWidth:
                             ResponsiveSystem.spacing(context, baseSpacing: 3),
                       ),
-                      ResponsiveSystem.sizedBox(context,
-                          height: ResponsiveSystem.spacing(context,
-                              baseSpacing: 16)),
+                      ResponsiveSystem.sizedBox(
+                        context,
+                        height: ResponsiveSystem.spacing(
+                          context,
+                          baseSpacing: 16,
+                        ),
+                      ),
                       Text(
-                        translationService.translateContent('loading_profile',
-                            fallback: 'Loading profile...'),
+                        translationService.translateContent(
+                          'loading_profile',
+                          fallback: 'Loading profile...',
+                        ),
                         style: TextStyle(
                           fontSize:
                               ResponsiveSystem.fontSize(context, baseSize: 16),
@@ -388,28 +421,41 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                           Icon(
                             Icons.error_outline,
                             color: ThemeHelpers.getPrimaryTextColor(context),
-                            size: ResponsiveSystem.iconSize(context,
-                                baseSize: 64),
+                            size: ResponsiveSystem.iconSize(
+                              context,
+                              baseSize: 64,
+                            ),
                           ),
-                          ResponsiveSystem.sizedBox(context,
-                              height: ResponsiveSystem.spacing(context,
-                                  baseSpacing: 16)),
+                          ResponsiveSystem.sizedBox(
+                            context,
+                            height: ResponsiveSystem.spacing(
+                              context,
+                              baseSpacing: 16,
+                            ),
+                          ),
                           Text(
                             _errorMessage!,
                             style: TextStyle(
-                              fontSize: ResponsiveSystem.fontSize(context,
-                                  baseSize: 16),
-                              color:
-                                  ThemeHelpers.getPrimaryTextColor(context),
+                              fontSize: ResponsiveSystem.fontSize(
+                                context,
+                                baseSize: 16,
+                              ),
+                              color: ThemeHelpers.getPrimaryTextColor(context),
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          ResponsiveSystem.sizedBox(context,
-                              height: ResponsiveSystem.spacing(context,
-                                  baseSpacing: 16)),
+                          ResponsiveSystem.sizedBox(
+                            context,
+                            height: ResponsiveSystem.spacing(
+                              context,
+                              baseSpacing: 16,
+                            ),
+                          ),
                           ModernButton(
-                            text: translationService.translateContent('retry',
-                                fallback: 'Retry'),
+                            text: translationService.translateContent(
+                              'retry',
+                              fallback: 'Retry',
+                            ),
                             onPressed: _loadUserData,
                             width: ResponsiveSystem.screenWidth(context) * 0.3,
                           ),
@@ -418,7 +464,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                     )
                   : _currentUser == null ||
                           !ProfileCompletionChecker.isProfileComplete(
-                              _currentUser)
+                            _currentUser,
+                          )
                       ? Stack(
                           children: [
                             Center(
@@ -428,89 +475,118 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                   Icon(
                                     Icons.person_add,
                                     color: ThemeHelpers.getPrimaryTextColor(
-                                        context),
-                                    size: ResponsiveSystem.iconSize(context,
-                                        baseSize: 64),
+                                      context,
+                                    ),
+                                    size: ResponsiveSystem.iconSize(
+                                      context,
+                                      baseSize: 64,
+                                    ),
                                   ),
-                                  ResponsiveSystem.sizedBox(context,
-                                      height: ResponsiveSystem.spacing(context,
-                                          baseSpacing: 16)),
+                                  ResponsiveSystem.sizedBox(
+                                    context,
+                                    height: ResponsiveSystem.spacing(
+                                      context,
+                                      baseSpacing: 16,
+                                    ),
+                                  ),
                                   Text(
                                     _currentUser == null
                                         ? translationService.translateContent(
                                             'no_profile_found',
-                                            fallback: 'No Profile Found')
+                                            fallback: 'No Profile Found',
+                                          )
                                         : translationService.translateContent(
                                             'complete_your_profile',
-                                            fallback: 'Complete Your Profile'),
+                                            fallback: 'Complete Your Profile',
+                                          ),
                                     style: TextStyle(
                                       fontSize: ResponsiveSystem.fontSize(
-                                          context,
-                                          baseSize: 20),
+                                        context,
+                                        baseSize: 20,
+                                      ),
                                       fontWeight: FontWeight.bold,
-                                      color:
-                                          ThemeHelpers.getPrimaryTextColor(
-                                              context),
+                                      color: ThemeHelpers.getPrimaryTextColor(
+                                        context,
+                                      ),
                                     ),
                                   ),
-                                  ResponsiveSystem.sizedBox(context,
-                                      height: ResponsiveSystem.spacing(context,
-                                          baseSpacing: 8)),
+                                  ResponsiveSystem.sizedBox(
+                                    context,
+                                    height: ResponsiveSystem.spacing(
+                                      context,
+                                      baseSpacing: 8,
+                                    ),
+                                  ),
                                   Text(
                                     'Create your profile to get started',
                                     style: TextStyle(
                                       fontSize: ResponsiveSystem.fontSize(
-                                          context,
-                                          baseSize: 16),
-                                      color:
-                                          ThemeHelpers.getSecondaryTextColor(
-                                              context),
+                                        context,
+                                        baseSize: 16,
+                                      ),
+                                      color: ThemeHelpers.getSecondaryTextColor(
+                                        context,
+                                      ),
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
-                                  ResponsiveSystem.sizedBox(context,
-                                      height: ResponsiveSystem.spacing(context,
-                                          baseSpacing: 24)),
+                                  ResponsiveSystem.sizedBox(
+                                    context,
+                                    height: ResponsiveSystem.spacing(
+                                      context,
+                                      baseSpacing: 24,
+                                    ),
+                                  ),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       ModernButton(
-                                        text: translationService
-                                            .translateContent('retry',
-                                                fallback: 'Retry'),
-                                        onPressed: () => _loadUserData(),
+                                        text:
+                                            translationService.translateContent(
+                                          'retry',
+                                          fallback: 'Retry',
+                                        ),
+                                        onPressed: _loadUserData,
                                         icon: Icons.refresh,
                                         width: ResponsiveSystem.screenWidth(
-                                                context) *
+                                              context,
+                                            ) *
                                             0.25,
                                         backgroundColor:
                                             ThemeHelpers.getPrimaryColor(
-                                                    context)
-                                                .withAlpha((0.1 * 255).round()),
-                                        textColor:
-                                            ThemeHelpers.getPrimaryColor(
-                                                context),
+                                          context,
+                                        ).withValues(alpha: 0.1),
+                                        textColor: ThemeHelpers.getPrimaryColor(
+                                          context,
+                                        ),
                                       ),
-                                      ResponsiveSystem.sizedBox(context,
-                                          width: ResponsiveSystem.spacing(
-                                              context,
-                                              baseSpacing: 12)),
+                                      ResponsiveSystem.sizedBox(
+                                        context,
+                                        width: ResponsiveSystem.spacing(
+                                          context,
+                                          baseSpacing: 12,
+                                        ),
+                                      ),
                                       ModernButton(
-                                        text: translationService
-                                            .translateContent('create_profile',
-                                                fallback: 'Create Profile'),
+                                        text:
+                                            translationService.translateContent(
+                                          'create_profile',
+                                          fallback: 'Create Profile',
+                                        ),
                                         onPressed: () =>
                                             _editProfile(context, null),
                                         icon: Icons.person_add,
                                         width: ResponsiveSystem.screenWidth(
-                                                context) *
+                                              context,
+                                            ) *
                                             0.35,
                                         backgroundColor:
                                             ThemeHelpers.getSurfaceColor(
-                                                context),
-                                        textColor:
-                                            ThemeHelpers.getPrimaryColor(
-                                                context),
+                                          context,
+                                        ),
+                                        textColor: ThemeHelpers.getPrimaryColor(
+                                          context,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -519,17 +595,24 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             ),
                             // Back button positioned at top-left
                             Positioned(
-                              top: ResponsiveSystem.spacing(context,
-                                  baseSpacing: 16),
-                              left: ResponsiveSystem.spacing(context,
-                                  baseSpacing: 16),
+                              top: ResponsiveSystem.spacing(
+                                context,
+                                baseSpacing: 16,
+                              ),
+                              left: ResponsiveSystem.spacing(
+                                context,
+                                baseSpacing: 16,
+                              ),
                               child: IconButton(
                                 icon: Icon(
                                   Icons.arrow_back,
                                   color: ThemeHelpers.getPrimaryTextColor(
-                                      context),
-                                  size: ResponsiveSystem.iconSize(context,
-                                      baseSize: 28),
+                                    context,
+                                  ),
+                                  size: ResponsiveSystem.iconSize(
+                                    context,
+                                    baseSize: 28,
+                                  ),
                                 ),
                                 onPressed: () {
                                   Navigator.pushNamedAndRemoveUntil(
@@ -542,7 +625,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                                 style: IconButton.styleFrom(
                                   backgroundColor:
                                       ThemeHelpers.getSurfaceColor(context)
-                                          .withAlpha((0.8 * 255).round()),
+                                          .withValues(alpha: 0.8),
                                   shape: const CircleBorder(),
                                 ),
                               ),
@@ -554,323 +637,369 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
                             final user = _currentUser;
 
                             return CustomScrollView(
-                                  slivers: [
-                                    // App Bar
-                                    SliverAppBar(
-                                      expandedHeight: ResponsiveSystem.spacing(
-                                          context,
-                                          baseSpacing: 120),
-                                      floating: false,
-                                      pinned: true,
-                                      backgroundColor:
-                                          ThemeHelpers.getTransparentColor(
-                                              context),
-                                      elevation: 0,
-                                      toolbarHeight: ResponsiveSystem.spacing(
-                                          context,
-                                          baseSpacing: 60),
-                                      leading: IconButton(
-                                        icon: Icon(
-                                          Icons.arrow_back,
-                                          color: ThemeHelpers
-                                              .getPrimaryTextColor(context),
-                                          size: ResponsiveSystem.iconSize(
-                                              context,
-                                              baseSize: 28),
-                                        ),
-                                        onPressed: () {
-                                          Navigator.pushNamedAndRemoveUntil(
-                                            context,
-                                            '/',
-                                            (route) => false,
-                                          );
-                                        },
-                                        tooltip: 'Back to Home',
+                              slivers: [
+                                // App Bar
+                                SliverAppBar(
+                                  expandedHeight: ResponsiveSystem.spacing(
+                                    context,
+                                    baseSpacing: 120,
+                                  ),
+                                  pinned: true,
+                                  backgroundColor:
+                                      ThemeHelpers.getTransparentColor(
+                                    context,
+                                  ),
+                                  elevation: 0,
+                                  toolbarHeight: ResponsiveSystem.spacing(
+                                    context,
+                                    baseSpacing: 60,
+                                  ),
+                                  leading: IconButton(
+                                    icon: Icon(
+                                      Icons.arrow_back,
+                                      color: ThemeHelpers.getPrimaryTextColor(
+                                          context,),
+                                      size: ResponsiveSystem.iconSize(
+                                        context,
+                                        baseSize: 28,
                                       ),
-                                      flexibleSpace: FlexibleSpaceBar(
-                                        title: Text(
-                                          'Profile',
-                                          style: TextStyle(
-                                            fontSize: ResponsiveSystem.fontSize(
-                                                context,
-                                                baseSize: 18),
-                                            fontWeight: FontWeight.bold,
-                                            color: ThemeHelpers
-                                                .getPrimaryTextColor(context),
-                                          ),
-                                        ),
-                                        background: Container(
-                                          decoration: BoxDecoration(
-                                            gradient: ThemeHelpers
-                                                .getPrimaryGradient(context),
-                                          ),
-                                        ),
-                                        collapseMode: CollapseMode.parallax,
-                                      ),
-                                      actions: [
-                                        // Language Dropdown Widget
-                                        LanguageDropdown(
-                                          onLanguageChanged: (value) {
-                                            LoggingHelper.logInfo(
-                                                'Language changed to: $value');
-                                            ScreenHandlers.handleLanguageChange(ref, value);
-                                          },
-                                        ),
-                                        // Theme Dropdown Widget
-                                        ThemeDropdown(
-                                          onThemeChanged: (value) {
-                                            LoggingHelper.logInfo(
-                                                'Theme changed to: $value');
-                                            ScreenHandlers.handleThemeChange(ref, value);
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.share,
-                                            color: ThemeHelpers
-                                                .getPrimaryTextColor(context),
-                                            size: ResponsiveSystem.iconSize(
-                                                context,
-                                                baseSize:
-                                                    24), // Consistent with other app bar icons
-                                          ),
-                                          onPressed: () => _shareProfile(
-                                              context,
-                                              user != null
-                                                  ? () {
-                                                      LoggingHelper.logDebug(
-                                                          'Converting UserModel to UserEntity: name=${user.name}, length=${user.name.length}',
-                                                          source: 'UserProfile');
-                                                      return entity.UserEntity(
-                                                        id: user.id,
-                                                        username: user.name,
-                                                        dateOfBirth:
-                                                            user.dateOfBirth,
-                                                        timeOfBirth:
-                                                            entity.TimeOfBirth(
-                                                          hour: user
-                                                              .timeOfBirth.hour,
-                                                          minute: user
-                                                              .timeOfBirth
-                                                              .minute,
-                                                        ),
-                                                        placeOfBirth:
-                                                            user.placeOfBirth,
-                                                        latitude: user.latitude,
-                                                        longitude:
-                                                            user.longitude,
-                                                        sex: user.sex,
-                                                        // ayanamsha removed as it's not in UserEntity
-                                                        createdAt:
-                                                            DateTime.now(),
-                                                        updatedAt:
-                                                            DateTime.now(),
-                                                      );
-                                                    }()
-                                                  : null,
-                                              translationService),
-                                          tooltip: translationService
-                                              .translateContent('share_profile',
-                                                  fallback: 'Share Profile'),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.edit,
-                                            color: ThemeHelpers
-                                                .getPrimaryTextColor(context),
-                                            size: ResponsiveSystem.iconSize(
-                                                context,
-                                                baseSize:
-                                                    24), // Consistent with other app bar icons
-                                          ),
-                                          onPressed: () => _editProfile(
-                                              context,
-                                              user != null
-                                                  ? () {
-                                                      LoggingHelper.logDebug(
-                                                          'Converting UserModel to UserEntity for edit: name=${user.name}, length=${user.name.length}',
-                                                          source: 'UserProfile');
-                                                      return entity.UserEntity(
-                                                        id: user.id,
-                                                        username: user.name,
-                                                        dateOfBirth:
-                                                            user.dateOfBirth,
-                                                        timeOfBirth:
-                                                            entity.TimeOfBirth(
-                                                          hour: user
-                                                              .timeOfBirth.hour,
-                                                          minute: user
-                                                              .timeOfBirth
-                                                              .minute,
-                                                        ),
-                                                        placeOfBirth:
-                                                            user.placeOfBirth,
-                                                        latitude: user.latitude,
-                                                        longitude:
-                                                            user.longitude,
-                                                        sex: user.sex,
-                                                        // ayanamsha removed as it's not in UserEntity
-                                                        createdAt:
-                                                            DateTime.now(),
-                                                        updatedAt:
-                                                            DateTime.now(),
-                                                      );
-                                                    }()
-                                                  : null),
-                                          tooltip: translationService
-                                              .translateContent('edit_profile',
-                                                  fallback: 'Edit Profile'),
-                                        ),
-                                      ],
                                     ),
-
-                                    // Profile Content
-                                    SliverToBoxAdapter(
-                                      child: Padding(
-                                        padding: ResponsiveSystem.only(
+                                    onPressed: () {
+                                      Navigator.pushNamedAndRemoveUntil(
+                                        context,
+                                        '/',
+                                        (route) => false,
+                                      );
+                                    },
+                                    tooltip: 'Back to Home',
+                                  ),
+                                  flexibleSpace: FlexibleSpaceBar(
+                                    title: Text(
+                                      'Profile',
+                                      style: TextStyle(
+                                        fontSize: ResponsiveSystem.fontSize(
                                           context,
-                                          top: ResponsiveSystem.spacing(context,
-                                              baseSpacing: 20),
-                                          left: ResponsiveSystem.spacing(
-                                              context,
-                                              baseSpacing: 16),
-                                          right: ResponsiveSystem.spacing(
-                                              context,
-                                              baseSpacing: 16),
-                                          bottom: ResponsiveSystem.spacing(
-                                              context,
-                                              baseSpacing: 16),
+                                          baseSize: 18,
                                         ),
-                                        child: Column(
-                                          children: [
-                                            // Profile Header
-                                            ProfileHeaderWidget(
-                                              user: user,
-                                              onProfilePictureChanged:
-                                                  (imagePath) =>
-                                                      _handleProfilePictureChanged(
-                                                          imagePath,
-                                                          translationService),
-                                            ),
-
-                                            ResponsiveSystem.sizedBox(context,
-                                                height:
-                                                    ResponsiveSystem.spacing(
-                                                        context,
-                                                        baseSpacing: 24)),
-
-                                            // Profile Statistics - Removed widget
-                                            // ProfileStatisticsWidget(user: user),
-
-                                            ResponsiveSystem.sizedBox(context,
-                                                height:
-                                                    ResponsiveSystem.spacing(
-                                                        context,
-                                                        baseSpacing: 24)),
-
-                                            // Personal Information
-                                            ProfileInfoCard(
-                                              title: 'Personal Information',
-                                              icon: Icons.face,
-                                              children: [
-                                                _buildInfoRow(
-                                                    'Name',
-                                                    (user?.name.isNotEmpty ==
-                                                            true)
-                                                        ? user!.name
-                                                        : ((user?.username
-                                                                    ?.isNotEmpty ==
-                                                                true)
-                                                            ? user!.username!
-                                                            : 'Not provided')),
-                                                _buildInfoRow(
-                                                    'Date of Birth',
-                                                    _formatDate(
-                                                        user?.dateOfBirth)),
-                                                _buildInfoRow(
-                                                    'Time of Birth',
-                                                    _formatTime(
-                                                        user?.timeOfBirth)),
-                                                _buildInfoRow(
-                                                    'Place of Birth',
-                                                    user?.placeOfBirth ??
-                                                        'Not provided'),
-                                                _buildInfoRow(
-                                                    'Gender',
-                                                    user?.sex ??
-                                                        'Not specified'),
-                                              ],
-                                            ),
-
-                                            ResponsiveSystem.sizedBox(context,
-                                                height:
-                                                    ResponsiveSystem.spacing(
-                                                        context,
-                                                        baseSpacing: 16)),
-
-                                            // Astrological Information
-                                            ProfileInfoCard(
-                                              title: 'Birth Chart Information',
-                                              icon: Icons.star,
-                                              onTap: _astrologyData == null
-                                                  ? () => _loadAstrologyData()
-                                                  : null,
-                                              children: [
-                                                _buildAstrologyInfoRow(
-                                                    'Moon Sign (Rashi)',
-                                                    _getAstrologyValue(
-                                                        'moonRashi'),
-                                                    rashiNumber:
-                                                        _getAstrologyRashiNumber(
-                                                            'moonRashi')),
-                                                _buildAstrologyInfoRow(
-                                                    'Birth Star (Nakshatra)',
-                                                    _getAstrologyValue(
-                                                        'moonNakshatra'),
-                                                    nakshatraNumber:
-                                                        _getAstrologyNakshatraNumber(
-                                                            'moonNakshatra')),
-                                                _buildAstrologyInfoRow(
-                                                    'Star Quarter (Pada)',
-                                                    _getAstrologyValue(
-                                                        'moonPada')),
-                                                _buildAstrologyInfoRow(
-                                                    'Rising Sign (Ascendant)',
-                                                    _getAstrologyValue(
-                                                        'ascendant'),
-                                                    rashiNumber:
-                                                        _getAstrologyRashiNumber(
-                                                            'ascendant')),
-                                              ],
-                                            ),
-
-                                            ResponsiveSystem.sizedBox(context,
-                                                height:
-                                                    ResponsiveSystem.spacing(
-                                                        context,
-                                                        baseSpacing: 24)),
-
-                                            // App Information
-                                            ProfileInfoCard(
-                                              title: 'Application Information',
-                                              icon: Icons.info,
-                                              children: [
-                                                _buildInfoRow('App Version',
-                                                    AppConstants.appVersion),
-                                                _buildInfoRow(
-                                                    'Profile Status', 'Active'),
-                                                _buildInfoRow('Data Source',
-                                                    'Local Storage'),
-                                              ],
-                                            ),
-
-                                            ResponsiveSystem.sizedBox(context,
-                                                height: 32),
-                                          ],
-                                        ),
+                                        fontWeight: FontWeight.bold,
+                                        color: ThemeHelpers.getPrimaryTextColor(
+                                            context,),
+                                      ),
+                                    ),
+                                    background: Container(
+                                      decoration: BoxDecoration(
+                                        gradient:
+                                            ThemeHelpers.getPrimaryGradient(
+                                                context,),
+                                      ),
+                                    ),
+                                  ),
+                                  actions: [
+                                    // Language Dropdown Widget
+                                    LanguageDropdown(
+                                      onLanguageChanged: (value) async {
+                                        await LoggingHelper.logInfo(
+                                          'Language changed to: $value',
+                                        );
+                                        ScreenHandlers.handleLanguageChange(
+                                            ref, value,);
+                                      },
+                                    ),
+                                    // Theme Dropdown Widget
+                                    ThemeDropdown(
+                                      onThemeChanged: (value) async {
+                                        await LoggingHelper.logInfo(
+                                          'Theme changed to: $value',
+                                        );
+                                        ScreenHandlers.handleThemeChange(
+                                            ref, value,);
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.share,
+                                        color: ThemeHelpers.getPrimaryTextColor(
+                                            context,),
+                                        size: ResponsiveSystem.iconSize(
+                                          context,
+                                          baseSize: 24,
+                                        ), // Consistent with other app bar icons
+                                      ),
+                                      onPressed: () => _shareProfile(
+                                        context,
+                                        user != null
+                                            ? () {
+                                                unawaited(
+                                                  LoggingHelper.logDebug(
+                                                    'Converting UserModel to UserEntity: name=${user.name}, length=${user.name.length}',
+                                                    source: 'UserProfile',
+                                                  ),
+                                                );
+                                                return entity.UserEntity(
+                                                  id: user.id,
+                                                  username: user.name,
+                                                  dateOfBirth: user.dateOfBirth,
+                                                  timeOfBirth:
+                                                      entity.TimeOfBirth(
+                                                    hour: user.timeOfBirth.hour,
+                                                    minute:
+                                                        user.timeOfBirth.minute,
+                                                  ),
+                                                  placeOfBirth:
+                                                      user.placeOfBirth,
+                                                  latitude: user.latitude,
+                                                  longitude: user.longitude,
+                                                  sex: user.sex,
+                                                  // ayanamsha removed as it's not in UserEntity
+                                                  createdAt: DateTime.now(),
+                                                  updatedAt: DateTime.now(),
+                                                );
+                                              }()
+                                            : null,
+                                        translationService,
+                                      ),
+                                      tooltip:
+                                          translationService.translateContent(
+                                        'share_profile',
+                                        fallback: 'Share Profile',
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.edit,
+                                        color: ThemeHelpers.getPrimaryTextColor(
+                                            context,),
+                                        size: ResponsiveSystem.iconSize(
+                                          context,
+                                          baseSize: 24,
+                                        ), // Consistent with other app bar icons
+                                      ),
+                                      onPressed: () => _editProfile(
+                                        context,
+                                        user != null
+                                            ? () {
+                                                unawaited(
+                                                  LoggingHelper.logDebug(
+                                                    'Converting UserModel to UserEntity for edit: name=${user.name}, length=${user.name.length}',
+                                                    source: 'UserProfile',
+                                                  ),
+                                                );
+                                                return entity.UserEntity(
+                                                  id: user.id,
+                                                  username: user.name,
+                                                  dateOfBirth: user.dateOfBirth,
+                                                  timeOfBirth:
+                                                      entity.TimeOfBirth(
+                                                    hour: user.timeOfBirth.hour,
+                                                    minute:
+                                                        user.timeOfBirth.minute,
+                                                  ),
+                                                  placeOfBirth:
+                                                      user.placeOfBirth,
+                                                  latitude: user.latitude,
+                                                  longitude: user.longitude,
+                                                  sex: user.sex,
+                                                  // ayanamsha removed as it's not in UserEntity
+                                                  createdAt: DateTime.now(),
+                                                  updatedAt: DateTime.now(),
+                                                );
+                                              }()
+                                            : null,
+                                      ),
+                                      tooltip:
+                                          translationService.translateContent(
+                                        'edit_profile',
+                                        fallback: 'Edit Profile',
                                       ),
                                     ),
                                   ],
+                                ),
+
+                                // Profile Content
+                                SliverToBoxAdapter(
+                                  child: Padding(
+                                    padding: ResponsiveSystem.only(
+                                      context,
+                                      top: ResponsiveSystem.spacing(
+                                        context,
+                                        baseSpacing: 20,
+                                      ),
+                                      left: ResponsiveSystem.spacing(
+                                        context,
+                                        baseSpacing: 16,
+                                      ),
+                                      right: ResponsiveSystem.spacing(
+                                        context,
+                                        baseSpacing: 16,
+                                      ),
+                                      bottom: ResponsiveSystem.spacing(
+                                        context,
+                                        baseSpacing: 16,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        // Profile Header
+                                        ProfileHeaderWidget(
+                                          user: user,
+                                          onProfilePictureChanged:
+                                              (imagePath) =>
+                                                  _handleProfilePictureChanged(
+                                            imagePath,
+                                            translationService,
+                                          ),
+                                        ),
+
+                                        ResponsiveSystem.sizedBox(
+                                          context,
+                                          height: ResponsiveSystem.spacing(
+                                            context,
+                                            baseSpacing: 24,
+                                          ),
+                                        ),
+
+                                        // Profile Statistics - Removed widget
+                                        // ProfileStatisticsWidget(user: user),
+
+                                        ResponsiveSystem.sizedBox(
+                                          context,
+                                          height: ResponsiveSystem.spacing(
+                                            context,
+                                            baseSpacing: 24,
+                                          ),
+                                        ),
+
+                                        // Personal Information
+                                        ProfileInfoCard(
+                                          title: 'Personal Information',
+                                          icon: Icons.face,
+                                          children: [
+                                            _buildInfoRow(
+                                              'Name',
+                                              (user?.name.isNotEmpty ?? false)
+                                                  ? user!.name
+                                                  : ((user?.username
+                                                              ?.isNotEmpty ??
+                                                          false)
+                                                      ? user!.username!
+                                                      : 'Not provided'),
+                                            ),
+                                            _buildInfoRow(
+                                              'Date of Birth',
+                                              _formatDate(
+                                                user?.dateOfBirth,
+                                              ),
+                                            ),
+                                            _buildInfoRow(
+                                              'Time of Birth',
+                                              _formatTime(
+                                                user?.timeOfBirth,
+                                              ),
+                                            ),
+                                            _buildInfoRow(
+                                              'Place of Birth',
+                                              user?.placeOfBirth ??
+                                                  'Not provided',
+                                            ),
+                                            _buildInfoRow(
+                                              'Gender',
+                                              user?.sex ?? 'Not specified',
+                                            ),
+                                          ],
+                                        ),
+
+                                        ResponsiveSystem.sizedBox(
+                                          context,
+                                          height: ResponsiveSystem.spacing(
+                                            context,
+                                            baseSpacing: 16,
+                                          ),
+                                        ),
+
+                                        // Astrological Information
+                                        ProfileInfoCard(
+                                          title: 'Birth Chart Information',
+                                          icon: Icons.star,
+                                          onTap: _astrologyData == null
+                                              ? _loadAstrologyData
+                                              : null,
+                                          children: [
+                                            _buildAstrologyInfoRow(
+                                              'Moon Sign (Rashi)',
+                                              _getAstrologyValue(
+                                                'moonRashi',
+                                              ),
+                                              rashiNumber:
+                                                  _getAstrologyRashiNumber(
+                                                'moonRashi',
+                                              ),
+                                            ),
+                                            _buildAstrologyInfoRow(
+                                              'Birth Star (Nakshatra)',
+                                              _getAstrologyValue(
+                                                'moonNakshatra',
+                                              ),
+                                              nakshatraNumber:
+                                                  _getAstrologyNakshatraNumber(
+                                                'moonNakshatra',
+                                              ),
+                                            ),
+                                            _buildAstrologyInfoRow(
+                                              'Star Quarter (Pada)',
+                                              _getAstrologyValue(
+                                                'moonPada',
+                                              ),
+                                            ),
+                                            _buildAstrologyInfoRow(
+                                              'Rising Sign (Ascendant)',
+                                              _getAstrologyValue(
+                                                'ascendant',
+                                              ),
+                                              rashiNumber:
+                                                  _getAstrologyRashiNumber(
+                                                'ascendant',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        ResponsiveSystem.sizedBox(
+                                          context,
+                                          height: ResponsiveSystem.spacing(
+                                            context,
+                                            baseSpacing: 24,
+                                          ),
+                                        ),
+
+                                        // App Information
+                                        ProfileInfoCard(
+                                          title: 'Application Information',
+                                          icon: Icons.info,
+                                          children: [
+                                            _buildInfoRow(
+                                              'App Version',
+                                              AppConstants.appVersion,
+                                            ),
+                                            _buildInfoRow(
+                                              'Profile Status',
+                                              'Active',
+                                            ),
+                                            _buildInfoRow(
+                                              'Data Source',
+                                              'Local Storage',
+                                            ),
+                                          ],
+                                        ),
+
+                                        ResponsiveSystem.sizedBox(
+                                          context,
+                                          height: 32,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             );
                           },
                         ),
@@ -915,8 +1044,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     );
   }
 
-  Widget _buildAstrologyInfoRow(String label, String value,
-      {int? rashiNumber, int? nakshatraNumber}) {
+  Widget _buildAstrologyInfoRow(
+    String label,
+    String value, {
+    int? rashiNumber,
+    int? nakshatraNumber,
+  }) {
     return InfoRow(
       label: label,
       value: value,
@@ -942,20 +1075,16 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       return 'Tap to calculate';
     }
 
-    // Get value from the structured data
-    dynamic value = _astrologyData![key];
+    final dynamic value = _astrologyData![key];
 
     if (value == null || value.toString().isEmpty) {
       return 'Not available';
     }
-    // Convert to user-friendly text
     return _convertToUserFriendlyText(key, value);
   }
 
   String _convertToUserFriendlyText(String key, dynamic value) {
-    // Handle different data types from the API
     if (value is Map<String, dynamic>) {
-      // Handle Map data from API
       if (value.containsKey('englishName')) {
         return value['englishName'] as String? ?? 'Unknown';
       } else if (value.containsKey('name')) {
@@ -965,19 +1094,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       }
       return 'Unknown';
     } else if (value is String) {
-      // Handle string values - check if it contains symbol concatenation
       if (key.toLowerCase().contains('nakshatra') && value.contains(' ')) {
-        // If nakshatra string contains spaces, it might have symbol concatenated
         // Extract just the name part (everything after the first space)
         final parts = value.split(' ');
         if (parts.length > 1) {
-          // Return everything except the first part (which might be the symbol)
           return parts.skip(1).join(' ');
         }
       }
       return value; // Already a string, return as is
     } else if (value is int) {
-      // Handle numeric values for backward compatibility
       switch (key.toLowerCase()) {
         case 'moonrashi':
         case 'rashi':
@@ -1007,7 +1132,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   int? _getAstrologyRashiNumber(String key) {
     if (_astrologyData == null) return null;
 
-    dynamic value = _astrologyData![key];
+    final dynamic value = _astrologyData![key];
     if (value is Map<String, dynamic>) {
       return value['number'] as int?;
     } else if (value is int) {
@@ -1019,7 +1144,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
   int? _getAstrologyNakshatraNumber(String key) {
     if (_astrologyData == null) return null;
 
-    dynamic value = _astrologyData![key];
+    final dynamic value = _astrologyData![key];
     if (value is Map<String, dynamic>) {
       return value['number'] as int?;
     } else if (value is int) {
@@ -1030,12 +1155,13 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
   // Duplicate methods removed - now using centralized AstrologyUtils
 
-  void _handleProfilePictureChanged(
-      String? imagePath, TranslationService translationService) async {
+  Future<void> _handleProfilePictureChanged(
+    String? imagePath,
+    TranslationService translationService,
+  ) async {
     if (_currentUser == null) return;
 
     try {
-      // Create updated user with new profile picture path
       final updatedUser = entity.UserEntity(
         id: _currentUser!.id,
         username: _currentUser!.name,
@@ -1050,9 +1176,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
         longitude: _currentUser!.longitude,
       );
 
-      // Update user in service
       final userService = ref.read(userServiceProvider.notifier);
-      // Convert UserEntity back to UserModel for service
       final userModel = UserModel.create(
         name: updatedUser.username,
         dateOfBirth: updatedUser.dateOfBirth,
@@ -1067,29 +1191,32 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       );
       await userService.setUser(userModel);
 
-      // Update local state
       setState(() {
         _currentUser = userModel;
       });
 
-      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(imagePath != null
-                ? 'Profile picture updated!'
-                : 'Profile picture removed!'),
+            content: Text(
+              imagePath != null
+                  ? 'Profile picture updated!'
+                  : 'Profile picture removed!',
+            ),
             backgroundColor: ThemeHelpers.getPrimaryColor(context),
           ),
         );
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(translationService.translateContent(
+            content: Text(
+              translationService.translateContent(
                 'error_updating_profile_picture',
-                fallback: 'Error updating profile picture: $e')),
+                fallback: 'Error updating profile picture: $e',
+              ),
+            ),
             backgroundColor: ThemeHelpers.getErrorColor(context),
           ),
         );
@@ -1097,11 +1224,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
-  void _editProfile(BuildContext context, entity.UserEntity? user) async {
+  Future<void> _editProfile(
+      BuildContext context, entity.UserEntity? user,) async {
     // Store current user data to detect changes
     final previousUser = _currentUser;
 
-    // Navigate to edit screen using proper navigation
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -1112,7 +1239,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     // Refresh user data when returning from edit screen
     await _loadUserData();
 
-    // Check if user data has changed (birth details, location, etc.)
     final currentUser = _currentUser;
     bool userDataChanged = false;
 
@@ -1127,9 +1253,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
       userDataChanged = true;
     }
 
-    // If user data changed, clear astrology cache and reload
     if (userDataChanged && currentUser != null) {
-      // Clear astrology data to force recalculation
       setState(() {
         _astrologyData = null;
       });
@@ -1140,14 +1264,20 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
     }
   }
 
-  void _shareProfile(BuildContext context, entity.UserEntity? user,
-      TranslationService translationService) {
+  void _shareProfile(
+    BuildContext context,
+    entity.UserEntity? user,
+    TranslationService translationService,
+  ) {
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(translationService.translateContent(
+          content: Text(
+            translationService.translateContent(
               'no_profile_to_share',
-              fallback: 'No profile to share')),
+              fallback: 'No profile to share',
+            ),
+          ),
           backgroundColor: ThemeHelpers.getPrimaryColor(context),
         ),
       );
@@ -1156,12 +1286,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(translationService.translateContent(
+        content: Text(
+          translationService.translateContent(
             'profile_sharing_coming_soon',
-            fallback: 'Profile sharing feature coming soon')),
+            fallback: 'Profile sharing feature coming soon',
+          ),
+        ),
         backgroundColor: ThemeHelpers.getPrimaryColor(context),
       ),
     );
   }
-
 }

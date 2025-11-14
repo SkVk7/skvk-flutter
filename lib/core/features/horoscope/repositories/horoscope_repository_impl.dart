@@ -4,62 +4,63 @@
 /// Uses BaseRepository for consistent error handling
 library;
 
-import '../repositories/horoscope_repository.dart';
-import '../../../utils/either.dart';
-import '../../../errors/failures.dart';
-import '../../../interfaces/user_repository_interface.dart';
-import '../../../services/astrology/astrology_service_bridge.dart';
-import '../../../base/base_repository.dart';
-import '../../../logging/logging_helper.dart';
+import 'package:skvk_application/core/base/base_repository.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/core/features/horoscope/repositories/horoscope_repository.dart';
+import 'package:skvk_application/core/interfaces/user_repository_interface.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/services/astrology/astrology_service_bridge.dart';
+import 'package:skvk_application/core/utils/either.dart';
 
 /// Horoscope repository implementation
 /// Extends BaseRepository for consistent error handling
-class HoroscopeRepositoryImpl extends BaseRepository implements HoroscopeRepository {
-  final UserRepositoryInterface _userRepository;
-
+class HoroscopeRepositoryImpl extends BaseRepository
+    implements HoroscopeRepository {
   HoroscopeRepositoryImpl({required UserRepositoryInterface userRepository})
       : _userRepository = userRepository;
+  final UserRepositoryInterface _userRepository;
 
   @override
   Future<Result<HoroscopeData>> generateHoroscope() async {
     try {
-      // Get user birth data
       final userDataResult = await getUserBirthData();
       if (userDataResult.isFailure || userDataResult.value == null) {
         return ResultHelper.failure(
-          ValidationFailure(
-              message:
-                  'User profile not complete. Please complete your profile first.'),
+          const ValidationFailure(
+            message:
+                'User profile not complete. Please complete your profile first.',
+          ),
         );
       }
 
       final userData = userDataResult.value!;
 
       // Use local birth datetime (bridge will convert to UTC)
-      final birthDateTime = userData['dateOfBirth'] is DateTime
-          ? userData['dateOfBirth'] as DateTime
+      final dateOfBirth = userData['dateOfBirth'] as dynamic;
+      final timeOfBirth = userData['timeOfBirth'] as dynamic;
+      final birthDateTime = dateOfBirth is DateTime
+          ? dateOfBirth
           : DateTime(
-              userData['dateOfBirth'].year,
-              userData['dateOfBirth'].month,
-              userData['dateOfBirth'].day,
-              userData['timeOfBirth'].hour,
-              userData['timeOfBirth'].minute,
+              (dateOfBirth as DateTime).year,
+              dateOfBirth.month,
+              dateOfBirth.day,
+              (timeOfBirth as Map<String, dynamic>)['hour'] as int,
+              timeOfBirth['minute'] as int,
             );
 
       // Use AstrologyServiceBridge for timezone handling and API calls
-      final bridge = AstrologyServiceBridge.instance;
+      final bridge = AstrologyServiceBridge.instance();
 
-      // Get timezone from user's location
       final timezoneId = AstrologyServiceBridge.getTimezoneFromLocation(
-          userData['latitude'], userData['longitude']);
+        userData['latitude'],
+        userData['longitude'],
+      );
 
-      // Get birth data from API (handles timezone conversion automatically)
       final birthData = await bridge.getBirthData(
         localBirthDateTime: birthDateTime,
         timezoneId: timezoneId,
         latitude: userData['latitude'],
         longitude: userData['longitude'],
-        ayanamsha: 'lahiri',
       );
 
       // Extract horoscope data from API response
@@ -85,9 +86,13 @@ class HoroscopeRepositoryImpl extends BaseRepository implements HoroscopeReposit
       );
 
       return ResultHelper.success(horoscopeData);
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Exception caught in horoscope repository: $e',
-          error: e, stackTrace: stackTrace, source: 'HoroscopeRepository');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
+        'Exception caught in horoscope repository: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'HoroscopeRepository',
+      );
       return handleException<HoroscopeData>(e, 'generateHoroscope');
     }
   }
@@ -97,9 +102,13 @@ class HoroscopeRepositoryImpl extends BaseRepository implements HoroscopeReposit
     try {
       final result = await _userRepository.getCachedAstrologyData();
       return ResultHelper.success(result);
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Exception getting user birth data: $e',
-          error: e, stackTrace: stackTrace, source: 'HoroscopeRepository');
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
+        'Exception getting user birth data: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'HoroscopeRepository',
+      );
       return handleException<Map<String, dynamic>?>(e, 'getUserBirthData');
     }
   }
@@ -121,7 +130,7 @@ class HoroscopeRepositoryImpl extends BaseRepository implements HoroscopeReposit
       'Indigo',
       'Violet',
       'Pink',
-      'White'
+      'White',
     ];
     return colors[nakshatraNumber % colors.length];
   }

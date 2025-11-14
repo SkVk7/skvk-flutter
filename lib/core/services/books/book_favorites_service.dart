@@ -7,28 +7,28 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Book Favorites Service - Manages favorite books with persistence
 class BookFavoritesService extends StateNotifier<Set<String>> {
-  static const String _favoritesKey = 'book_favorites';
-
   BookFavoritesService() : super({}) {
     _loadFavorites();
   }
+  static const String _favoritesKey = 'book_favorites';
 
   /// Load favorites from storage
   Future<void> _loadFavorites() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getString(_favoritesKey);
-      
+
       if (favoritesJson != null) {
         final List<dynamic> decoded = jsonDecode(favoritesJson);
         state = decoded.map((id) => id as String).toSet();
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to load book favorites', source: 'BookFavoritesService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to load book favorites',
+          source: 'BookFavoritesService', error: e,);
       state = {};
     }
   }
@@ -39,8 +39,9 @@ class BookFavoritesService extends StateNotifier<Set<String>> {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = jsonEncode(state.toList());
       await prefs.setString(_favoritesKey, favoritesJson);
-    } catch (e) {
-      LoggingHelper.logError('Failed to save book favorites', source: 'BookFavoritesService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to save book favorites',
+          source: 'BookFavoritesService', error: e,);
     }
   }
 
@@ -91,4 +92,3 @@ final bookFavoritesServiceProvider =
     StateNotifierProvider<BookFavoritesService, Set<String>>((ref) {
   return BookFavoritesService();
 });
-

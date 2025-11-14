@@ -5,11 +5,24 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Location Search Field - Reusable location search with suggestions
 class LocationSearchField extends StatelessWidget {
+  const LocationSearchField({
+    required this.controller,
+    required this.label,
+    required this.hintText,
+    required this.onChanged,
+    required this.onTap,
+    required this.suggestions,
+    required this.showSuggestions,
+    required this.isSearching,
+    required this.onSuggestionSelected,
+    super.key,
+    this.error,
+  });
   final TextEditingController controller;
   final String label;
   final String hintText;
@@ -20,20 +33,6 @@ class LocationSearchField extends StatelessWidget {
   final bool isSearching;
   final String? error;
   final ValueChanged<Map<String, dynamic>> onSuggestionSelected;
-
-  const LocationSearchField({
-    super.key,
-    required this.controller,
-    required this.label,
-    required this.hintText,
-    required this.onChanged,
-    required this.onTap,
-    required this.suggestions,
-    required this.showSuggestions,
-    required this.isSearching,
-    this.error,
-    required this.onSuggestionSelected,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -94,13 +93,13 @@ class LocationSearchField extends StatelessWidget {
         // Location suggestions dropdown
         if (showSuggestions && suggestions.isNotEmpty) ...[
           ResponsiveSystem.sizedBox(context, height: 8),
-          Container(
+          DecoratedBox(
             decoration: BoxDecoration(
               color: ThemeHelpers.getSurfaceColor(context),
               borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
               border: Border.all(
                 color: ThemeHelpers.getPrimaryColor(context)
-                    .withAlpha((0.3 * 255).round()),
+                    .withValues(alpha: 0.3),
               ),
               boxShadow: [
                 BoxShadow(
@@ -116,14 +115,16 @@ class LocationSearchField extends StatelessWidget {
                   title: Text(
                     suggestion['name'] ?? 'Unknown Location',
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 14),
                       color: ThemeHelpers.getPrimaryTextColor(context),
                     ),
                   ),
                   subtitle: Text(
-                    '${suggestion['latitude']?.toStringAsFixed(4) ?? ''}, ${suggestion['longitude']?.toStringAsFixed(4) ?? ''}',
+                    '${(suggestion['latitude'] as num?)?.toStringAsFixed(4) ?? ''}, ${(suggestion['longitude'] as num?)?.toStringAsFixed(4) ?? ''}',
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 12),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 12),
                       color: ThemeHelpers.getSecondaryTextColor(context),
                     ),
                   ),
@@ -140,8 +141,7 @@ class LocationSearchField extends StatelessWidget {
           Container(
             padding: ResponsiveSystem.all(context, baseSpacing: 12),
             decoration: BoxDecoration(
-              color: ThemeHelpers.getErrorColor(context)
-                  .withAlpha((0.1 * 255).round()),
+              color: ThemeHelpers.getErrorColor(context).withValues(alpha: 0.1),
               borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
               border: Border.all(
                 color: ThemeHelpers.getErrorColor(context),
@@ -160,7 +160,8 @@ class LocationSearchField extends StatelessWidget {
                   child: Text(
                     error!,
                     style: TextStyle(
-                      fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                      fontSize:
+                          ResponsiveSystem.fontSize(context, baseSize: 14),
                       color: ThemeHelpers.getErrorColor(context),
                     ),
                   ),
@@ -173,4 +174,3 @@ class LocationSearchField extends StatelessWidget {
     );
   }
 }
-

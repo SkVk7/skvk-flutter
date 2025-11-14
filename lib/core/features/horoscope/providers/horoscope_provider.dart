@@ -3,27 +3,28 @@
 /// Proper state management for horoscope feature following Flutter best practices
 library;
 
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../utils/validation/error_message_helper.dart';
-import '../repositories/horoscope_repository.dart';
-import '../../../di/injection_container.dart';
-import '../usecases/generate_horoscope_usecase.dart';
-import '../../../utils/either.dart';
-import '../../../logging/logging_helper.dart';
+import 'package:skvk_application/core/di/injection_container.dart';
+import 'package:skvk_application/core/features/horoscope/repositories/horoscope_repository.dart';
+import 'package:skvk_application/core/features/horoscope/usecases/generate_horoscope_usecase.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/error_message_helper.dart';
 
 /// Horoscope state
 class HoroscopeState {
-  final bool isLoading;
-  final HoroscopeData? horoscopeData;
-  final String? errorMessage;
-  final String? successMessage;
-
   const HoroscopeState({
     this.isLoading = false,
     this.horoscopeData,
     this.errorMessage,
     this.successMessage,
   });
+  final bool isLoading;
+  final HoroscopeData? horoscopeData;
+  final String? errorMessage;
+  final String? successMessage;
 
   HoroscopeState copyWith({
     bool? isLoading,
@@ -58,27 +59,31 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
 
   /// Generate horoscope
   Future<void> generateHoroscope() async {
-    LoggingHelper.logDebug('HoroscopeNotifier.generateHoroscope called', source: 'HoroscopeProvider');
+    await LoggingHelper.logDebug('HoroscopeNotifier.generateHoroscope called',
+        source: 'HoroscopeProvider',);
     state = state.copyWith(
-        isLoading: true, errorMessage: null, successMessage: null);
+      isLoading: true,
+    );
 
     try {
       final result = await _generateHoroscopeUseCase();
-      LoggingHelper.logDebug('Horoscope generation result: ${result.isSuccess}', source: 'HoroscopeProvider');
+      await LoggingHelper.logDebug(
+          'Horoscope generation result: ${result.isSuccess}',
+          source: 'HoroscopeProvider',);
 
       if (result.isSuccess) {
         state = state.copyWith(
           isLoading: false,
-          horoscopeData: result.value!,
+          horoscopeData: result.value,
           successMessage: 'Horoscope generated successfully!',
         );
 
-        // Clear success message after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          state = state.copyWith(successMessage: null);
-        });
+        unawaited(
+          Future.delayed(const Duration(seconds: 3), () {
+            state = state.copyWith();
+          }),
+        );
       } else {
-        // Convert technical error to user-friendly message
         final errorMessage =
             result.failure?.message ?? 'Failed to generate horoscope';
         final userFriendlyMessage =
@@ -88,10 +93,13 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
           errorMessage: userFriendlyMessage,
         );
       }
-    } catch (e, stackTrace) {
-      LoggingHelper.logError('Exception in horoscope generation: $e',
-          error: e, stackTrace: stackTrace, source: 'HoroscopeProvider');
-      // Convert technical error to user-friendly message
+    } on Exception catch (e, stackTrace) {
+      await LoggingHelper.logError(
+        'Exception in horoscope generation: $e',
+        error: e,
+        stackTrace: stackTrace,
+        source: 'HoroscopeProvider',
+      );
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       state = state.copyWith(
         isLoading: false,
@@ -102,12 +110,12 @@ class HoroscopeNotifier extends Notifier<HoroscopeState> {
 
   /// Clear error message
   void clearError() {
-    state = state.copyWith(errorMessage: null);
+    state = state.copyWith();
   }
 
   /// Clear success message
   void clearSuccess() {
-    state = state.copyWith(successMessage: null);
+    state = state.copyWith();
   }
 
   /// Reset state

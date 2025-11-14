@@ -6,14 +6,14 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/services/audio/audio_controller.dart';
-import '../../core/models/audio/track.dart';
-import '../components/audio/mini_player.dart';
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-import '../../core/services/content/content_api_service.dart';
-import '../../core/services/network/network_connectivity_service.dart';
-import '../../core/logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/audio/audio_controller.dart';
+import 'package:skvk_application/core/services/content/content_api_service.dart';
+import 'package:skvk_application/core/services/network/network_connectivity_service.dart';
+import 'package:skvk_application/ui/components/audio/mini_player.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Audio List Screen
 ///
@@ -52,25 +52,25 @@ class _AudioListScreenState extends ConsumerState<AudioListScreen> {
       _errorMessage = null;
     });
 
-    // Check network connectivity
     final hasInternet =
-        await NetworkConnectivityService.instance.hasInternetConnection();
+        await NetworkConnectivityService.instance().hasInternetConnection();
     if (!hasInternet) {
       if (mounted) {
         setState(() {
           _isLoading = false;
           _errorMessage =
-              NetworkConnectivityService.instance.getOfflineMessage();
+              NetworkConnectivityService.instance().getOfflineMessage();
         });
       }
       return;
     }
 
     try {
-      final musicList = await ContentApiService.instance.getMusicList();
+      final musicList = await ContentApiService.instance().getMusicList();
       if (mounted) {
         final tracks = (musicList['music'] as List<dynamic>?)
-                ?.map((music) => Track.fromMusicMap(music as Map<String, dynamic>))
+                ?.map((music) =>
+                    Track.fromMusicMap(music as Map<String, dynamic>),)
                 .toList() ??
             [];
         setState(() {
@@ -79,9 +79,12 @@ class _AudioListScreenState extends ConsumerState<AudioListScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to load music list',
-          source: 'AudioListScreen', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
+        'Failed to load music list',
+        source: 'AudioListScreen',
+        error: e,
+      );
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -110,15 +113,14 @@ class _AudioListScreenState extends ConsumerState<AudioListScreen> {
   Widget build(BuildContext context) {
     final playerState = ref.watch(audioControllerProvider);
 
-    // Calculate bottom padding for mini player (responsive height)
     final bottomPadding = playerState.showMiniPlayer
         ? ResponsiveSystem.responsive(
-            context,
-            mobile: ResponsiveSystem.spacing(context, baseSpacing: 88),
-            tablet: ResponsiveSystem.spacing(context, baseSpacing: 96),
-            desktop: ResponsiveSystem.spacing(context, baseSpacing: 104),
-            largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 112),
-          ) +
+              context,
+              mobile: ResponsiveSystem.spacing(context, baseSpacing: 88),
+              tablet: ResponsiveSystem.spacing(context, baseSpacing: 96),
+              desktop: ResponsiveSystem.spacing(context, baseSpacing: 104),
+              largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 112),
+            ) +
             MediaQuery.of(context).padding.bottom +
             ResponsiveSystem.spacing(context, baseSpacing: 16)
         : ResponsiveSystem.spacing(context, baseSpacing: 16);
@@ -153,11 +155,11 @@ class _AudioListScreenState extends ConsumerState<AudioListScreen> {
           ),
           // Mini player overlay (positioned at bottom)
           if (playerState.showMiniPlayer)
-            Positioned(
+            const Positioned(
               left: 0,
               right: 0,
               bottom: 0,
-              child: const MiniPlayer(),
+              child: MiniPlayer(),
             ),
         ],
       ),
@@ -277,8 +279,9 @@ class _AudioListScreenState extends ConsumerState<AudioListScreen> {
                         _filteredTracks[index].id &&
                     currentPlayerState.isPlaying,
                 onTap: () {
-                  final audioController = ref.read(audioControllerProvider.notifier);
-                  audioController.playTrack(_filteredTracks[index]);
+                  ref
+                      .read(audioControllerProvider.notifier)
+                      .playTrack(_filteredTracks[index]);
                 },
               );
             },
@@ -291,17 +294,16 @@ class _AudioListScreenState extends ConsumerState<AudioListScreen> {
 
 /// Track list item widget
 class _TrackListItem extends StatelessWidget {
-  final Track track;
-  final bool isCurrentTrack;
-  final bool isPlaying;
-  final VoidCallback onTap;
-
   const _TrackListItem({
     required this.track,
     required this.isCurrentTrack,
     required this.isPlaying,
     required this.onTap,
   });
+  final Track track;
+  final bool isCurrentTrack;
+  final bool isPlaying;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -360,4 +362,3 @@ class _TrackListItem extends StatelessWidget {
     );
   }
 }
-

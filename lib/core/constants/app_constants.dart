@@ -8,7 +8,7 @@ class AppConstants {
   // App Information
   static const String appName = 'Vedic Astrology Pro';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Your Personal Guide to Life\'s Journey';
+  static const String appDescription = "Your Personal Guide to Life's Journey";
 
   // API Configuration
   static const String baseUrl = 'https://api.vedicastrology.com';
@@ -24,10 +24,9 @@ class AppConstants {
   static const int maxConcurrentCalculations = 4;
   static const int calculationTimeoutSeconds = 10;
 
-  // UI Configuration
-  static const double defaultPadding = 16.0;
-  static const double defaultBorderRadius = 12.0;
-  static const double defaultElevation = 4.0;
+  static const double defaultPadding = 16;
+  static const double defaultBorderRadius = 12;
+  static const double defaultElevation = 4;
 
   // Hindu Calendar Configuration
   static const int maxYearsToShow = 100;
@@ -36,10 +35,10 @@ class AppConstants {
   // Validation Configuration
   static const int minNameLength = 2;
   static const int maxNameLength = 50;
-  static const double minLatitude = -90.0;
-  static const double maxLatitude = 90.0;
-  static const double minLongitude = -180.0;
-  static const double maxLongitude = 180.0;
+  static const double minLatitude = -90;
+  static const double maxLatitude = 90;
+  static const double minLongitude = -180;
+  static const double maxLongitude = 180;
 
   // User-Friendly Error Messages
   static const String networkErrorMessage =

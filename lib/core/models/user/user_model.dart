@@ -8,10 +8,6 @@ import 'package:flutter/material.dart';
 
 /// Time of birth model
 class TimeOfBirth extends Equatable {
-  final int hour;
-  final int minute;
-  final int second;
-
   const TimeOfBirth({
     required this.hour,
     required this.minute,
@@ -23,7 +19,6 @@ class TimeOfBirth extends Equatable {
     return TimeOfBirth(
       hour: timeOfDay.hour,
       minute: timeOfDay.minute,
-      second: 0,
     );
   }
 
@@ -35,6 +30,9 @@ class TimeOfBirth extends Equatable {
       second: dateTime.second,
     );
   }
+  final int hour;
+  final int minute;
+  final int second;
 
   /// Convert to TimeOfDay
   TimeOfDay toTimeOfDay() {
@@ -65,36 +63,18 @@ class TimeOfBirth extends Equatable {
 
 /// User model with all required fields for astrology calculations
 class UserModel extends Equatable {
-  final String id;
-  final String name;
-  final String? username;
-  final String? email;
-  final String? phone;
-  final DateTime dateOfBirth;
-  final TimeOfBirth timeOfBirth;
-  final String placeOfBirth;
-  final double latitude;
-  final double longitude;
-  final String sex;
-  final String? gender;
-  final String? timezone;
-  final String ayanamsha;
-  final String houseSystem;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-
   const UserModel({
     required this.id,
     required this.name,
-    this.username,
-    this.email,
-    this.phone,
     required this.dateOfBirth,
     required this.timeOfBirth,
     required this.placeOfBirth,
     required this.latitude,
     required this.longitude,
     required this.sex,
+    this.username,
+    this.email,
+    this.phone,
     this.gender,
     this.timezone,
     this.ayanamsha = 'lahiri',
@@ -122,7 +102,6 @@ class UserModel extends Equatable {
       timezone: json['timezone'] as String?,
       ayanamsha: json['ayanamsha'] as String? ?? 'lahiri',
       houseSystem: json['houseSystem'] as String? ?? 'placidus',
-      // Removed: UTC birth time fields - timezone conversion now handled by AstrologyFacade
       // Astrology data handled separately
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
@@ -130,76 +109,6 @@ class UserModel extends Equatable {
       updatedAt: json['updatedAt'] != null
           ? DateTime.parse(json['updatedAt'] as String)
           : null,
-    );
-  }
-
-  /// Convert UserModel to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'username': username,
-      'email': email,
-      'phone': phone,
-      'dateOfBirth': dateOfBirth.toIso8601String(),
-      'timeOfBirth': timeOfBirth.toJson(),
-      'placeOfBirth': placeOfBirth,
-      'latitude': latitude,
-      'longitude': longitude,
-      'sex': sex,
-      'gender': gender,
-      'timezone': timezone,
-      'ayanamsha': ayanamsha,
-      'houseSystem': houseSystem,
-      // Removed: UTC birth time fields - timezone conversion now handled by AstrologyFacade
-      // Astrology data handled separately
-      'createdAt': createdAt?.toIso8601String(),
-      'updatedAt': updatedAt?.toIso8601String(),
-    };
-  }
-
-  /// Create a copy with updated fields
-  UserModel copyWith({
-    String? id,
-    String? name,
-    String? username,
-    String? email,
-    String? phone,
-    DateTime? dateOfBirth,
-    TimeOfBirth? timeOfBirth,
-    String? placeOfBirth,
-    double? latitude,
-    double? longitude,
-    String? sex,
-    String? gender,
-    String? timezone,
-    String? ayanamsha,
-    String? houseSystem,
-    // Removed: UTC birth time parameters - timezone conversion now handled by AstrologyFacade
-    // Astrology data handled separately
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) {
-    return UserModel(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      username: username ?? this.username,
-      email: email ?? this.email,
-      phone: phone ?? this.phone,
-      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
-      timeOfBirth: timeOfBirth ?? this.timeOfBirth,
-      placeOfBirth: placeOfBirth ?? this.placeOfBirth,
-      latitude: latitude ?? this.latitude,
-      longitude: longitude ?? this.longitude,
-      sex: sex ?? this.sex,
-      gender: gender ?? this.gender,
-      timezone: timezone ?? this.timezone,
-      ayanamsha: ayanamsha ?? this.ayanamsha,
-      houseSystem: houseSystem ?? this.houseSystem,
-      // Removed: UTC birth time fields - timezone conversion now handled by AstrologyFacade
-      // Astrology data handled separately
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -241,6 +150,90 @@ class UserModel extends Equatable {
       updatedAt: now,
     );
   }
+  final String id;
+  final String name;
+  final String? username;
+  final String? email;
+  final String? phone;
+  final DateTime dateOfBirth;
+  final TimeOfBirth timeOfBirth;
+  final String placeOfBirth;
+  final double latitude;
+  final double longitude;
+  final String sex;
+  final String? gender;
+  final String? timezone;
+  final String ayanamsha;
+  final String houseSystem;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  /// Convert UserModel to JSON
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'username': username,
+      'email': email,
+      'phone': phone,
+      'dateOfBirth': dateOfBirth.toIso8601String(),
+      'timeOfBirth': timeOfBirth.toJson(),
+      'placeOfBirth': placeOfBirth,
+      'latitude': latitude,
+      'longitude': longitude,
+      'sex': sex,
+      'gender': gender,
+      'timezone': timezone,
+      'ayanamsha': ayanamsha,
+      'houseSystem': houseSystem,
+      // Astrology data handled separately
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
+    };
+  }
+
+  /// Create a copy with updated fields
+  UserModel copyWith({
+    String? id,
+    String? name,
+    String? username,
+    String? email,
+    String? phone,
+    DateTime? dateOfBirth,
+    TimeOfBirth? timeOfBirth,
+    String? placeOfBirth,
+    double? latitude,
+    double? longitude,
+    String? sex,
+    String? gender,
+    String? timezone,
+    String? ayanamsha,
+    String? houseSystem,
+    // Astrology data handled separately
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      timeOfBirth: timeOfBirth ?? this.timeOfBirth,
+      placeOfBirth: placeOfBirth ?? this.placeOfBirth,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      sex: sex ?? this.sex,
+      gender: gender ?? this.gender,
+      timezone: timezone ?? this.timezone,
+      ayanamsha: ayanamsha ?? this.ayanamsha,
+      houseSystem: houseSystem ?? this.houseSystem,
+      // Astrology data handled separately
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
   /// Check if user has complete birth data
   bool get hasCompleteBirthData {
@@ -250,7 +243,6 @@ class UserModel extends Equatable {
   /// Check if user has astrology data (now fetched from centralized cache)
   bool get hasAstrologyData {
     // Astrology data is now fetched from centralized astrology cache
-    // This method is kept for backward compatibility
     return hasCompleteBirthData;
   }
 
@@ -280,7 +272,6 @@ class UserModel extends Equatable {
         timezone,
         ayanamsha,
         houseSystem,
-        // Removed: UTC birth time fields - timezone conversion now handled by AstrologyFacade
         // Astrology data handled separately
         createdAt,
         updatedAt,
@@ -300,7 +291,6 @@ class UserModel extends Equatable {
 
   /// Get formatted birth time for display (preserves user's original input)
   String get formattedBirthTime {
-    // Format the local time for display (no conversion needed)
     return '${localBirthDateTime.hour.toString().padLeft(2, '0')}:${localBirthDateTime.minute.toString().padLeft(2, '0')}';
   }
 }

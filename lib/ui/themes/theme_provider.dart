@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'app_themes.dart';
+import 'package:skvk_application/ui/themes/app_themes.dart';
 
 enum AppThemeMode {
   light,
@@ -16,14 +16,14 @@ enum AppThemeMode {
 }
 
 /// Theme state
+@immutable
 class ThemeState {
-  final AppThemeMode mode;
-  final bool isDarkMode;
-
   const ThemeState({
     required this.mode,
     required this.isDarkMode,
   });
+  final AppThemeMode mode;
+  final bool isDarkMode;
 
   ThemeMode get themeMode {
     if (mode == AppThemeMode.system) {
@@ -34,7 +34,7 @@ class ThemeState {
 
   /// Get the current theme data
   ThemeData get theme {
-    return AppThemes.getTheme(isDarkMode);
+    return AppThemes.getTheme(isDark: isDarkMode);
   }
 
   ThemeState copyWith({
@@ -59,8 +59,7 @@ class ThemeState {
   int get hashCode => mode.hashCode ^ isDarkMode.hashCode;
 
   @override
-  String toString() => 
-      'ThemeState(mode: $mode, isDarkMode: $isDarkMode)';
+  String toString() => 'ThemeState(mode: $mode, isDarkMode: $isDarkMode)';
 }
 
 /// Theme notifier using AsyncNotifier for robust state management
@@ -69,7 +68,7 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
 
   @override
   Future<ThemeState> build() async {
-    return await _loadThemeFromStorage();
+    return _loadThemeFromStorage();
   }
 
   /// Determine if dark mode based on theme mode
@@ -94,8 +93,8 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
         mode: mode,
         isDarkMode: isDarkMode,
       );
-    } catch (e) {
-      return ThemeState(
+    } on Exception {
+      return const ThemeState(
         mode: AppThemeMode.system,
         isDarkMode: false,
       );
@@ -106,7 +105,7 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_themeKey, mode.index);
-    } catch (e) {
+    } on Exception {
       // Silently fail if storage is not available
     }
   }
@@ -128,13 +127,13 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
     final currentState = state.value;
     if (currentState == null) return;
 
-    // If in system mode, switch to explicit light/dark
     AppThemeMode newMode;
     if (currentState.mode == AppThemeMode.system) {
-      newMode = currentState.isDarkMode ? AppThemeMode.light : AppThemeMode.dark;
+      newMode =
+          currentState.isDarkMode ? AppThemeMode.light : AppThemeMode.dark;
     } else {
-      // Toggle between light and dark
-      newMode = currentState.isDarkMode ? AppThemeMode.light : AppThemeMode.dark;
+      newMode =
+          currentState.isDarkMode ? AppThemeMode.light : AppThemeMode.dark;
     }
 
     final isDarkMode = _getIsDarkMode(newMode);
@@ -150,7 +149,7 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
   /// Refresh theme from storage
   Future<void> refreshTheme() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _loadThemeFromStorage());
+    state = await AsyncValue.guard(_loadThemeFromStorage);
   }
 
   /// Refresh theme when system theme changes
@@ -158,7 +157,6 @@ class ThemeNotifier extends AsyncNotifier<ThemeState> {
     final currentState = state.value;
     if (currentState == null) return;
 
-    // Only refresh if current mode is system
     if (currentState.mode == AppThemeMode.system) {
       final isDarkMode = _getIsDarkMode(AppThemeMode.system);
       final newState = ThemeState(
@@ -226,4 +224,3 @@ final themeStateProvider = Provider<ThemeState?>((ref) {
     error: (_, __) => null,
   );
 });
-

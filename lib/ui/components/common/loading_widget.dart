@@ -4,20 +4,19 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Loading Widget - Displays a loading indicator with optional message
 @immutable
 class LoadingWidget extends StatelessWidget {
-  final String? message;
-  final double? size;
-
   const LoadingWidget({
     super.key,
     this.message,
     this.size,
   });
+  final String? message;
+  final double? size;
 
   @override
   Widget build(BuildContext context) {
@@ -54,4 +53,3 @@ class LoadingWidget extends StatelessWidget {
     );
   }
 }
-

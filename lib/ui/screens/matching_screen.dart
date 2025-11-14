@@ -1,24 +1,23 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-// UI Utils - Use only these for consistency
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-import '../utils/screen_handlers.dart';
-// Core imports
-import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
-import '../components/common/index.dart';
-import '../components/matching/index.dart';
-import '../components/app_bar/index.dart';
-import '../../core/services/language/translation_service.dart';
-import '../../core/services/location/simple_location_service.dart';
-import '../../core/logging/logging_helper.dart';
-import '../../core/services/storage/matching_form_storage_service.dart';
-import '../../core/features/matching/providers/matching_provider.dart';
-import '../../core/features/matching/repositories/matching_repository.dart';
-import '../../core/features/user/providers/user_provider.dart';
-import '../../core/models/user/user_model.dart';
+import 'package:skvk_application/core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
+import 'package:skvk_application/core/features/matching/providers/matching_provider.dart';
+import 'package:skvk_application/core/features/matching/repositories/matching_repository.dart';
+import 'package:skvk_application/core/features/user/providers/user_provider.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/location/simple_location_service.dart';
+import 'package:skvk_application/core/services/storage/matching_form_storage_service.dart';
+import 'package:skvk_application/ui/components/app_bar/index.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/matching/index.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 class MatchingScreen extends ConsumerStatefulWidget {
   const MatchingScreen({super.key});
@@ -76,7 +75,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   void initState() {
     super.initState();
 
-    // Initialize animation controllers
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -94,7 +92,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       ref.read(matchingProvider.notifier).resetState();
     });
 
-    // Initialize data based on user gender and load stored form data
     _initializeDataBasedOnGender();
     _loadStoredFormData();
   }
@@ -116,7 +113,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         _groomLongitude = currentUser.longitude;
         _groomLocationSearchController.text = _groomPob;
 
-        // Set bride data to defaults
         _brideNameController.text = '';
         _brideDob = DateTime.now().subtract(const Duration(days: 25 * 365));
         _brideTob = TimeOfDay.now();
@@ -136,7 +132,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         _brideLongitude = currentUser.longitude;
         _brideLocationSearchController.text = _bridePob;
 
-        // Set groom data to defaults
         _groomNameController.text = '';
         _groomDob = DateTime.now().subtract(const Duration(days: 25 * 365));
         _groomTob = TimeOfDay.now();
@@ -155,10 +150,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   /// Load stored form data from previous sessions
   Future<void> _loadStoredFormData() async {
     try {
-      final storageService = MatchingFormStorageService.instance;
+      final storageService = MatchingFormStorageService.instance();
       await storageService.initialize();
 
-      // Load groom data
       final groomData = await storageService.getGroomData();
       if (groomData != null) {
         setState(() {
@@ -167,13 +161,14 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
               DateTime.now().subtract(const Duration(days: 25 * 365));
           _groomTob = _parseTimeOfDay(groomData['timeOfBirth'] ?? '12:00');
           _groomPob = groomData['placeOfBirth'] ?? 'New Delhi';
-          _groomLatitude = (groomData['latitude'] ?? 28.6139).toDouble();
-          _groomLongitude = (groomData['longitude'] ?? 77.2090).toDouble();
+          _groomLatitude =
+              ((groomData['latitude'] as num?) ?? 28.6139).toDouble();
+          _groomLongitude =
+              ((groomData['longitude'] as num?) ?? 77.2090).toDouble();
           _groomLocationSearchController.text = _groomPob;
         });
       }
 
-      // Load bride data
       final brideData = await storageService.getBrideData();
       if (brideData != null) {
         setState(() {
@@ -182,13 +177,14 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
               DateTime.now().subtract(const Duration(days: 25 * 365));
           _brideTob = _parseTimeOfDay(brideData['timeOfBirth'] ?? '12:00');
           _bridePob = brideData['placeOfBirth'] ?? 'New Delhi';
-          _brideLatitude = (brideData['latitude'] ?? 28.6139).toDouble();
-          _brideLongitude = (brideData['longitude'] ?? 77.2090).toDouble();
+          _brideLatitude =
+              ((brideData['latitude'] as num?) ?? 28.6139).toDouble();
+          _brideLongitude =
+              ((brideData['longitude'] as num?) ?? 77.2090).toDouble();
           _brideLocationSearchController.text = _bridePob;
         });
       }
 
-      // Load ayanamsha selection
       final ayanamsha = await storageService.getAyanamsha();
       if (ayanamsha != null) {
         setState(() {
@@ -196,7 +192,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         });
       }
 
-      // Load house system selection
       final houseSystem = await storageService.getHouseSystem();
       if (houseSystem != null) {
         setState(() {
@@ -204,9 +199,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         });
       }
 
-      LoggingHelper.logInfo('Stored form data loaded successfully');
-    } catch (e) {
-      LoggingHelper.logError('Failed to load stored form data: $e');
+      await LoggingHelper.logInfo('Stored form data loaded successfully');
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to load stored form data: $e');
     }
   }
 
@@ -219,7 +214,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         final minute = int.tryParse(parts[1]) ?? 0;
         return TimeOfDay(hour: hour, minute: minute);
       }
-    } catch (e) {
+    } on Exception {
       // Fallback to default time
     }
     return const TimeOfDay(hour: 12, minute: 0);
@@ -228,10 +223,9 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   /// Save current form data for future sessions
   Future<void> _saveFormData() async {
     try {
-      final storageService = MatchingFormStorageService.instance;
+      final storageService = MatchingFormStorageService.instance();
       await storageService.initialize();
 
-      // Save groom data
       await storageService.saveGroomData(
         name: _groomNameController.text.trim(),
         dateOfBirth: _groomDob,
@@ -242,7 +236,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         longitude: _groomLongitude,
       );
 
-      // Save bride data
       await storageService.saveBrideData(
         name: _brideNameController.text.trim(),
         dateOfBirth: _brideDob,
@@ -253,15 +246,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         longitude: _brideLongitude,
       );
 
-      // Save ayanamsha selection
       await storageService.saveAyanamsha(_selectedAyanamsha);
 
-      // Save house system selection
       await storageService.saveHouseSystem(_selectedHouseSystem);
 
-      LoggingHelper.logInfo('Form data saved successfully');
-    } catch (e) {
-      LoggingHelper.logError('Failed to save form data: $e');
+      await LoggingHelper.logInfo('Form data saved successfully');
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to save form data: $e');
     }
   }
 
@@ -271,7 +262,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
     _groomSearchDebounceTimer?.cancel();
 
     if (query.length >= 3) {
-      // Set a new timer for 300ms (0.3 seconds)
       _groomSearchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
         _searchGroomLocations(query);
       });
@@ -291,7 +281,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
     _brideSearchDebounceTimer?.cancel();
 
     if (query.length >= 3) {
-      // Set a new timer for 300ms (0.3 seconds)
       _brideSearchDebounceTimer = Timer(const Duration(milliseconds: 300), () {
         _searchBrideLocations(query);
       });
@@ -319,13 +308,14 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       final results = await locationService.searchPlaces(query);
 
       if (mounted) {
-        // Convert LocationResult objects to Map format for the UI
         final suggestions = results
-            .map((result) => {
-                  'name': result.placeName ?? 'Unknown Location',
-                  'latitude': result.latitude,
-                  'longitude': result.longitude,
-                })
+            .map(
+              (result) => {
+                'name': result.placeName ?? 'Unknown Location',
+                'latitude': result.latitude,
+                'longitude': result.longitude,
+              },
+            )
             .toList();
 
         setState(() {
@@ -334,7 +324,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
           _isSearchingGroomLocation = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _groomLocationError = 'Failed to search locations: $e';
@@ -359,13 +349,14 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       final results = await locationService.searchPlaces(query);
 
       if (mounted) {
-        // Convert LocationResult objects to Map format for the UI
         final suggestions = results
-            .map((result) => {
-                  'name': result.placeName ?? 'Unknown Location',
-                  'latitude': result.latitude,
-                  'longitude': result.longitude,
-                })
+            .map(
+              (result) => {
+                'name': result.placeName ?? 'Unknown Location',
+                'latitude': result.latitude,
+                'longitude': result.longitude,
+              },
+            )
             .toList();
 
         setState(() {
@@ -374,7 +365,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
           _isSearchingBrideLocation = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _brideLocationError = 'Failed to search locations: $e';
@@ -409,7 +400,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
     });
   }
 
-  // Note: Location search field build methods (_buildGroomLocationSearchField, _buildBrideLocationSearchField)
   // have been replaced with reusable LocationSearchField component
 
   @override
@@ -426,20 +416,24 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   }
 
   Future<void> _performMatching() async {
-    LoggingHelper.logInfo('Perform Matching button pressed!', source: 'MatchingScreen');
+    await LoggingHelper.logInfo('Perform Matching button pressed!',
+        source: 'MatchingScreen',);
 
-    // Validate that both persons have required data
     if (_groomNameController.text.trim().isEmpty ||
         _brideNameController.text.trim().isEmpty) {
-      LoggingHelper.logWarning('Matching validation failed: Missing names', source: 'MatchingScreen');
+      await LoggingHelper.logWarning(
+          'Matching validation failed: Missing names',
+          source: 'MatchingScreen',);
       _showErrorDialog('Please enter names for both groom and bride');
       return;
     }
 
-    LoggingHelper.logDebug('Validation passed, proceeding with matching', source: 'MatchingScreen');
+    await LoggingHelper.logDebug('Validation passed, proceeding with matching',
+        source: 'MatchingScreen',);
 
     try {
-      LoggingHelper.logInfo('Starting kundali matching process - groom: ${_groomNameController.text.trim()}, bride: ${_brideNameController.text.trim()}');
+      await LoggingHelper.logInfo(
+          'Starting kundali matching process - groom: ${_groomNameController.text.trim()}, bride: ${_brideNameController.text.trim()}',);
 
       final groomLocalDateTime = DateTime(
         _groomDob.year,
@@ -457,15 +451,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
         _brideTob.minute,
       );
 
-      LoggingHelper.logInfo('Birth data prepared for astrology calculations - groomLocal: ${groomLocalDateTime.toIso8601String()}, brideLocal: ${brideLocalDateTime.toIso8601String()}');
+      await LoggingHelper.logInfo(
+          'Birth data prepared for astrology calculations - groomLocal: ${groomLocalDateTime.toIso8601String()}, brideLocal: ${brideLocalDateTime.toIso8601String()}',);
 
-      // Note: Birth chart data will be fetched internally by compatibility API
       // No need to fetch separately - this reduces API calls from 3 to 1
 
-      // Get current user for cache optimization
       final currentUser = ref.read(userServiceProvider);
 
-      // Check if groom is the current user
       final isGroomUser = currentUser != null &&
           _isUserBirthData(
             groomLocalDateTime,
@@ -474,7 +466,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
             currentUser,
           );
 
-      // Check if bride is the current user
       final isBrideUser = currentUser != null &&
           _isUserBirthData(
             brideLocalDateTime,
@@ -483,7 +474,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
             currentUser,
           );
 
-      // Create PartnerData objects using local times
       // Timezone conversion will be handled by AstrologyServiceBridge
       final groomData = PartnerData(
         name: _groomNameController.text.trim(),
@@ -506,25 +496,28 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       );
 
       // Perform matching through the use case with both persons
-      LoggingHelper.logInfo(
+      await LoggingHelper.logInfo(
         'Performing kundali matching calculations - groom: ${groomData.name}, bride: ${brideData.name}',
         source: 'MatchingScreen',
       );
 
       // Pass current user to optimize cache usage
       await ref.read(matchingProvider.notifier).performMatching(
-          groomData, brideData,
-          ayanamsha: _selectedAyanamsha, houseSystem: _selectedHouseSystem);
+            groomData,
+            brideData,
+            ayanamsha: _selectedAyanamsha,
+            houseSystem: _selectedHouseSystem,
+          );
 
-      LoggingHelper.logInfo('Kundali matching completed successfully', source: 'MatchingScreen');
+      await LoggingHelper.logInfo('Kundali matching completed successfully',
+          source: 'MatchingScreen',);
 
-      // Save form data for future sessions
       await _saveFormData();
 
       // Start results animation when matching is complete
-      _resultsAnimationController.forward();
-    } catch (e) {
-      LoggingHelper.logError('Kundali matching failed: $e');
+      unawaited(_resultsAnimationController.forward());
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Kundali matching failed: $e');
       // Error is already handled by the provider - it will set errorMessage
       // The error screen will be displayed automatically via the build method
     }
@@ -539,7 +532,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   ) {
     // Compare birth date/time (within 1 minute tolerance)
     final userBirthDateTime = user.localBirthDateTime;
-    final timeDiff = (localBirthDateTime.difference(userBirthDateTime)).abs();
+    final timeDiff = localBirthDateTime.difference(userBirthDateTime).abs();
     if (timeDiff.inMinutes > 1) {
       return false;
     }
@@ -553,7 +546,6 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
     return true;
   }
-
 
   /// Show error dialog with retry option
   void _showErrorDialog(String message, {bool showRetry = true}) {
@@ -570,8 +562,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
               color: ThemeHelpers.getErrorColor(context),
               size: ResponsiveSystem.iconSize(context, baseSize: 24),
             ),
-            ResponsiveSystem.sizedBox(context,
-                width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             Expanded(
               child: Text(
                 'Error',
@@ -625,278 +619,312 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
   /// Build partner details section
   List<Widget> _buildPartnerDetailsSection(
-      TranslationService translationService) {
+    TranslationService translationService,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 600;
 
     return [
       SectionTitle(
-          title: translationService.translateHeader('compatibility_details',
-              fallback: 'Compatibility Details')),
+        title: translationService.translateHeader(
+          'compatibility_details',
+          fallback: 'Compatibility Details',
+        ),
+      ),
 
       // Responsive layout: Row on larger screens, Column on small screens
-      isSmallScreen
-          ? Column(
+      if (isSmallScreen)
+        Column(
+          children: [
+            // Groom Name
+            NameField(
+              controller: _groomNameController,
+              label: 'Groom Name',
+              icon: LucideIcons.user,
+              hintText: 'Enter groom name',
+              onChanged: (value) => setState(() {}),
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Bride Name
+            NameField(
+              controller: _brideNameController,
+              label: 'Bride Name',
+              icon: LucideIcons.user,
+              hintText: 'Enter bride name',
+              onChanged: (value) => setState(() {}),
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Groom Date of Birth
+            DateField(
+              label: 'Groom Date of Birth',
+              selectedDate: _groomDob,
+              onDateChanged: (date) {
+                setState(() {
+                  _groomDob = date;
+                });
+              },
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Bride Date of Birth
+            DateField(
+              label: 'Bride Date of Birth',
+              selectedDate: _brideDob,
+              onDateChanged: (date) {
+                setState(() {
+                  _brideDob = date;
+                });
+              },
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Groom Time of Birth
+            TimeField(
+              label: 'Groom Time of Birth',
+              selectedTime: _groomTob,
+              onTimeChanged: (time) {
+                setState(() {
+                  _groomTob = time;
+                });
+              },
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Bride Time of Birth
+            TimeField(
+              label: 'Bride Time of Birth',
+              selectedTime: _brideTob,
+              onTimeChanged: (time) {
+                setState(() {
+                  _brideTob = time;
+                });
+              },
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Groom Place of Birth
+            LocationSearchField(
+              controller: _groomLocationSearchController,
+              label: "Groom's Place of Birth",
+              hintText: "Type to search for groom's birth location",
+              onChanged: _onGroomLocationSearchChanged,
+              onTap: () {
+                setState(() {
+                  _groomLocationError = null;
+                  _showGroomLocationSuggestions =
+                      _groomLocationSuggestions.isNotEmpty;
+                });
+              },
+              suggestions: _groomLocationSuggestions,
+              showSuggestions: _showGroomLocationSuggestions,
+              isSearching: _isSearchingGroomLocation,
+              error: _groomLocationError,
+              onSuggestionSelected: _selectGroomLocationSuggestion,
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+            // Bride Place of Birth
+            LocationSearchField(
+              controller: _brideLocationSearchController,
+              label: "Bride's Place of Birth",
+              hintText: "Type to search for bride's birth location",
+              onChanged: _onBrideLocationSearchChanged,
+              onTap: () {
+                setState(() {
+                  _brideLocationError = null;
+                  _showBrideLocationSuggestions =
+                      _brideLocationSuggestions.isNotEmpty;
+                });
+              },
+              suggestions: _brideLocationSuggestions,
+              showSuggestions: _showBrideLocationSuggestions,
+              isSearching: _isSearchingBrideLocation,
+              error: _brideLocationError,
+              onSuggestionSelected: _selectBrideLocationSuggestion,
+            ),
+          ],
+        )
+      else
+        Column(
+          children: [
+            Row(
               children: [
-                // Groom Name
-                NameField(
-                  controller: _groomNameController,
-                  label: 'Groom Name',
-                  icon: LucideIcons.user,
-                  hintText: 'Enter groom name',
-                  onChanged: (value) => setState(() {}),
+                Expanded(
+                  child: NameField(
+                    controller: _groomNameController,
+                    label: 'Groom Name',
+                    icon: LucideIcons.user,
+                    hintText: 'Enter groom name',
+                    onChanged: (value) => setState(() {}),
+                  ),
                 ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Bride Name
-                NameField(
-                  controller: _brideNameController,
-                  label: 'Bride Name',
-                  icon: LucideIcons.user,
-                  hintText: 'Enter bride name',
-                  onChanged: (value) => setState(() {}),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 16),
                 ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Groom Date of Birth
-                DateField(
-                  label: 'Groom Date of Birth',
-                  selectedDate: _groomDob,
-                  onDateChanged: (date) {
-                    setState(() {
-                      _groomDob = date;
-                    });
-                  },
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Bride Date of Birth
-                DateField(
-                  label: 'Bride Date of Birth',
-                  selectedDate: _brideDob,
-                  onDateChanged: (date) {
-                    setState(() {
-                      _brideDob = date;
-                    });
-                  },
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Groom Time of Birth
-                TimeField(
-                  label: 'Groom Time of Birth',
-                  selectedTime: _groomTob,
-                  onTimeChanged: (time) {
-                    setState(() {
-                      _groomTob = time;
-                    });
-                  },
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Bride Time of Birth
-                TimeField(
-                  label: 'Bride Time of Birth',
-                  selectedTime: _brideTob,
-                  onTimeChanged: (time) {
-                    setState(() {
-                      _brideTob = time;
-                    });
-                  },
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Groom Place of Birth
-                LocationSearchField(
-                  controller: _groomLocationSearchController,
-                  label: 'Groom\'s Place of Birth',
-                  hintText: 'Type to search for groom\'s birth location',
-                  onChanged: _onGroomLocationSearchChanged,
-                  onTap: () {
-                    setState(() {
-                      _groomLocationError = null;
-                      _showGroomLocationSuggestions = _groomLocationSuggestions.isNotEmpty;
-                    });
-                  },
-                  suggestions: _groomLocationSuggestions,
-                  showSuggestions: _showGroomLocationSuggestions,
-                  isSearching: _isSearchingGroomLocation,
-                  error: _groomLocationError,
-                  onSuggestionSelected: _selectGroomLocationSuggestion,
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                // Bride Place of Birth
-                LocationSearchField(
-                  controller: _brideLocationSearchController,
-                  label: 'Bride\'s Place of Birth',
-                  hintText: 'Type to search for bride\'s birth location',
-                  onChanged: _onBrideLocationSearchChanged,
-                  onTap: () {
-                    setState(() {
-                      _brideLocationError = null;
-                      _showBrideLocationSuggestions = _brideLocationSuggestions.isNotEmpty;
-                    });
-                  },
-                  suggestions: _brideLocationSuggestions,
-                  showSuggestions: _showBrideLocationSuggestions,
-                  isSearching: _isSearchingBrideLocation,
-                  error: _brideLocationError,
-                  onSuggestionSelected: _selectBrideLocationSuggestion,
-                ),
-              ],
-            )
-          : Column(
-              children: [
-                // First Row: Names
-                Row(
-                  children: [
-                    Expanded(
-                      child: NameField(
-                        controller: _groomNameController,
-                        label: 'Groom Name',
-                        icon: LucideIcons.user,
-                        hintText: 'Enter groom name',
-                        onChanged: (value) => setState(() {}),
-                      ),
-                    ),
-                    ResponsiveSystem.sizedBox(context,
-                        width:
-                            ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                    Expanded(
-                      child: NameField(
-                        controller: _brideNameController,
-                        label: 'Bride Name',
-                        icon: LucideIcons.user,
-                        hintText: 'Enter bride name',
-                        onChanged: (value) => setState(() {}),
-                      ),
-                    ),
-                  ],
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-
-                // Second Row: Date of Birth
-                Row(
-                  children: [
-                    Expanded(
-                      child: DateField(
-                        label: 'Groom Date of Birth',
-                        selectedDate: _groomDob,
-                        onDateChanged: (date) {
-                          setState(() {
-                            _groomDob = date;
-                          });
-                        },
-                      ),
-                    ),
-                    ResponsiveSystem.sizedBox(context,
-                        width:
-                            ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                    Expanded(
-                      child: DateField(
-                        label: 'Bride Date of Birth',
-                        selectedDate: _brideDob,
-                        onDateChanged: (date) {
-                          setState(() {
-                            _brideDob = date;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-
-                // Third Row: Time of Birth
-                Row(
-                  children: [
-                    Expanded(
-                      child: TimeField(
-                        label: 'Groom Time of Birth',
-                        selectedTime: _groomTob,
-                        onTimeChanged: (time) {
-                          setState(() {
-                            _groomTob = time;
-                          });
-                        },
-                      ),
-                    ),
-                    ResponsiveSystem.sizedBox(context,
-                        width:
-                            ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                    Expanded(
-                      child: TimeField(
-                        label: 'Bride Time of Birth',
-                        selectedTime: _brideTob,
-                        onTimeChanged: (time) {
-                          setState(() {
-                            _brideTob = time;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-
-                // Fourth Row: Place of Birth
-                Row(
-                  children: [
-                    Expanded(
-                      child: LocationSearchField(
-                        controller: _groomLocationSearchController,
-                        label: 'Groom\'s Place of Birth',
-                        hintText: 'Type to search for groom\'s birth location',
-                        onChanged: _onGroomLocationSearchChanged,
-                        onTap: () {
-                          setState(() {
-                            _groomLocationError = null;
-                            _showGroomLocationSuggestions = _groomLocationSuggestions.isNotEmpty;
-                          });
-                        },
-                        suggestions: _groomLocationSuggestions,
-                        showSuggestions: _showGroomLocationSuggestions,
-                        isSearching: _isSearchingGroomLocation,
-                        error: _groomLocationError,
-                        onSuggestionSelected: _selectGroomLocationSuggestion,
-                      ),
-                    ),
-                    ResponsiveSystem.sizedBox(context,
-                        width:
-                            ResponsiveSystem.spacing(context, baseSpacing: 16)),
-                    Expanded(
-                      child: LocationSearchField(
-                        controller: _brideLocationSearchController,
-                        label: 'Bride\'s Place of Birth',
-                        hintText: 'Type to search for bride\'s birth location',
-                        onChanged: _onBrideLocationSearchChanged,
-                        onTap: () {
-                          setState(() {
-                            _brideLocationError = null;
-                            _showBrideLocationSuggestions = _brideLocationSuggestions.isNotEmpty;
-                          });
-                        },
-                        suggestions: _brideLocationSuggestions,
-                        showSuggestions: _showBrideLocationSuggestions,
-                        isSearching: _isSearchingBrideLocation,
-                        error: _brideLocationError,
-                        onSuggestionSelected: _selectBrideLocationSuggestion,
-                      ),
-                    ),
-                  ],
+                Expanded(
+                  child: NameField(
+                    controller: _brideNameController,
+                    label: 'Bride Name',
+                    icon: LucideIcons.user,
+                    hintText: 'Enter bride name',
+                    onChanged: (value) => setState(() {}),
+                  ),
                 ),
               ],
             ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+
+            // Second Row: Date of Birth
+            Row(
+              children: [
+                Expanded(
+                  child: DateField(
+                    label: 'Groom Date of Birth',
+                    selectedDate: _groomDob,
+                    onDateChanged: (date) {
+                      setState(() {
+                        _groomDob = date;
+                      });
+                    },
+                  ),
+                ),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
+                Expanded(
+                  child: DateField(
+                    label: 'Bride Date of Birth',
+                    selectedDate: _brideDob,
+                    onDateChanged: (date) {
+                      setState(() {
+                        _brideDob = date;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+
+            // Third Row: Time of Birth
+            Row(
+              children: [
+                Expanded(
+                  child: TimeField(
+                    label: 'Groom Time of Birth',
+                    selectedTime: _groomTob,
+                    onTimeChanged: (time) {
+                      setState(() {
+                        _groomTob = time;
+                      });
+                    },
+                  ),
+                ),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
+                Expanded(
+                  child: TimeField(
+                    label: 'Bride Time of Birth',
+                    selectedTime: _brideTob,
+                    onTimeChanged: (time) {
+                      setState(() {
+                        _brideTob = time;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
+
+            // Fourth Row: Place of Birth
+            Row(
+              children: [
+                Expanded(
+                  child: LocationSearchField(
+                    controller: _groomLocationSearchController,
+                    label: "Groom's Place of Birth",
+                    hintText: "Type to search for groom's birth location",
+                    onChanged: _onGroomLocationSearchChanged,
+                    onTap: () {
+                      setState(() {
+                        _groomLocationError = null;
+                        _showGroomLocationSuggestions =
+                            _groomLocationSuggestions.isNotEmpty;
+                      });
+                    },
+                    suggestions: _groomLocationSuggestions,
+                    showSuggestions: _showGroomLocationSuggestions,
+                    isSearching: _isSearchingGroomLocation,
+                    error: _groomLocationError,
+                    onSuggestionSelected: _selectGroomLocationSuggestion,
+                  ),
+                ),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
+                Expanded(
+                  child: LocationSearchField(
+                    controller: _brideLocationSearchController,
+                    label: "Bride's Place of Birth",
+                    hintText: "Type to search for bride's birth location",
+                    onChanged: _onBrideLocationSearchChanged,
+                    onTap: () {
+                      setState(() {
+                        _brideLocationError = null;
+                        _showBrideLocationSuggestions =
+                            _brideLocationSuggestions.isNotEmpty;
+                      });
+                    },
+                    suggestions: _brideLocationSuggestions,
+                    showSuggestions: _showBrideLocationSuggestions,
+                    isSearching: _isSearchingBrideLocation,
+                    error: _brideLocationError,
+                    onSuggestionSelected: _selectBrideLocationSuggestion,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
     ];
   }
 
   /// Build entire content section
   List<Widget> _buildContentSection(
-      TranslationService translationService, MatchingState matchingState) {
+    TranslationService translationService,
+    MatchingState matchingState,
+  ) {
     return [
       ..._buildPartnerDetailsSection(translationService),
       ..._buildCalculationSection(translationService, matchingState),
@@ -905,11 +933,14 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
   /// Build calculation and matching section
   List<Widget> _buildCalculationSection(
-      TranslationService translationService, MatchingState matchingState) {
-
+    TranslationService translationService,
+    MatchingState matchingState,
+  ) {
     return [
-      ResponsiveSystem.sizedBox(context,
-          height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+      ResponsiveSystem.sizedBox(
+        context,
+        height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+      ),
 
       // Calculation System Selection (Ayanamsha and House System)
       CalculationSystemSelector(
@@ -919,34 +950,38 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
           setState(() {
             _selectedAyanamsha = value;
           });
-          MatchingFormStorageService.instance.saveAyanamsha(value);
+          MatchingFormStorageService.instance().saveAyanamsha(value);
         },
         onHouseSystemChanged: (value) {
           setState(() {
             _selectedHouseSystem = value;
           });
-          MatchingFormStorageService.instance.saveHouseSystem(value);
+          MatchingFormStorageService.instance().saveHouseSystem(value);
         },
       ),
-      ResponsiveSystem.sizedBox(context,
-          height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+      ResponsiveSystem.sizedBox(
+        context,
+        height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+      ),
 
       MatchButton(
-        onPressed: () {
+        onPressed: () async {
           if (!matchingState.isLoading) {
-            LoggingHelper.logInfo('Button pressed! Calling _performMatching...');
-            _performMatching();
+            await LoggingHelper.logInfo(
+                'Button pressed! Calling _performMatching...',);
+            unawaited(_performMatching());
           }
         },
         isLoading: matchingState.isLoading,
-        text: translationService.translateContent('perform_matching',
-            fallback: 'Perform Matching'),
+        text: translationService.translateContent(
+          'perform_matching',
+          fallback: 'Perform Matching',
+        ),
         icon: LucideIcons.heart,
       ),
     ];
   }
 
-  // Note: _buildCompactAyanamshaDropdown and _buildCompactHouseSystemDropdown
   // have been replaced with CalculationSystemSelector component
 
   @override
@@ -954,12 +989,10 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
     final matchingState = ref.watch(matchingProvider);
 
     return Scaffold(
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: BackgroundGradients.getBackgroundGradient(
             isDark: Theme.of(context).brightness == Brightness.dark,
-            isEvening: false,
-            useSacredFire: false,
           ),
         ),
         child: matchingState.isLoading
@@ -974,7 +1007,7 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
                   )
                 : matchingState.showResults
                     ? AnimatedOpacity(
-                        opacity: 1.0,
+                        opacity: 1,
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
                         child: _buildResultsScreen(matchingState),
@@ -992,18 +1025,21 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
       slivers: [
         // Collapsible Hero Section using SliverAppBar
         SliverAppBarWithHero(
-          title: translationService.translateHeader('kundali_matching',
-              fallback: 'Kundali Matching'),
-          heroBackground: MatchingHeroSection(translationService: translationService),
+          title: translationService.translateHeader(
+            'kundali_matching',
+            fallback: 'Kundali Matching',
+          ),
+          heroBackground:
+              MatchingHeroSection(translationService: translationService),
           expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 250),
-          floating: true,
-          pinned: true,
-          snap: true,
           leadingIcon: LucideIcons.house,
           onLeadingTap: () => Navigator.of(context).pop(),
-          onProfileTap: () => ScreenHandlers.handleProfileTap(context, ref, translationService),
-          onLanguageChanged: (value) => ScreenHandlers.handleLanguageChange(ref, value),
-          onThemeChanged: (value) => ScreenHandlers.handleThemeChange(ref, value),
+          onProfileTap: () =>
+              ScreenHandlers.handleProfileTap(context, ref, translationService),
+          onLanguageChanged: (value) =>
+              ScreenHandlers.handleLanguageChange(ref, value),
+          onThemeChanged: (value) =>
+              ScreenHandlers.handleThemeChange(ref, value),
         ),
 
         // Content
@@ -1021,147 +1057,175 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
 
   Widget _buildResultsScreen(MatchingState matchingState) {
     final translationService = ref.watch(translationServiceProvider);
-    // Note: kundali data is now handled by the centralized astrology library
-    // This is a simplified display - actual calculations are done in the matching method
 
     return Scaffold(
       backgroundColor: ThemeHelpers.getBackgroundColor(context),
       body: CustomScrollView(
         slivers: [
-        // SliverAppBar for consistency
-        SliverAppBarWithHero(
-          title: translationService.translateHeader('kundali_matching',
-              fallback: 'Kundali Matching'),
-          expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 60),
-          floating: false,
-          pinned: true,
-          snap: false,
-          leadingIcon: LucideIcons.house,
-          onLeadingTap: () => Navigator.of(context).pop(),
-          onProfileTap: () => ScreenHandlers.handleProfileTap(context, ref, translationService),
-          onLanguageChanged: (value) => ScreenHandlers.handleLanguageChange(ref, value),
-          onThemeChanged: (value) => ScreenHandlers.handleThemeChange(ref, value),
-        ),
+          // SliverAppBar for consistency
+          SliverAppBarWithHero(
+            title: translationService.translateHeader(
+              'kundali_matching',
+              fallback: 'Kundali Matching',
+            ),
+            expandedHeight: ResponsiveSystem.spacing(context, baseSpacing: 60),
+            floating: false,
+            snap: false,
+            leadingIcon: LucideIcons.house,
+            onLeadingTap: () => Navigator.of(context).pop(),
+            onProfileTap: () => ScreenHandlers.handleProfileTap(
+                context, ref, translationService,),
+            onLanguageChanged: (value) =>
+                ScreenHandlers.handleLanguageChange(ref, value),
+            onThemeChanged: (value) =>
+                ScreenHandlers.handleThemeChange(ref, value),
+          ),
 
-        // Hero Section
-        SliverToBoxAdapter(
-          child: MatchingResultsHeroSection(compatibilityScore: matchingState.compatibilityScore),
-        ),
+          // Hero Section
+          SliverToBoxAdapter(
+            child: MatchingResultsHeroSection(
+                compatibilityScore: matchingState.compatibilityScore,),
+          ),
 
-        // Spacing between hero and content
-        SliverToBoxAdapter(
-          child: ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 40)),
-        ),
+          // Spacing between hero and content
+          SliverToBoxAdapter(
+            child: ResponsiveSystem.sizedBox(
+              context,
+              height: ResponsiveSystem.spacing(context, baseSpacing: 40),
+            ),
+          ),
 
-        // Content
-        SliverPadding(
-          padding: ResponsiveSystem.all(context, baseSpacing: 16),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate([
-              // Responsive layout: Row on larger screens, Column on small screens
-              Builder(
-                builder: (context) {
-                  final screenWidth = MediaQuery.of(context).size.width;
-                  final isSmallScreen = screenWidth < 600;
+          // Content
+          SliverPadding(
+            padding: ResponsiveSystem.all(context, baseSpacing: 16),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // Responsive layout: Row on larger screens, Column on small screens
+                Builder(
+                  builder: (context) {
+                    final screenWidth = MediaQuery.of(context).size.width;
+                    final isSmallScreen = screenWidth < 600;
 
-                  if (isSmallScreen) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Groom Details
-                        PartnerDetailsCard(
-                          name: _groomNameController.text,
-                          dateOfBirth: _groomDob,
-                          timeOfBirth: _groomTob,
-                          placeOfBirth: _groomPob,
-                          nakshatram: matchingState.kootaDetails?['person1Nakshatram'],
-                          raasi: matchingState.kootaDetails?['person1Raasi'],
-                          pada: matchingState.kootaDetails?['person1Pada'],
-                          title: 'Groom Details',
-                        ),
-                        ResponsiveSystem.sizedBox(context,
-                            height: ResponsiveSystem.spacing(context,
-                                baseSpacing: 16)),
-                        // Bride Details
-                        PartnerDetailsCard(
-                          name: _brideNameController.text,
-                          dateOfBirth: _brideDob,
-                          timeOfBirth: _brideTob,
-                          placeOfBirth: _bridePob,
-                          nakshatram: matchingState.kootaDetails?['person2Nakshatram'],
-                          raasi: matchingState.kootaDetails?['person2Raasi'],
-                          pada: matchingState.kootaDetails?['person2Pada'],
-                          title: 'Bride Details',
-                        ),
-                      ],
-                    );
-                  } else {
-                    return Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Groom Details
-                        Expanded(
-                          child: PartnerDetailsCard(
+                    if (isSmallScreen) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Groom Details
+                          PartnerDetailsCard(
                             name: _groomNameController.text,
                             dateOfBirth: _groomDob,
                             timeOfBirth: _groomTob,
                             placeOfBirth: _groomPob,
-                            nakshatram: matchingState.kootaDetails?['person1Nakshatram'],
+                            nakshatram: matchingState
+                                .kootaDetails?['person1Nakshatram'],
                             raasi: matchingState.kootaDetails?['person1Raasi'],
                             pada: matchingState.kootaDetails?['person1Pada'],
                             title: 'Groom Details',
                           ),
-                        ),
-                        ResponsiveSystem.sizedBox(context,
-                            width: ResponsiveSystem.spacing(context,
-                                baseSpacing: 16)),
-                        // Bride Details
-                        Expanded(
-                          child: PartnerDetailsCard(
+                          ResponsiveSystem.sizedBox(
+                            context,
+                            height: ResponsiveSystem.spacing(
+                              context,
+                              baseSpacing: 16,
+                            ),
+                          ),
+                          // Bride Details
+                          PartnerDetailsCard(
                             name: _brideNameController.text,
                             dateOfBirth: _brideDob,
                             timeOfBirth: _brideTob,
                             placeOfBirth: _bridePob,
-                            nakshatram: matchingState.kootaDetails?['person2Nakshatram'],
+                            nakshatram: matchingState
+                                .kootaDetails?['person2Nakshatram'],
                             raasi: matchingState.kootaDetails?['person2Raasi'],
                             pada: matchingState.kootaDetails?['person2Pada'],
                             title: 'Bride Details',
                           ),
-                        ),
-                      ],
-                    );
-                  }
-                },
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
-              // Large score display similar to Pradakshana counter
-              Container(
-                width: double.infinity,
-                padding: ResponsiveSystem.all(context, baseSpacing: 32),
-                child: CompatibilityScoreDisplay(
-                  score: matchingState.compatibilityScore,
-                  totalPoints: matchingState.totalScore ?? MatchingInsightsHelper.getTotalScore(matchingState),
-                  maxPoints: 36,
-                  scaleAnimation: Tween<double>(
-                    begin: 1.0,
-                    end: 1.1,
-                  ).animate(CurvedAnimation(
-                    parent: _resultsAnimationController,
-                    curve: Curves.elasticOut,
-                  )),
+                        ],
+                      );
+                    } else {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Groom Details
+                          Expanded(
+                            child: PartnerDetailsCard(
+                              name: _groomNameController.text,
+                              dateOfBirth: _groomDob,
+                              timeOfBirth: _groomTob,
+                              placeOfBirth: _groomPob,
+                              nakshatram: matchingState
+                                  .kootaDetails?['person1Nakshatram'],
+                              raasi:
+                                  matchingState.kootaDetails?['person1Raasi'],
+                              pada: matchingState.kootaDetails?['person1Pada'],
+                              title: 'Groom Details',
+                            ),
+                          ),
+                          ResponsiveSystem.sizedBox(
+                            context,
+                            width: ResponsiveSystem.spacing(
+                              context,
+                              baseSpacing: 16,
+                            ),
+                          ),
+                          // Bride Details
+                          Expanded(
+                            child: PartnerDetailsCard(
+                              name: _brideNameController.text,
+                              dateOfBirth: _brideDob,
+                              timeOfBirth: _brideTob,
+                              placeOfBirth: _bridePob,
+                              nakshatram: matchingState
+                                  .kootaDetails?['person2Nakshatram'],
+                              raasi:
+                                  matchingState.kootaDetails?['person2Raasi'],
+                              pada: matchingState.kootaDetails?['person2Pada'],
+                              title: 'Bride Details',
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  },
                 ),
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-              _buildSmallCompatibilityButton(),
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
-              _buildDetailedKootaAnalysis(),
-            ]),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+                ),
+                // Large score display similar to Pradakshana counter
+                Container(
+                  width: double.infinity,
+                  padding: ResponsiveSystem.all(context, baseSpacing: 32),
+                  child: CompatibilityScoreDisplay(
+                    score: matchingState.compatibilityScore,
+                    totalPoints: matchingState.totalScore ??
+                        MatchingInsightsHelper.getTotalScore(matchingState),
+                    maxPoints: 36,
+                    scaleAnimation: Tween<double>(
+                      begin: 1,
+                      end: 1.1,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: _resultsAnimationController,
+                        curve: Curves.elasticOut,
+                      ),
+                    ),
+                  ),
+                ),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
+                _buildSmallCompatibilityButton(),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+                ),
+                _buildDetailedKootaAnalysis(),
+              ]),
+            ),
           ),
-        ),
         ],
       ),
     );
@@ -1170,44 +1234,47 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
   Widget _buildDetailedKootaAnalysis() {
     final matchingState = ref.watch(matchingProvider);
 
-    // Get koota entries and filter out totalPoints
     final kootaEntries = (matchingState.kootaDetails ?? {})
         .entries
         .where(
-            (entry) => KootaInfoHelper.isKootaScore(entry.key) && entry.key != 'totalPoints')
+          (entry) =>
+              KootaInfoHelper.isKootaScore(entry.key) &&
+              entry.key != 'totalPoints',
+        )
         .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SectionTitle(title: 'Detailed Guna Milan Analysis'),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+        const SectionTitle(title: 'Detailed Guna Milan Analysis'),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+        ),
 
         // Two-column layout for koota cards
         KootaGridLayout(kootaEntries: kootaEntries),
 
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+        ),
         ScoreSummaryCard(matchingState: matchingState),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+        ),
         CompatibilityInsightsCard(matchingState: matchingState),
-        ResponsiveSystem.sizedBox(context,
-            height: ResponsiveSystem.spacing(context, baseSpacing: 24)),
+        ResponsiveSystem.sizedBox(
+          context,
+          height: ResponsiveSystem.spacing(context, baseSpacing: 24),
+        ),
         const CalculationInfoCard(),
       ],
     );
   }
 
-  // Note: _buildTwoColumnKootaLayout has been replaced with KootaGridLayout component
-
-  // Note: _buildKootaCard method has been replaced with reusable KootaCard component
-
-  // Note: Helper methods for insights, score summary, and calculation info
   // have been moved to MatchingInsightsHelper, ScoreSummaryCard, CompatibilityInsightsCard, and CalculationInfoCard
-
-  // Note: _buildHeroSection and _buildResultsHeroSection have been replaced with MatchingHeroSection and MatchingResultsHeroSection components
 
   /// Build small compatibility button for top of results
   Widget _buildSmallCompatibilityButton() {
@@ -1218,13 +1285,13 @@ class _MatchingScreenState extends ConsumerState<MatchingScreen>
           child: ModernButton(
             text: 'Modify Details',
             icon: LucideIcons.pencil,
-            onPressed: () {
+            onPressed: () async {
               // Reset the matching state to go back to input screen
               ref.read(matchingProvider.notifier).resetState();
 
               // Keep all existing form data - don't reset values
-              // This allows users to modify just one field instead of re-entering everything
-              LoggingHelper.logInfo('Check Different Compatibility - keeping existing form data');
+              await LoggingHelper.logInfo(
+                  'Check Different Compatibility - keeping existing form data',);
             },
             width: ResponsiveSystem.screenWidth(context) * 0.4,
             height: ResponsiveSystem.buttonHeight(context, baseHeight: 40),

@@ -6,29 +6,30 @@
 /// - Trailing overflow menu
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/audio/audio_controller.dart';
-import '../../../core/services/audio/favorites_service.dart';
-import '../../../core/services/audio/recently_played_service.dart';
-import '../../../core/services/audio/player_queue_service.dart';
-import '../../../core/models/audio/track.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/audio/audio_controller.dart';
+import 'package:skvk_application/core/services/audio/favorites_service.dart';
+import 'package:skvk_application/core/services/audio/player_queue_service.dart';
+import 'package:skvk_application/core/services/audio/recently_played_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Audio Track List Item - Material3 ListTile for track display
 class AudioTrackListItem extends ConsumerWidget {
-  final Map<String, dynamic> music;
-  final VoidCallback? onTap;
-  final VoidCallback? onMoreTap;
-
   const AudioTrackListItem({
-    super.key,
     required this.music,
+    super.key,
     this.onTap,
     this.onMoreTap,
   });
+  final Map<String, dynamic> music;
+  final VoidCallback? onTap;
+  final VoidCallback? onMoreTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,7 +39,9 @@ class AudioTrackListItem extends ConsumerWidget {
 
     final trackId = music['id'] as String? ?? '';
     final title = music['title'] as String? ?? music['id'] as String? ?? '';
-    final subtitle = music['subtitle'] as String? ?? music['artist'] as String? ?? 'Tap to play';
+    final subtitle = music['subtitle'] as String? ??
+        music['artist'] as String? ??
+        'Tap to play';
     final coverArtUrl = music['coverArtUrl'] as String?;
 
     final isCurrentTrack = playerState.currentTrack?.id == trackId;
@@ -61,9 +64,7 @@ class AudioTrackListItem extends ConsumerWidget {
               ? DecorationImage(
                   image: NetworkImage(coverArtUrl),
                   fit: BoxFit.cover,
-                  onError: (_, __) {
-                    // Handle image load error
-                  },
+                  onError: (_, __) {},
                 )
               : null,
         ),
@@ -152,7 +153,8 @@ class AudioTrackListItem extends ConsumerWidget {
                     Text(
                       isPlaying ? 'Pause' : 'Play',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         color: ThemeHelpers.getPrimaryTextColor(context),
                       ),
                     ),
@@ -175,7 +177,8 @@ class AudioTrackListItem extends ConsumerWidget {
                     Text(
                       'Add to Queue',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         color: ThemeHelpers.getPrimaryTextColor(context),
                       ),
                     ),
@@ -198,7 +201,8 @@ class AudioTrackListItem extends ConsumerWidget {
                     Text(
                       'Add to Favorites',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         color: ThemeHelpers.getPrimaryTextColor(context),
                       ),
                     ),
@@ -221,7 +225,8 @@ class AudioTrackListItem extends ConsumerWidget {
                     Text(
                       'Share',
                       style: TextStyle(
-                        fontSize: ResponsiveSystem.fontSize(context, baseSize: 14),
+                        fontSize:
+                            ResponsiveSystem.fontSize(context, baseSize: 14),
                         color: ThemeHelpers.getPrimaryTextColor(context),
                       ),
                     ),
@@ -230,22 +235,23 @@ class AudioTrackListItem extends ConsumerWidget {
               ),
             ],
             onSelected: (value) async {
-              final audioController = ref.read(audioControllerProvider.notifier);
+              final audioController =
+                  ref.read(audioControllerProvider.notifier);
               final track = Track.fromMusicMap(music);
-              
+
               switch (value) {
                 case 'play':
                   if (isCurrentTrack) {
-                    audioController.togglePlayPause();
+                    unawaited(audioController.togglePlayPause());
                   } else {
                     // Play track and show mini player only (NOT full player)
-                    audioController.playTrack(track);
+                    unawaited(audioController.playTrack(track));
                   }
                   break;
                 case 'add_to_queue':
-                  // Add track to queue
                   try {
-                    final queueService = ref.read(playerQueueServiceProvider.notifier);
+                    final queueService =
+                        ref.read(playerQueueServiceProvider.notifier);
                     await queueService.appendTracks([track]);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -255,20 +261,19 @@ class AudioTrackListItem extends ConsumerWidget {
                         ),
                       );
                     }
-                  } catch (e) {
+                  } on Exception {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text('Failed to add to queue'),
-                          duration: const Duration(seconds: 2),
+                          duration: Duration(seconds: 2),
                         ),
                       );
                     }
                   }
                   break;
                 case 'add_to_favorites':
-                  // Toggle favorite
-                  favoritesService.toggleFavorite(trackId);
+                  unawaited(favoritesService.toggleFavorite(trackId));
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -285,7 +290,8 @@ class AudioTrackListItem extends ConsumerWidget {
                 case 'share':
                   // Share track information
                   try {
-                    final shareText = '$title${subtitle.isNotEmpty ? ' - $subtitle' : ''}';
+                    final shareText =
+                        '$title${subtitle.isNotEmpty ? ' - $subtitle' : ''}';
                     // Use Flutter's share functionality if available, otherwise show snackbar
                     // For now, we'll use a simple approach with clipboard
                     if (context.mounted) {
@@ -298,12 +304,12 @@ class AudioTrackListItem extends ConsumerWidget {
                         ),
                       );
                     }
-                  } catch (e) {
+                  } on Exception {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
+                        const SnackBar(
                           content: Text('Failed to share'),
-                          duration: const Duration(seconds: 2),
+                          duration: Duration(seconds: 2),
                         ),
                       );
                     }
@@ -316,23 +322,20 @@ class AudioTrackListItem extends ConsumerWidget {
       ),
       onTap: onTap ??
           () {
-            // Load and play track automatically (show mini player only, NOT full player)
             final trackId = music['id'] as String? ?? '';
             final isCurrentTrack = playerState.currentTrack?.id == trackId;
-            
+
+            final audioController = ref.read(audioControllerProvider.notifier);
             if (isCurrentTrack) {
-              // If same track, just toggle play/pause
-              final audioController = ref.read(audioControllerProvider.notifier);
               audioController.togglePlayPause();
             } else {
               // Track recently played
-              ref.read(recentlyPlayedServiceProvider.notifier).addTrack(trackId);
-              
-              // Load track using new audio controller (only shows mini player)
-              final audioController = ref.read(audioControllerProvider.notifier);
+              ref
+                  .read(recentlyPlayedServiceProvider.notifier)
+                  .addTrack(trackId);
+
               final track = Track.fromMusicMap(music);
               audioController.playTrack(track).catchError((e) {
-                // Handle error silently - track loading failed
                 // The error will be shown in the player state
               });
             }
@@ -340,4 +343,3 @@ class AudioTrackListItem extends ConsumerWidget {
     );
   }
 }
-

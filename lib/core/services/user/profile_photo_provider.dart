@@ -4,7 +4,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'profile_photo_service.dart';
+import 'package:skvk_application/core/services/user/profile_photo_service.dart';
 
 /// Provider for loading the profile photo
 final profilePhotoNotifierProvider =
@@ -16,7 +16,7 @@ final profilePhotoNotifierProvider =
 class ProfilePhotoNotifier extends AsyncNotifier<String?> {
   @override
   Future<String?> build() async {
-    return await ProfilePhotoService.getProfilePhotoPath();
+    return ProfilePhotoService.getProfilePhotoPath();
   }
 
   /// Update the profile photo path

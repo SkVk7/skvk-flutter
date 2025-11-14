@@ -1,19 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_flutter/lucide_flutter.dart';
-import 'dart:async';
-// UI Utils - Use only these for consistency
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-// Core imports
-import '../../core/services/location/simple_location_service.dart';
-import '../../core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
-import '../../core/services/user/user_service.dart';
-import '../../core/models/user/user_model.dart';
-import '../../core/utils/either.dart';
-import '../../core/utils/astrology/ayanamsha_info.dart';
-import '../../core/utils/astrology/house_system_info.dart';
-import '../components/forms/reusable_form_fields.dart';
+import 'package:skvk_application/core/design_system/theme/background_gradients.dart'; // For BackgroundGradients
+import 'package:skvk_application/core/models/user/user_model.dart';
+import 'package:skvk_application/core/services/location/simple_location_service.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/astrology/ayanamsha_info.dart';
+import 'package:skvk_application/core/utils/astrology/house_system_info.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/ui/components/forms/reusable_form_fields.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// User Edit Screen - Enhanced Version with Proper UI/UX
 class UserEditScreen extends ConsumerStatefulWidget {
@@ -78,18 +77,17 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
         elevation: ResponsiveSystem.elevation(context, baseElevation: 4),
         toolbarHeight: ResponsiveSystem.spacing(context, baseSpacing: 60),
       ),
-      body: Container(
+      body: DecoratedBox(
         decoration: BoxDecoration(
           gradient: BackgroundGradients.getBackgroundGradient(
             isDark: isDark,
-            isEvening: false,
-            useSacredFire: false,
           ),
         ),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.all(
-                ResponsiveSystem.spacing(context, baseSpacing: 16)),
+              ResponsiveSystem.spacing(context, baseSpacing: 16),
+            ),
             child: Column(
               children: [
                 // Name Field
@@ -104,8 +102,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   ),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // Date of Birth Field
                 ReusableFormField(
@@ -126,8 +126,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   ),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // Time of Birth Field
                 ReusableFormField(
@@ -145,8 +147,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   ),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // Place of Birth Field with Search
                 ReusableFormField(
@@ -157,8 +161,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   child: _buildLocationSearchField(),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // Gender Field
                 ReusableFormField(
@@ -178,8 +184,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   ),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // Ayanamsha System Field
                 ReusableFormField(
@@ -190,8 +198,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   child: _buildAyanamshaSelector(),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
 
                 // House System Field
                 ReusableFormField(
@@ -202,10 +212,11 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   child: _buildHouseSystemSelector(),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 32)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 32),
+                ),
 
-                // Save Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -218,8 +229,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                             ResponsiveSystem.spacing(context, baseSpacing: 16),
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius: ResponsiveSystem.circular(context,
-                            baseRadius: 12),
+                        borderRadius: ResponsiveSystem.circular(
+                          context,
+                          baseRadius: 12,
+                        ),
                       ),
                       elevation:
                           ResponsiveSystem.elevation(context, baseElevation: 4),
@@ -235,8 +248,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   ),
                 ),
 
-                ResponsiveSystem.sizedBox(context,
-                    height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
+                ),
               ],
             ),
           ),
@@ -296,13 +311,15 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                   color: ThemeHelpers.getShadowColor(context),
                   blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 8),
                   offset: Offset(
-                      0, ResponsiveSystem.spacing(context, baseSpacing: 4)),
+                    0,
+                    ResponsiveSystem.spacing(context, baseSpacing: 4),
+                  ),
                 ),
               ],
             ),
             child: ListView.builder(
               shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _locationSuggestions.length,
               itemBuilder: (context, index) {
                 final location = _locationSuggestions[index];
@@ -364,8 +381,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
               color: ThemeHelpers.getPrimaryColor(context),
               size: ResponsiveSystem.iconSize(context, baseSize: 20),
             ),
-            ResponsiveSystem.sizedBox(context,
-                width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             Expanded(
               child: Text(
                 _getAyanamshaDisplayName(_ayanamsha),
@@ -409,8 +428,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
               color: ThemeHelpers.getPrimaryColor(context),
               size: ResponsiveSystem.iconSize(context, baseSize: 20),
             ),
-            ResponsiveSystem.sizedBox(context,
-                width: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+            ResponsiveSystem.sizedBox(
+              context,
+              width: ResponsiveSystem.spacing(context, baseSpacing: 12),
+            ),
             Expanded(
               child: Text(
                 _getHouseSystemDisplayName(_houseSystem),
@@ -464,11 +485,13 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
 
       if (mounted) {
         final suggestions = results
-            .map((result) => {
-                  'name': result.placeName ?? 'Unknown Location',
-                  'latitude': result.latitude,
-                  'longitude': result.longitude,
-                })
+            .map(
+              (result) => {
+                'name': result.placeName ?? 'Unknown Location',
+                'latitude': result.latitude,
+                'longitude': result.longitude,
+              },
+            )
             .toList();
 
         setState(() {
@@ -477,7 +500,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
           _isSearchingLocation = false;
         });
       }
-    } catch (e) {
+    } on Exception catch (e) {
       if (mounted) {
         setState(() {
           _locationError = 'Failed to search locations: $e';
@@ -550,7 +573,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                         color: ThemeHelpers.getSecondaryTextColor(context),
                       ),
                     ),
-                    if (info?.regions.isNotEmpty == true)
+                    if (info?.regions.isNotEmpty ?? false)
                       Text(
                         'Regions: ${info!.regions.join(', ')}',
                         style: TextStyle(
@@ -638,7 +661,7 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
                         color: ThemeHelpers.getSecondaryTextColor(context),
                       ),
                     ),
-                    if (info?.usage.isNotEmpty == true)
+                    if (info?.usage.isNotEmpty ?? false)
                       Text(
                         'Usage: ${info!.usage}',
                         style: TextStyle(
@@ -688,11 +711,10 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
 
   /// Save profile
   Future<void> _saveProfile() async {
-    // Validate form
     if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please enter your name'),
+          content: const Text('Please enter your name'),
           backgroundColor: ThemeHelpers.getErrorColor(context),
         ),
       );
@@ -702,50 +724,53 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
     if (_pobController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select your place of birth'),
+          content: const Text('Please select your place of birth'),
           backgroundColor: ThemeHelpers.getErrorColor(context),
         ),
       );
       return;
     }
 
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => Center(
-        child: Container(
-          padding: EdgeInsets.all(
-              ResponsiveSystem.spacing(context, baseSpacing: 20)),
-          decoration: BoxDecoration(
-            color: ThemeHelpers.getSurfaceColor(context),
-            borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  ThemeHelpers.getPrimaryColor(context),
+    unawaited(
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: Container(
+            padding: EdgeInsets.all(
+              ResponsiveSystem.spacing(context, baseSpacing: 20),
+            ),
+            decoration: BoxDecoration(
+              color: ThemeHelpers.getSurfaceColor(context),
+              borderRadius: ResponsiveSystem.circular(context, baseRadius: 12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    ThemeHelpers.getPrimaryColor(context),
+                  ),
                 ),
-              ),
-              ResponsiveSystem.sizedBox(context,
-                  height: ResponsiveSystem.spacing(context, baseSpacing: 16)),
-              Text(
-                'Saving profile...',
-                style: TextStyle(
-                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
-                  color: ThemeHelpers.getPrimaryTextColor(context),
+                ResponsiveSystem.sizedBox(
+                  context,
+                  height: ResponsiveSystem.spacing(context, baseSpacing: 16),
                 ),
-              ),
-            ],
+                Text(
+                  'Saving profile...',
+                  style: TextStyle(
+                    fontSize: ResponsiveSystem.fontSize(context, baseSize: 16),
+                    color: ThemeHelpers.getPrimaryTextColor(context),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
 
     try {
-      // Create UserModel from form data
       final user = UserModel(
         id: DateTime.now()
             .millisecondsSinceEpoch
@@ -763,46 +788,48 @@ class _UserEditScreenState extends ConsumerState<UserEditScreen> {
         updatedAt: DateTime.now(),
       );
 
-      // Save user data using UserService
       final userService = ref.read(userServiceProvider.notifier);
       final result = await userService.saveUser(user);
 
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final primaryColor = ThemeHelpers.getPrimaryColor(context);
+      final errorColor = ThemeHelpers.getErrorColor(context);
+
       // Close loading dialog
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-      }
+      navigator.pop(); // Close loading dialog
 
       if (result.isSuccess) {
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text('Profile saved successfully!'),
-            backgroundColor: ThemeHelpers.getPrimaryColor(context),
+            content: const Text('Profile saved successfully!'),
+            backgroundColor: primaryColor,
           ),
         );
 
-        // Navigate back
-        Navigator.of(context).pop();
+        navigator.pop();
       } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
-            content: Text('Failed to save profile. Please try again.'),
-            backgroundColor: ThemeHelpers.getErrorColor(context),
+            content: const Text('Failed to save profile. Please try again.'),
+            backgroundColor: errorColor,
           ),
         );
       }
-    } catch (e) {
-      // Close loading dialog
-      if (mounted) {
-        Navigator.of(context).pop(); // Close loading dialog
-      }
+    } on Exception catch (e) {
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+      final errorColor = ThemeHelpers.getErrorColor(context);
 
-      // Show error message
-      ScaffoldMessenger.of(context).showSnackBar(
+      // Close loading dialog
+      navigator.pop(); // Close loading dialog
+
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Error saving profile: $e'),
-          backgroundColor: ThemeHelpers.getErrorColor(context),
+          backgroundColor: errorColor,
         ),
       );
     }

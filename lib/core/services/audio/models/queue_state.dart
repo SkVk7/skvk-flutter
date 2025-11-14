@@ -3,16 +3,12 @@
 /// Immutable snapshot of queue state
 library;
 
-import '../../../models/audio/track.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
 import 'package:skvk_application/core/services/audio/global_audio_player_controller.dart';
 
 /// Queue state - immutable snapshot
 class QueueState {
-  final List<Track> queue;
-  final int currentIndex;
-  final bool shuffleEnabled;
-  final RepeatMode repeatMode;
-  final List<int>? shuffledIndices; // Mapping for shuffle mode
+  // Mapping for shuffle mode
 
   const QueueState({
     required this.queue,
@@ -21,12 +17,18 @@ class QueueState {
     this.repeatMode = RepeatMode.none,
     this.shuffledIndices,
   });
+  final List<Track> queue;
+  final int currentIndex;
+  final bool shuffleEnabled;
+  final RepeatMode repeatMode;
+  final List<int>? shuffledIndices;
 
   /// Get current track
   Track? get currentTrack {
     if (queue.isEmpty) return null;
     if (shuffleEnabled && shuffledIndices != null) {
-      final mappedIndex = shuffledIndices![currentIndex.clamp(0, shuffledIndices!.length - 1)];
+      final mappedIndex =
+          shuffledIndices![currentIndex.clamp(0, shuffledIndices!.length - 1)];
       return queue[mappedIndex];
     }
     return queue[currentIndex.clamp(0, queue.length - 1)];
@@ -87,4 +89,3 @@ class QueueState {
   String toString() =>
       'QueueState(queue: ${queue.length}, currentIndex: $currentIndex, shuffle: $shuffleEnabled, repeat: $repeatMode)';
 }
-

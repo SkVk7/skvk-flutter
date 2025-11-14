@@ -4,28 +4,29 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../core/features/matching/providers/matching_provider.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../common/index.dart';
-import 'koota_info_helper.dart';
-import 'matching_insights_helper.dart';
+import 'package:skvk_application/core/features/matching/providers/matching_provider.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/matching/koota_info_helper.dart';
+import 'package:skvk_application/ui/components/matching/matching_insights_helper.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Score Summary Card - Displays total score, percentage, and interpretation
 class ScoreSummaryCard extends StatelessWidget {
-  final MatchingState matchingState;
-
   const ScoreSummaryCard({
-    super.key,
     required this.matchingState,
+    super.key,
   });
+  final MatchingState matchingState;
 
   @override
   Widget build(BuildContext context) {
     // All data comes from API - no calculations here
-    final totalScore = matchingState.totalScore ?? MatchingInsightsHelper.getTotalScore(matchingState);
-    final maxPossibleScore = 36;
-    final percentage = matchingState.compatibilityScore?.round() ?? (totalScore / maxPossibleScore * 100).round();
+    final totalScore = matchingState.totalScore ??
+        MatchingInsightsHelper.getTotalScore(matchingState);
+    const maxPossibleScore = 36;
+    final percentage = matchingState.compatibilityScore?.round() ??
+        (totalScore / maxPossibleScore * 100).round();
 
     return InfoCard(
       child: Column(
@@ -51,8 +52,10 @@ class ScoreSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -74,17 +77,19 @@ class ScoreSummaryCard extends StatelessWidget {
               ),
             ],
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 12)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 12),
+          ),
           LinearProgressIndicator(
             value: totalScore / maxPossibleScore,
             backgroundColor: KootaInfoHelper.getScoreColor(context, percentage)
-                .withAlpha((0.2 * 255).round()),
-            valueColor: AlwaysStoppedAnimation<Color>(
-                KootaInfoHelper.getScoreColor(context, percentage)),
+                .withValues(alpha: 0.2),
           ),
-          ResponsiveSystem.sizedBox(context,
-              height: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+          ResponsiveSystem.sizedBox(
+            context,
+            height: ResponsiveSystem.spacing(context, baseSpacing: 8),
+          ),
           Text(
             MatchingInsightsHelper.getScoreInterpretation(matchingState),
             style: TextStyle(
@@ -99,4 +104,3 @@ class ScoreSummaryCard extends StatelessWidget {
     );
   }
 }
-

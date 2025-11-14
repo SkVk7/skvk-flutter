@@ -6,18 +6,6 @@ library;
 
 /// Birth Data Response Model
 class BirthDataResponse {
-  final String birthDateTime;
-  final double? latitude;
-  final double? longitude;
-  final String? ayanamsha;
-  final String? houseSystem;
-  final Map<String, dynamic>? rashi;
-  final Map<String, dynamic>? nakshatra;
-  final Map<String, dynamic>? pada;
-  final Map<String, dynamic>? dasha;
-  final Map<String, dynamic>? birthChart;
-  final String? calculatedAt;
-
   BirthDataResponse({
     required this.birthDateTime,
     this.latitude,
@@ -47,6 +35,17 @@ class BirthDataResponse {
       calculatedAt: json['calculatedAt'] as String?,
     );
   }
+  final String birthDateTime;
+  final double? latitude;
+  final double? longitude;
+  final String? ayanamsha;
+  final String? houseSystem;
+  final Map<String, dynamic>? rashi;
+  final Map<String, dynamic>? nakshatra;
+  final Map<String, dynamic>? pada;
+  final Map<String, dynamic>? dasha;
+  final Map<String, dynamic>? birthChart;
+  final String? calculatedAt;
 
   Map<String, dynamic> toJson() {
     return {
@@ -67,12 +66,6 @@ class BirthDataResponse {
 
 /// Compatibility Response Model
 class CompatibilityResponse {
-  final double? overallScore;
-  final Map<String, dynamic>? kootaScores;
-  final String? explanation;
-  final String? recommendation;
-  final String? calculatedAt;
-
   CompatibilityResponse({
     this.overallScore,
     this.kootaScores,
@@ -90,15 +83,15 @@ class CompatibilityResponse {
       calculatedAt: json['calculatedAt'] as String?,
     );
   }
+  final double? overallScore;
+  final Map<String, dynamic>? kootaScores;
+  final String? explanation;
+  final String? recommendation;
+  final String? calculatedAt;
 }
 
 /// Predictions Response Model
 class PredictionsResponse {
-  final Map<String, dynamic>? dasha;
-  final Map<String, dynamic>? transit;
-  final Map<String, dynamic>? prediction;
-  final String? calculatedAt;
-
   PredictionsResponse({
     this.dasha,
     this.transit,
@@ -114,15 +107,14 @@ class PredictionsResponse {
       calculatedAt: json['calculatedAt'] as String?,
     );
   }
+  final Map<String, dynamic>? dasha;
+  final Map<String, dynamic>? transit;
+  final Map<String, dynamic>? prediction;
+  final String? calculatedAt;
 }
 
 /// Calendar Year Response Model
 class CalendarYearResponse {
-  final int? year;
-  final String? region;
-  final List<Map<String, dynamic>>? festivals;
-  final String? calculatedAt;
-
   CalendarYearResponse({
     this.year,
     this.region,
@@ -138,16 +130,14 @@ class CalendarYearResponse {
       calculatedAt: json['calculatedAt'] as String?,
     );
   }
+  final int? year;
+  final String? region;
+  final List<Map<String, dynamic>>? festivals;
+  final String? calculatedAt;
 }
 
 /// Calendar Month Response Model
 class CalendarMonthResponse {
-  final int? year;
-  final int? month;
-  final String? region;
-  final List<Map<String, dynamic>>? days;
-  final String? calculatedAt;
-
   CalendarMonthResponse({
     this.year,
     this.month,
@@ -165,4 +155,9 @@ class CalendarMonthResponse {
       calculatedAt: json['calculatedAt'] as String?,
     );
   }
+  final int? year;
+  final int? month;
+  final String? region;
+  final List<Map<String, dynamic>>? days;
+  final String? calculatedAt;
 }

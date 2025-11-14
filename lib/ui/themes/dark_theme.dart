@@ -12,22 +12,23 @@ class DarkTheme {
   static const Color primary = Color(0xFFD4AF6E); // Light gold
   static const Color primaryVariant = Color(0xFFB8945A); // Medium gold
   static const Color accent = Color(0xFFFFB84D); // Bright saffron
-  
+
   // Background & Surface - Deep dark brown
   static const Color background = Color(0xFF1A1611); // Deep dark brown
   static const Color surface = Color(0xFF252018); // Dark surface
   static const Color surfaceVariant = Color(0xFF3A3328); // Lighter dark surface
-  
+
   // Text Colors - High contrast light cream
   static const Color onPrimary = Color(0xFF1A1611); // Dark brown on primary
-  static const Color onBackground = Color(0xFFF5F0E8); // Light cream (excellent contrast)
+  static const Color onBackground =
+      Color(0xFFF5F0E8); // Light cream (excellent contrast)
   static const Color onSurface = Color(0xFFF5F0E8); // Light cream
   static const Color onSurfaceVariant = Color(0xFFD4C4B0); // Medium cream
-  
+
   // Error Colors
   static const Color error = Color(0xFFEF5350); // Light red
   static const Color onError = Color(0xFF1A1611); // Dark on error
-  
+
   // Interactive Elements
   static const Color outline = Color(0xFF6B5D4A); // Muted gold border
   static const Color outlineVariant = Color(0xFF8B7D6B); // Lighter gold border
@@ -37,30 +38,25 @@ class DarkTheme {
       useMaterial3: true,
       brightness: Brightness.dark,
       scaffoldBackgroundColor: background,
-      
+
       // Color Scheme
       colorScheme: const ColorScheme.dark(
         primary: primary,
         onPrimary: onPrimary,
         primaryContainer: primaryVariant,
         onPrimaryContainer: onPrimary,
-        
         secondary: surfaceVariant,
         onSecondary: onSurface,
         secondaryContainer: surfaceVariant,
         onSecondaryContainer: onSurface,
-        
         tertiary: accent,
         onTertiary: onPrimary,
-        
         error: error,
         onError: onError,
-        
         surface: surface,
         onSurface: onSurface,
         surfaceContainerHighest: surfaceVariant,
         onSurfaceVariant: onSurfaceVariant,
-        
         outline: outline,
         outlineVariant: outlineVariant,
       ),
@@ -91,7 +87,6 @@ class DarkTheme {
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(
             color: outline,
-            width: 1,
           ),
         ),
         color: surface,
@@ -175,7 +170,8 @@ class DarkTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         labelStyle: GoogleFonts.inter(
           color: onSurfaceVariant,
           fontSize: 14,
@@ -191,12 +187,13 @@ class DarkTheme {
       ),
 
       // Typography
-      textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+      textTheme:
+          GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
         displayLarge: GoogleFonts.inter(
           fontSize: 32,
           fontWeight: FontWeight.bold,
           color: onSurface,
-          letterSpacing: -1.0,
+          letterSpacing: -1,
         ),
         displayMedium: GoogleFonts.inter(
           fontSize: 28,
@@ -329,4 +326,3 @@ class DarkTheme {
     );
   }
 }
-

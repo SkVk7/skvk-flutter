@@ -5,23 +5,23 @@ library;
 
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'models/playlist.dart';
-import '../../models/audio/track.dart';
-import '../../../core/logging/logging_helper.dart';
-import '../../../core/services/analytics/analytics_service.dart';
-import '../../../core/services/content/content_api_service.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/models/audio/track.dart';
+import 'package:skvk_application/core/services/analytics/analytics_service.dart';
+import 'package:skvk_application/core/services/audio/models/playlist.dart';
+import 'package:skvk_application/core/services/content/content_api_service.dart';
 
 /// Playlist Service - Manages playlists with persistence
 class PlaylistService extends StateNotifier<List<Playlist>> {
-  static const String _playlistsKey = 'audio_playlists';
-
-  Completer<void> _mutex = Completer<void>()..complete();
-
   PlaylistService() : super([]) {
     _loadPlaylists();
   }
+  static const String _playlistsKey = 'audio_playlists';
+
+  Completer<void> _mutex = Completer<void>()..complete();
 
   /// Acquire mutex for thread-safe operations
   Future<void> _acquireMutex() async {
@@ -41,7 +41,7 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final playlistsJson = prefs.getString(_playlistsKey);
-      
+
       if (playlistsJson != null) {
         final List<dynamic> decoded = jsonDecode(playlistsJson);
         final playlists = decoded
@@ -49,8 +49,9 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
             .toList();
         state = playlists;
       }
-    } catch (e) {
-      LoggingHelper.logError('Failed to load playlists', source: 'PlaylistService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to load playlists',
+          source: 'PlaylistService', error: e,);
       state = [];
     }
   }
@@ -61,8 +62,9 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
       final prefs = await SharedPreferences.getInstance();
       final playlistsJson = jsonEncode(state.map((p) => p.toJson()).toList());
       await prefs.setString(_playlistsKey, playlistsJson);
-    } catch (e) {
-      LoggingHelper.logError('Failed to save playlists', source: 'PlaylistService', error: e);
+    } on Exception catch (e) {
+      await LoggingHelper.logError('Failed to save playlists',
+          source: 'PlaylistService', error: e,);
     }
   }
 
@@ -90,14 +92,19 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
 
       state = [...state, playlist];
       await _savePlaylists();
-      
+
       // Track analytics (non-blocking)
-      Future.microtask(() {
-        AnalyticsService.instance.trackPlaylistCreate(playlist.id).catchError((e) {
-          LoggingHelper.logError('Failed to track playlist create', source: 'PlaylistService', error: e);
-        });
-      });
-      
+      unawaited(
+        Future.microtask(() {
+          AnalyticsService.instance()
+              .trackPlaylistCreate(playlist.id)
+              .catchError((e) async {
+            await LoggingHelper.logError('Failed to track playlist create',
+                source: 'PlaylistService', error: e,);
+          });
+        }),
+      );
+
       return playlist;
     } finally {
       _releaseMutex();
@@ -172,7 +179,8 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
       if (index < 0) return;
 
       final playlist = state[index];
-      final updatedTrackIds = playlist.trackIds.where((id) => id != trackId).toList();
+      final updatedTrackIds =
+          playlist.trackIds.where((id) => id != trackId).toList();
 
       final updated = playlist.copyWith(
         trackIds: updatedTrackIds,
@@ -203,9 +211,11 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
 
       final playlist = state[index];
       final trackIds = List<String>.from(playlist.trackIds);
-      
-      if (fromIndex < 0 || fromIndex >= trackIds.length ||
-          toIndex < 0 || toIndex >= trackIds.length) {
+
+      if (fromIndex < 0 ||
+          fromIndex >= trackIds.length ||
+          toIndex < 0 ||
+          toIndex >= trackIds.length) {
         return;
       }
 
@@ -232,7 +242,7 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
   Playlist? getPlaylist(String id) {
     try {
       return state.firstWhere((p) => p.id == id);
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -246,14 +256,12 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
     if (playlist.trackIds.isEmpty) return [];
 
     try {
-      // Load music list from API (uses cache)
-      final musicList = await ContentApiService.instance.getMusicList();
+      final musicList = await ContentApiService.instance().getMusicList();
       final allMusic = (musicList['music'] as List<dynamic>?)
               ?.map((music) => music as Map<String, dynamic>)
               .toList() ??
           [];
 
-      // Create a map of track ID to music data for quick lookup
       final musicMap = <String, Map<String, dynamic>>{};
       for (final music in allMusic) {
         final id = music['id'] as String?;
@@ -262,7 +270,6 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
         }
       }
 
-      // Get tracks in playlist order
       final tracks = <Track>[];
       for (final trackId in playlist.trackIds) {
         final music = musicMap[trackId];
@@ -272,8 +279,8 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
       }
 
       return tracks;
-    } catch (e) {
-      LoggingHelper.logError(
+    } on Exception catch (e) {
+      await LoggingHelper.logError(
         'Failed to load tracks for playlist $playlistId',
         source: 'PlaylistService',
         error: e,
@@ -295,21 +302,18 @@ class PlaylistService extends StateNotifier<List<Playlist>> {
     try {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       final playlist = Playlist.fromJson(json);
-      
-      // Check if playlist with same ID exists
+
       final existingIndex = state.indexWhere((p) => p.id == playlist.id);
       if (existingIndex >= 0) {
-        // Update existing
         state = [
           ...state.sublist(0, existingIndex),
           playlist.copyWith(updatedAt: DateTime.now()),
           ...state.sublist(existingIndex + 1),
         ];
       } else {
-        // Add new
         state = [...state, playlist];
       }
-      
+
       await _savePlaylists();
       return playlist;
     } finally {
@@ -323,4 +327,3 @@ final playlistServiceProvider =
     StateNotifierProvider<PlaylistService, List<Playlist>>(
   (ref) => PlaylistService(),
 );
-

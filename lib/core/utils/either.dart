@@ -5,7 +5,7 @@
 library;
 
 import 'package:dartz/dartz.dart';
-import '../errors/failures.dart';
+import 'package:skvk_application/core/errors/failures.dart';
 
 /// Type alias for Either with Failure on the left and T on the right
 typedef Result<T> = Either<Failure, T>;
@@ -27,7 +27,7 @@ extension ResultExtension<T> on Result<T> {
   /// Transform the success value
   Result<R> map<R>(R Function(T) transform) {
     return fold(
-      (failure) => Left(failure),
+      Left.new,
       (value) => Right(transform(value)),
     );
   }
@@ -36,7 +36,7 @@ extension ResultExtension<T> on Result<T> {
   Result<T> mapFailure(Failure Function(Failure) transform) {
     return fold(
       (failure) => Left(transform(failure)),
-      (value) => Right(value),
+      Right.new,
     );
   }
 
@@ -62,25 +62,30 @@ class ResultHelper {
   static Result<T> tryCatch<T>(T Function() computation) {
     try {
       return Right(computation());
-    } catch (e) {
-      return Left(UnexpectedFailure(
-        message: e.toString(),
-        details: e,
-      ));
+    } on Exception catch (e) {
+      return Left(
+        UnexpectedFailure(
+          message: e.toString(),
+          details: e,
+        ),
+      );
     }
   }
 
   /// Create a result from an async function that might throw
   static Future<Result<T>> tryCatchAsync<T>(
-      Future<T> Function() computation) async {
+    Future<T> Function() computation,
+  ) async {
     try {
       final result = await computation();
       return Right(result);
-    } catch (e) {
-      return Left(UnexpectedFailure(
-        message: e.toString(),
-        details: e,
-      ));
+    } on Exception catch (e) {
+      return Left(
+        UnexpectedFailure(
+          message: e.toString(),
+          details: e,
+        ),
+      );
     }
   }
 

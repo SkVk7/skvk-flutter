@@ -4,22 +4,20 @@
 /// and Hindu traditional styling
 library;
 
-import '../../../core/design_system/design_system.dart';
 import 'package:flutter/material.dart';
-
-import '../../../core/features/calendar/calendar_enums.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/features/calendar/calendar_enums.dart';
 
 class CalendarHeaderWidget extends StatelessWidget {
-  final DateTime selectedDate;
-  final CalendarView currentView;
-  final Function(CalendarView) onViewChanged;
-
   const CalendarHeaderWidget({
-    super.key,
     required this.selectedDate,
     required this.currentView,
     required this.onViewChanged,
+    super.key,
   });
+  final DateTime selectedDate;
+  final CalendarView currentView;
+  final Function(CalendarView) onViewChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +26,14 @@ class CalendarHeaderWidget extends StatelessWidget {
         gradient: ThemeHelpers.getPrimaryGradient(context),
         boxShadow: [
           BoxShadow(
-            color: ThemeHelpers.getPrimaryColor(context).withAlpha(76),
+            color: ThemeHelpers.getPrimaryColor(context)
+                .withValues(alpha: 76 / 255),
             blurRadius: 24,
             offset: const Offset(0, 12),
           ),
           BoxShadow(
-            color: ThemeHelpers.getPrimaryColor(context).withAlpha(51),
+            color: ThemeHelpers.getPrimaryColor(context)
+                .withValues(alpha: 51 / 255),
             blurRadius: 48,
             offset: const Offset(0, 24),
           ),
@@ -67,8 +67,8 @@ class CalendarHeaderWidget extends StatelessWidget {
               vertical: ResponsiveSystem.spacing(context, baseSpacing: 8),
             ),
             decoration: BoxDecoration(
-              color: ThemeHelpers.getSurfaceColor(context)
-                  .withAlpha((0.2 * 255).round()),
+              color:
+                  ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.2),
               borderRadius: ResponsiveSystem.circular(context, baseRadius: 20),
             ),
             child: Row(
@@ -80,7 +80,8 @@ class CalendarHeaderWidget extends StatelessWidget {
                   size: ResponsiveSystem.iconSize(context, baseSize: 16),
                 ),
                 SizedBox(
-                    width: ResponsiveSystem.spacing(context, baseSpacing: 8)),
+                  width: ResponsiveSystem.spacing(context, baseSpacing: 8),
+                ),
                 Text(
                   _formatDate(selectedDate),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -97,10 +98,9 @@ class CalendarHeaderWidget extends StatelessWidget {
   }
 
   Widget _buildViewSelector(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: ThemeHelpers.getSurfaceColor(context)
-            .withAlpha((0.2 * 255).round()),
+        color: ThemeHelpers.getSurfaceColor(context).withValues(alpha: 0.2),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 20),
       ),
       child: Row(
@@ -118,7 +118,8 @@ class CalendarHeaderWidget extends StatelessWidget {
                 color: isSelected
                     ? ThemeHelpers.getSurfaceColor(context)
                     : Colors.transparent,
-                borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
+                borderRadius:
+                    ResponsiveSystem.circular(context, baseRadius: 16),
               ),
               child: Text(
                 _getViewName(view),
@@ -163,7 +164,7 @@ class CalendarHeaderWidget extends StatelessWidget {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
 
     const days = [
@@ -173,7 +174,7 @@ class CalendarHeaderWidget extends StatelessWidget {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
 
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';

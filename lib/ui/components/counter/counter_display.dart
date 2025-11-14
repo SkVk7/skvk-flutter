@@ -4,19 +4,18 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 @immutable
 class CounterDisplay extends StatelessWidget {
-  final int count;
-  final Animation<double> scaleAnimation;
-
   const CounterDisplay({
-    super.key,
     required this.count,
     required this.scaleAnimation,
+    super.key,
   });
+  final int count;
+  final Animation<double> scaleAnimation;
 
   @override
   Widget build(BuildContext context) {
@@ -31,18 +30,18 @@ class CounterDisplay extends StatelessWidget {
               value: '$count',
               child: Text(
                 '$count',
-            style: TextStyle(
-              fontSize: ResponsiveSystem.fontSize(context, baseSize: 140),
-              fontWeight: FontWeight.bold,
-              color: ThemeHelpers.getPrimaryColor(context),
-              letterSpacing: ResponsiveSystem.responsive(
-                context,
-                mobile: -6.0,
-                tablet: -8.0,
-                desktop: -10.0,
-                largeDesktop: -12.0,
-              ),
-            ),
+                style: TextStyle(
+                  fontSize: ResponsiveSystem.fontSize(context, baseSize: 140),
+                  fontWeight: FontWeight.bold,
+                  color: ThemeHelpers.getPrimaryColor(context),
+                  letterSpacing: ResponsiveSystem.responsive(
+                    context,
+                    mobile: -6,
+                    tablet: -8,
+                    desktop: -10,
+                    largeDesktop: -12,
+                  ),
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -52,4 +51,3 @@ class CounterDisplay extends StatelessWidget {
     );
   }
 }
-

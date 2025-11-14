@@ -7,7 +7,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../core/design_system/theme/background_gradients.dart';
+import 'package:skvk_application/core/design_system/theme/background_gradients.dart';
 
 /// Mixin for common screen functionality
 mixin ScreenBaseMixin<T extends StatefulWidget> on State<T> {
@@ -33,7 +33,7 @@ mixin ScreenBaseMixin<T extends StatefulWidget> on State<T> {
     bool isEvening = false,
     bool useSacredFire = false,
   }) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: getBackgroundGradient(
           isEvening: isEvening,
@@ -44,4 +44,3 @@ mixin ScreenBaseMixin<T extends StatefulWidget> on State<T> {
     );
   }
 }
-

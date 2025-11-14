@@ -4,24 +4,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../../core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Reset Button - Simple text button for reset operations
 class ResetButton extends StatelessWidget {
+  const ResetButton({
+    required this.translationService,
+    required this.onTap,
+    super.key,
+    this.customText,
+    this.fontSize,
+  });
   final TranslationService translationService;
   final VoidCallback onTap;
   final String? customText;
   final double? fontSize;
-
-  const ResetButton({
-    super.key,
-    required this.translationService,
-    required this.onTap,
-    this.customText,
-    this.fontSize,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,4 +44,3 @@ class ResetButton extends StatelessWidget {
     );
   }
 }
-

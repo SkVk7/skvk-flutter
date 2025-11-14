@@ -5,24 +5,23 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../core/design_system/design_system.dart';
-import '../../../core/utils/validation/error_message_helper.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/utils/validation/error_message_helper.dart';
 
 class CalendarDayDetailPopup extends StatefulWidget {
+  const CalendarDayDetailPopup({
+    required this.date,
+    required this.latitude,
+    required this.longitude,
+    required this.onClose,
+    super.key,
+    this.ayanamsha = 'lahiri',
+  });
   final DateTime date;
   final double latitude;
   final double longitude;
   final String ayanamsha;
   final VoidCallback onClose;
-
-  const CalendarDayDetailPopup({
-    super.key,
-    required this.date,
-    required this.latitude,
-    required this.longitude,
-    required this.onClose,
-    this.ayanamsha = 'lahiri',
-  });
 
   @override
   State<CalendarDayDetailPopup> createState() => _CalendarDayDetailPopupState();
@@ -59,28 +58,34 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
     );
 
     _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.elasticOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.elasticOut,
+      ),
+    );
 
     _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.3),
+      begin: const Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _contentAnimationController,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(
+      CurvedAnimation(
+        parent: _contentAnimationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
 
     _animationController.forward();
     _contentAnimationController.forward();
@@ -93,12 +98,9 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         _errorMessage = null;
       });
 
-      // Note: There is no standalone getCalendarDay API endpoint.
-      // Only getCalendarMonth and getCalendarYear exist.
       // To implement standalone fetching, we would need to:
       // 1. Call getCalendarMonth API for the date's month
       // 2. Extract the specific day from the month response
-      // This is inefficient for a single day view, so it's not implemented.
       // Consider using this widget from calendar_month_view which already has month data loaded.
       setState(() {
         _detailedData = {
@@ -119,8 +121,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         };
         _isLoading = false;
       });
-    } catch (e) {
-      // Convert technical error to user-friendly message
+    } on Exception catch (e) {
       final userFriendlyMessage = ErrorMessageHelper.getUserFriendlyMessage(e);
       setState(() {
         _errorMessage = userFriendlyMessage;
@@ -142,7 +143,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       color: Colors.transparent,
       child: GestureDetector(
         onTap: widget.onClose,
-        child: Container(
+        child: ColoredBox(
           color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.5),
           child: Center(
             child: GestureDetector(
@@ -177,8 +178,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 16),
         boxShadow: [
           BoxShadow(
-            color:
-                ThemeHelpers.getShadowColor(context).withValues(alpha: 0.3),
+            color: ThemeHelpers.getShadowColor(context).withValues(alpha: 0.3),
             blurRadius: ResponsiveSystem.spacing(context, baseSpacing: 20),
             offset:
                 Offset(0, ResponsiveSystem.spacing(context, baseSpacing: 10)),
@@ -305,9 +305,11 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
         color: ThemeHelpers.getPrimaryColor(context),
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 16),
+          ),
           topRight: Radius.circular(
-              ResponsiveSystem.borderRadius(context, baseRadius: 16)),
+            ResponsiveSystem.borderRadius(context, baseRadius: 16),
+          ),
         ),
       ),
       child: Row(
@@ -328,7 +330,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
                   _getDayName(widget.date),
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: ThemeHelpers.getSurfaceColor(context)
-                            .withAlpha((0.8 * 255).round()),
+                            .withValues(alpha: 0.8),
                       ),
                 ),
               ],
@@ -370,13 +372,15 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'Festivals',
       Icons.celebration,
       festivals
-          .map((festival) => _buildInfoRow(
-                context,
-                festival['name'] as String? ?? 'Festival',
-                (festival['description'] as String? ?? '').isNotEmpty
-                    ? (festival['description'] as String)
-                    : 'Hindu Festival',
-              ))
+          .map(
+            (festival) => _buildInfoRow(
+              context,
+              festival['name'] as String? ?? 'Festival',
+              (festival['description'] as String? ?? '').isNotEmpty
+                  ? (festival['description'] as String)
+                  : 'Hindu Festival',
+            ),
+          )
           .toList(),
     );
   }
@@ -396,7 +400,10 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
           isActive: abhijit['isActive'],
         ),
         _buildInfoRow(
-            context, 'Time', '${abhijit['startTime']} - ${abhijit['endTime']}'),
+          context,
+          'Time',
+          '${abhijit['startTime']} - ${abhijit['endTime']}',
+        ),
         _buildInfoRow(context, 'Duration', abhijit['duration']),
       ],
     );
@@ -411,12 +418,20 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'Rahu & Ketu',
       Icons.visibility,
       [
-        _buildInfoRow(context, 'Rahu Rashi', 'Rashi ${rahu['rashi']}'),
         _buildInfoRow(
-            context, 'Rahu Degree', '${rahu['degree']?.toStringAsFixed(2)}°'),
-        _buildInfoRow(context, 'Ketu Rashi', 'Rashi ${ketu['rashi']}'),
+            context, 'Rahu Rashi', 'Rashi ${rahu['rashi'] as String? ?? ''}',),
         _buildInfoRow(
-            context, 'Ketu Degree', '${ketu['degree']?.toStringAsFixed(2)}°'),
+          context,
+          'Rahu Degree',
+          '${(rahu['degree'] as num?)?.toStringAsFixed(2) ?? '0.00'}°',
+        ),
+        _buildInfoRow(
+            context, 'Ketu Rashi', 'Rashi ${ketu['rashi'] as String? ?? ''}',),
+        _buildInfoRow(
+          context,
+          'Ketu Degree',
+          '${(ketu['degree'] as num?)?.toStringAsFixed(2) ?? '0.00'}°',
+        ),
       ],
     );
   }
@@ -429,12 +444,14 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'Ghadiyalu (8 Periods)',
       Icons.access_time,
       ghadiyalu
-          .map((ghadi) => _buildInfoRow(
-                context,
-                ghadi['name'],
-                '${ghadi['startTime']} - ${ghadi['endTime']}',
-                isAuspicious: ghadi['isAuspicious'],
-              ))
+          .map(
+            (ghadi) => _buildInfoRow(
+              context,
+              ghadi['name'],
+              '${ghadi['startTime']} - ${ghadi['endTime']}',
+              isAuspicious: ghadi['isAuspicious'],
+            ),
+          )
           .toList(),
     );
   }
@@ -446,26 +463,42 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       Icons.wb_sunny,
       [
         _buildInfoRow(
-            context, 'Sunrise', _formatTime(_detailedData!['sunrise'])),
-        _buildInfoRow(context, 'Sunset', _formatTime(_detailedData!['sunset'])),
+          context,
+          'Sunrise',
+          _formatTime(_detailedData!['sunrise']),
+        ),
         _buildInfoRow(
-            context, 'Moonrise', _formatTime(_detailedData!['moonrise'])),
+          context,
+          'Sunset',
+          _formatTime(_detailedData!['sunset']),
+        ),
         _buildInfoRow(
-            context, 'Moonset', _formatTime(_detailedData!['moonset'])),
+          context,
+          'Moonrise',
+          _formatTime(_detailedData!['moonrise']),
+        ),
+        _buildInfoRow(
+          context,
+          'Moonset',
+          _formatTime(_detailedData!['moonset']),
+        ),
       ],
     );
   }
 
-  Widget _buildInfoSection(BuildContext context, String title, IconData icon,
-      List<Widget> children) {
+  Widget _buildInfoSection(
+    BuildContext context,
+    String title,
+    IconData icon,
+    List<Widget> children,
+  ) {
     return Container(
       padding: ResponsiveSystem.all(context, baseSpacing: 12),
       decoration: BoxDecoration(
         color: ThemeHelpers.getCardColor(context),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
         border: Border.all(
-          color: ThemeHelpers.getPrimaryColor(context)
-              .withAlpha((0.2 * 255).round()),
+          color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -495,8 +528,13 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, String label, String value,
-      {bool? isActive, bool? isAuspicious}) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    String label,
+    String value, {
+    bool? isActive,
+    bool? isAuspicious,
+  }) {
     return Padding(
       padding: ResponsiveSystem.symmetric(context, vertical: 4),
       child: Row(
@@ -568,7 +606,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -581,7 +619,7 @@ class _CalendarDayDetailPopupState extends State<CalendarDayDetailPopup>
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     return days[date.weekday - 1];
   }

@@ -4,25 +4,24 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_constants.dart';
-import '../../../core/features/calendar/calendar_enums.dart';
-import '../../../core/design_system/design_system.dart';
+import 'package:skvk_application/core/constants/app_constants.dart';
+import 'package:skvk_application/core/design_system/design_system.dart';
+import 'package:skvk_application/core/features/calendar/calendar_enums.dart';
 
 class CalendarNavigationWidget extends StatelessWidget {
-  final DateTime currentMonth;
-  final CalendarView currentView;
-  final VoidCallback onPrevious;
-  final VoidCallback onNext;
-  final VoidCallback onToday;
-
   const CalendarNavigationWidget({
-    super.key,
     required this.currentMonth,
     required this.currentView,
     required this.onPrevious,
     required this.onNext,
     required this.onToday,
+    super.key,
   });
+  final DateTime currentMonth;
+  final CalendarView currentView;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onToday;
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +63,9 @@ class CalendarNavigationWidget extends StatelessWidget {
     required IconData icon,
     required VoidCallback onTap,
   }) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
-        color: ThemeHelpers.getPrimaryColor(context)
-            .withAlpha((0.1 * 255).round()),
+        color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.1),
         borderRadius: ResponsiveSystem.circular(context, baseRadius: 8),
       ),
       child: Material(
@@ -136,7 +134,7 @@ class CalendarNavigationWidget extends StatelessWidget {
   }
 
   int _getWeekOfMonth(DateTime date) {
-    final firstDayOfMonth = DateTime(date.year, date.month, 1);
+    final firstDayOfMonth = DateTime(date.year, date.month);
     final daysDifference = date.difference(firstDayOfMonth).inDays;
     return (daysDifference / 7).floor() + 1;
   }
@@ -154,7 +152,7 @@ class CalendarNavigationWidget extends StatelessWidget {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return months[month - 1];
   }

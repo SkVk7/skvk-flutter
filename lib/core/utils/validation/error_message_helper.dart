@@ -50,7 +50,6 @@ class ErrorMessageHelper {
         errorString.contains('json') ||
         errorString.contains('format');
 
-    // Return user-friendly messages based on error type
     if (isConnectionError) {
       return 'Server is down. Please try again later.';
     } else if (isTimeout) {
@@ -64,11 +63,14 @@ class ErrorMessageHelper {
     } else {
       // Try to extract the actual error message from the exception
       final errorStr = error.toString();
-      // Check if error contains a specific message we can show
       if (errorStr.contains('Failed to load book:')) {
-        return errorStr.replaceAll('Exception: ', '').replaceAll('Failed to load book: ', '');
+        return errorStr
+            .replaceAll('Exception: ', '')
+            .replaceAll('Failed to load book: ', '');
       } else if (errorStr.contains('API error:')) {
-        return errorStr.replaceAll('Exception: ', '').replaceAll('API error: ', '');
+        return errorStr
+            .replaceAll('Exception: ', '')
+            .replaceAll('API error: ', '');
       } else {
         // For other errors, return a generic message
         return 'Unable to process your request. Please try again later.';

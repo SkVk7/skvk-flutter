@@ -14,18 +14,86 @@ enum Environment {
 }
 
 /// Main application configuration class
-class AppConfig {
-  final Environment environment;
-  final String appName;
-  final String version;
-  final bool enableLogging;
-  final bool enableCrashReporting;
-  final bool enableAnalytics;
-  final String apiBaseUrl;
-  final String workersBaseUrl; // Cloudflare Workers URL for content API
-  final String apiKey;
-  final int connectTimeout;
-  final int receiveTimeout;
+enum AppConfig {
+  /// Development environment configuration
+  dev._(
+    environment: Environment.dev,
+    appName: 'SKVK Astrology DEV',
+    version: '1.0.0-dev',
+    enableLogging: true,
+    enableCrashReporting: false,
+    enableAnalytics: false,
+    apiBaseUrl: 'http://localhost:8080',
+    workersBaseUrl:
+        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
+    apiKey: 'dev-api-key-12345',
+    connectTimeout: 30000,
+    receiveTimeout: 30000,
+  ),
+
+  /// SIT (System Integration Testing) environment configuration
+  sit._(
+    environment: Environment.sit,
+    appName: 'SKVK Astrology SIT',
+    version: '1.0.0-sit',
+    enableLogging: true,
+    enableCrashReporting: true,
+    enableAnalytics: false,
+    apiBaseUrl: 'https://sit-api.astrology.com',
+    workersBaseUrl:
+        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
+    apiKey: 'sit-api-key-67890',
+    connectTimeout: 30000,
+    receiveTimeout: 30000,
+  ),
+
+  /// UAT (User Acceptance Testing) environment configuration
+  uat._(
+    environment: Environment.uat,
+    appName: 'SKVK Astrology UAT',
+    version: '1.0.0-uat',
+    enableLogging: true,
+    enableCrashReporting: true,
+    enableAnalytics: true,
+    apiBaseUrl: 'https://uat-api.astrology.com',
+    workersBaseUrl:
+        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
+    apiKey: 'uat-api-key-abcdef',
+    connectTimeout: 30000,
+    receiveTimeout: 30000,
+  ),
+
+  /// UAT2 (Secondary UAT) environment configuration
+  uat2._(
+    environment: Environment.uat2,
+    appName: 'SKVK Astrology UAT2',
+    version: '1.0.0-uat2',
+    enableLogging: true,
+    enableCrashReporting: true,
+    enableAnalytics: true,
+    apiBaseUrl: 'https://uat2-api.astrology.com',
+    workersBaseUrl:
+        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
+    apiKey: 'uat2-api-key-ghijkl',
+    connectTimeout: 30000,
+    receiveTimeout: 30000,
+  ),
+
+  /// Production environment configuration
+  prod._(
+    environment: Environment.prod,
+    appName: 'SKVK Astrology',
+    version: '1.0.0',
+    enableLogging: false,
+    enableCrashReporting: true,
+    enableAnalytics: true,
+    apiBaseUrl: 'https://api.astrology.com',
+    workersBaseUrl:
+        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
+    apiKey: 'prod-api-key-mnopqr',
+    connectTimeout: 15000,
+    receiveTimeout: 15000,
+  );
 
   const AppConfig._({
     required this.environment,
@@ -40,86 +108,17 @@ class AppConfig {
     required this.connectTimeout,
     required this.receiveTimeout,
   });
-
-  /// Development environment configuration
-  static const AppConfig dev = AppConfig._(
-    environment: Environment.dev,
-    appName: 'SKVK Astrology DEV',
-    version: '1.0.0-dev',
-    enableLogging: true,
-    enableCrashReporting: false,
-    enableAnalytics: false,
-    apiBaseUrl: 'http://localhost:8080',
-    workersBaseUrl:
-        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
-    apiKey: 'dev-api-key-12345',
-    connectTimeout: 30000,
-    receiveTimeout: 30000,
-  );
-
-  /// SIT (System Integration Testing) environment configuration
-  static const AppConfig sit = AppConfig._(
-    environment: Environment.sit,
-    appName: 'SKVK Astrology SIT',
-    version: '1.0.0-sit',
-    enableLogging: true,
-    enableCrashReporting: true,
-    enableAnalytics: false,
-    apiBaseUrl: 'https://sit-api.astrology.com',
-    workersBaseUrl:
-        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
-    apiKey: 'sit-api-key-67890',
-    connectTimeout: 30000,
-    receiveTimeout: 30000,
-  );
-
-  /// UAT (User Acceptance Testing) environment configuration
-  static const AppConfig uat = AppConfig._(
-    environment: Environment.uat,
-    appName: 'SKVK Astrology UAT',
-    version: '1.0.0-uat',
-    enableLogging: true,
-    enableCrashReporting: true,
-    enableAnalytics: true,
-    apiBaseUrl: 'https://uat-api.astrology.com',
-    workersBaseUrl:
-        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
-    apiKey: 'uat-api-key-abcdef',
-    connectTimeout: 30000,
-    receiveTimeout: 30000,
-  );
-
-  /// UAT2 (Secondary UAT) environment configuration
-  static const AppConfig uat2 = AppConfig._(
-    environment: Environment.uat2,
-    appName: 'SKVK Astrology UAT2',
-    version: '1.0.0-uat2',
-    enableLogging: true,
-    enableCrashReporting: true,
-    enableAnalytics: true,
-    apiBaseUrl: 'https://uat2-api.astrology.com',
-    workersBaseUrl:
-        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
-    apiKey: 'uat2-api-key-ghijkl',
-    connectTimeout: 30000,
-    receiveTimeout: 30000,
-  );
-
-  /// Production environment configuration
-  static const AppConfig prod = AppConfig._(
-    environment: Environment.prod,
-    appName: 'SKVK Astrology',
-    version: '1.0.0',
-    enableLogging: false,
-    enableCrashReporting: true,
-    enableAnalytics: true,
-    apiBaseUrl: 'https://api.astrology.com',
-    workersBaseUrl:
-        'https://skvk-media-content-worker.shabarinathkvikask.workers.dev',
-    apiKey: 'prod-api-key-mnopqr',
-    connectTimeout: 15000,
-    receiveTimeout: 15000,
-  );
+  final Environment environment;
+  final String appName;
+  final String version;
+  final bool enableLogging;
+  final bool enableCrashReporting;
+  final bool enableAnalytics;
+  final String apiBaseUrl;
+  final String workersBaseUrl; // Cloudflare Workers URL for content API
+  final String apiKey;
+  final int connectTimeout;
+  final int receiveTimeout;
 
   /// Get configuration based on current environment
   static AppConfig get current {
@@ -188,13 +187,6 @@ class AppConfig {
 
 /// Horoscope-specific configuration
 class HoroscopeConfig {
-  final CalculationPrecision defaultPrecision;
-  final bool enableAdvancedCalculations;
-  final bool enableCaching;
-  final int cacheDurationMinutes;
-  final bool enableDetailedAspects;
-  final bool enablePerturbationCorrections;
-
   const HoroscopeConfig({
     this.defaultPrecision = CalculationPrecision.standard,
     this.enableAdvancedCalculations = false,
@@ -203,6 +195,12 @@ class HoroscopeConfig {
     this.enableDetailedAspects = true,
     this.enablePerturbationCorrections = false,
   });
+  final CalculationPrecision defaultPrecision;
+  final bool enableAdvancedCalculations;
+  final bool enableCaching;
+  final int cacheDurationMinutes;
+  final bool enableDetailedAspects;
+  final bool enablePerturbationCorrections;
 
   /// Development configuration with all features enabled
   static const HoroscopeConfig development = HoroscopeConfig(
@@ -210,18 +208,12 @@ class HoroscopeConfig {
     enableAdvancedCalculations: true,
     enableCaching: false,
     cacheDurationMinutes: 0,
-    enableDetailedAspects: true,
     enablePerturbationCorrections: true,
   );
 
   /// Production configuration optimized for performance
   static const HoroscopeConfig production = HoroscopeConfig(
-    defaultPrecision: CalculationPrecision.standard,
-    enableAdvancedCalculations: false,
-    enableCaching: true,
     cacheDurationMinutes: 120,
-    enableDetailedAspects: true,
-    enablePerturbationCorrections: false,
   );
 
   /// Get configuration based on app environment

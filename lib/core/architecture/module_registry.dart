@@ -6,7 +6,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../logging/logging_helper.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
 
 /// Base interface for all modules
 abstract class AppModule {
@@ -31,9 +31,9 @@ abstract class AppModule {
 
 /// Module registry for managing all app modules
 class ModuleRegistry {
-  static final ModuleRegistry _instance = ModuleRegistry._internal();
   factory ModuleRegistry() => _instance;
   ModuleRegistry._internal();
+  static final ModuleRegistry _instance = ModuleRegistry._internal();
 
   final Map<String, AppModule> _modules = {};
   final Map<String, bool> _initializationStatus = {};
@@ -58,27 +58,26 @@ class ModuleRegistry {
       throw Exception('Module $moduleName not found');
     }
 
-    if (_initializationStatus[moduleName] == true) {
+    if (_initializationStatus[moduleName] ?? false) {
       return; // Already initialized
     }
 
-    // Initialize dependencies first
     for (final dependency in module.dependencies) {
       final dependencyModule = _modules.values.firstWhere(
-          (m) => m.runtimeType == dependency,
-          orElse: () => throw Exception('Dependency $dependency not found'));
+        (m) => m.runtimeType == dependency,
+        orElse: () => throw Exception('Dependency $dependency not found'),
+      );
 
       if (!_initializationStatus[dependencyModule.name]!) {
         await initializeModule(dependencyModule.name);
       }
     }
 
-    // Initialize the module
     await module.initialize();
     _initializationStatus[moduleName] = true;
 
     if (kDebugMode) {
-      LoggingHelper.logDebug(
+      await LoggingHelper.logDebug(
         'Module initialized: $moduleName',
         source: 'ModuleRegistry',
       );
@@ -151,7 +150,6 @@ class CoreModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize core services
     _isInitialized = true;
   }
 
@@ -179,7 +177,6 @@ class UserModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize user services
     _isInitialized = true;
   }
 
@@ -207,7 +204,6 @@ class AstrologyModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize astrology services
     _isInitialized = true;
   }
 
@@ -235,7 +231,6 @@ class HoroscopeModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize horoscope services
     _isInitialized = true;
   }
 
@@ -263,7 +258,6 @@ class MatchingModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize matching services
     _isInitialized = true;
   }
 
@@ -291,7 +285,6 @@ class CalendarModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize calendar services
     _isInitialized = true;
   }
 
@@ -319,7 +312,6 @@ class PredictionsModule implements AppModule {
 
   @override
   Future<void> initialize() async {
-    // Initialize predictions services
     _isInitialized = true;
   }
 

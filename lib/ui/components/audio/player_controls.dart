@@ -6,10 +6,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/services/audio/audio_controller.dart';
-import '../../utils/theme_helpers.dart';
-import '../../utils/responsive_system.dart';
-import '../../utils/animations.dart';
+import 'package:skvk_application/core/services/audio/audio_controller.dart';
+import 'package:skvk_application/ui/utils/animations.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Player controls widget with play/pause, next, prev buttons
 class PlayerControls extends ConsumerWidget {
@@ -26,10 +26,7 @@ class PlayerControls extends ConsumerWidget {
         // Previous button
         _ControlButton(
           icon: Icons.skip_previous,
-          onTap: () {
-            // HapticFeedback.lightImpact();
-            controller.prev();
-          },
+          onTap: controller.prev,
           onLongPress: () {
             HapticFeedback.mediumImpact();
             controller.skipBackward();
@@ -44,10 +41,7 @@ class PlayerControls extends ConsumerWidget {
         _PlayPauseButton(
           isPlaying: playerState.isPlaying,
           isLoading: playerState.isLoading,
-          onTap: () {
-            // HapticFeedback.lightImpact();
-            controller.togglePlayPause();
-          },
+          onTap: controller.togglePlayPause,
           size: ResponsiveSystem.iconSize(context, baseSize: 56),
         ),
         ResponsiveSystem.sizedBox(
@@ -57,10 +51,7 @@ class PlayerControls extends ConsumerWidget {
         // Next button
         _ControlButton(
           icon: Icons.skip_next,
-          onTap: () {
-            // HapticFeedback.lightImpact();
-            controller.next();
-          },
+          onTap: controller.next,
           onLongPress: () {
             HapticFeedback.mediumImpact();
             controller.skipForward();
@@ -74,17 +65,16 @@ class PlayerControls extends ConsumerWidget {
 
 /// Play/Pause button with loading state
 class _PlayPauseButton extends StatefulWidget {
-  final bool isPlaying;
-  final bool isLoading;
-  final VoidCallback onTap;
-  final double size;
-
   const _PlayPauseButton({
     required this.isPlaying,
     required this.isLoading,
     required this.onTap,
     required this.size,
   });
+  final bool isPlaying;
+  final bool isLoading;
+  final VoidCallback onTap;
+  final double size;
 
   @override
   State<_PlayPauseButton> createState() => _PlayPauseButtonState();
@@ -102,7 +92,7 @@ class _PlayPauseButtonState extends State<_PlayPauseButton>
       vsync: this,
       duration: AnimationDurations.quick,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+    _scaleAnimation = Tween<double>(begin: 1, end: 0.95).animate(
       CurvedAnimation(
         parent: _scaleController,
         curve: AnimationCurves.standard,
@@ -145,7 +135,8 @@ class _PlayPauseButtonState extends State<_PlayPauseButton>
             color: ThemeHelpers.getPrimaryColor(context),
             boxShadow: [
               BoxShadow(
-                color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.3),
+                color: ThemeHelpers.getPrimaryColor(context)
+                    .withValues(alpha: 0.3),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -160,7 +151,7 @@ class _PlayPauseButtonState extends State<_PlayPauseButton>
                       strokeWidth: ResponsiveSystem.responsive(
                         context,
                         mobile: 2.5,
-                        tablet: 3.0,
+                        tablet: 3,
                         desktop: 3.5,
                       ),
                       valueColor: AlwaysStoppedAnimation<Color>(
@@ -182,17 +173,16 @@ class _PlayPauseButtonState extends State<_PlayPauseButton>
 
 /// Control button (prev/next) with long-press support
 class _ControlButton extends StatefulWidget {
+  const _ControlButton({
+    required this.icon,
+    required this.onTap,
+    required this.size,
+    this.onLongPress,
+  });
   final IconData icon;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final double size;
-
-  const _ControlButton({
-    required this.icon,
-    required this.onTap,
-    this.onLongPress,
-    required this.size,
-  });
 
   @override
   State<_ControlButton> createState() => _ControlButtonState();
@@ -210,7 +200,7 @@ class _ControlButtonState extends State<_ControlButton>
       vsync: this,
       duration: AnimationDurations.quick,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+    _scaleAnimation = Tween<double>(begin: 1, end: 0.9).animate(
       CurvedAnimation(
         parent: _scaleController,
         curve: AnimationCurves.standard,
@@ -253,12 +243,13 @@ class _ControlButtonState extends State<_ControlButton>
             shape: BoxShape.circle,
             color: ThemeHelpers.getSurfaceColor(context),
             border: Border.all(
-              color: ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.3),
+              color:
+                  ThemeHelpers.getPrimaryColor(context).withValues(alpha: 0.3),
               width: ResponsiveSystem.responsive(
                 context,
-                mobile: 1.0,
+                mobile: 1,
                 tablet: 1.5,
-                desktop: 2.0,
+                desktop: 2,
               ),
             ),
           ),
@@ -272,4 +263,3 @@ class _ControlButtonState extends State<_ControlButton>
     );
   }
 }
-

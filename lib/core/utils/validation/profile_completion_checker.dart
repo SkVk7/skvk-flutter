@@ -4,15 +4,13 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../models/user/user_model.dart';
-// Removed missing user_entity import
+import 'package:skvk_application/core/models/user/user_model.dart';
 
 class ProfileCompletionChecker {
   /// Check if user profile is complete (not using default/placeholder values)
   static bool isProfileComplete(UserModel? user) {
     if (user == null) return false;
 
-    // Check if user has provided actual details (not defaults)
     return user.name.isNotEmpty &&
         user.name != 'Test User' &&
         user.placeOfBirth.isNotEmpty &&
@@ -33,11 +31,11 @@ class ProfileCompletionChecker {
         'Date of Birth',
         'Time of Birth',
         'Place of Birth',
-        'Gender'
+        'Gender',
       ];
     }
 
-    List<String> missing = [];
+    final List<String> missing = [];
 
     if (user.name.isEmpty || user.name == 'Test User') {
       missing.add('Name');
@@ -54,30 +52,17 @@ class ProfileCompletionChecker {
     return missing;
   }
 
-  /// Show profile completion dialog using centralized widget
-  static Future<bool> showProfileCompletionDialog(
-    BuildContext context, {
-    String? featureName,
-  }) async {
-    // Navigate to profile creation
-    Navigator.pushNamed(context, '/edit-profile');
-
-    // Return true to indicate user should complete profile
-    return true;
-  }
-
   /// Navigate to edit profile screen
   static void navigateToEditProfile(BuildContext context) {
     Navigator.pushNamed(context, '/edit-profile');
   }
 
-  /// Check profile completion and handle navigation using centralized widget
-  static Future<bool> checkAndNavigateToProfile(
+  /// Show profile completion dialog and navigate to profile creation
+  static Future<bool> showProfileCompletionDialog(
     BuildContext context, {
     String? featureName,
   }) async {
-    // Navigate to profile creation
-    Navigator.pushNamed(context, '/edit-profile');
+    navigateToEditProfile(context);
     return true;
   }
 }

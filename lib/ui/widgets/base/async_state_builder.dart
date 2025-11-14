@@ -5,29 +5,29 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../../../core/base/base_state.dart';
-import '../../../core/errors/failures.dart';
-import '../../components/common/loading_widget.dart';
-import '../../components/common/error_widget.dart' as error_widget;
+import 'package:skvk_application/core/base/base_state.dart';
+import 'package:skvk_application/core/errors/failures.dart';
+import 'package:skvk_application/ui/components/common/error_widget.dart'
+    as error_widget;
+import 'package:skvk_application/ui/components/common/loading_widget.dart';
 
 /// Builder for async states
 class AsyncStateBuilder<T> extends StatelessWidget {
+  const AsyncStateBuilder({
+    required this.state,
+    required this.builder,
+    super.key,
+    this.loadingWidget,
+    this.errorBuilder,
+    this.emptyWidget,
+    this.emptyMessage,
+  });
   final AsyncState<T> state;
   final Widget Function(T data) builder;
   final Widget? loadingWidget;
   final Widget Function(Failure failure)? errorBuilder;
   final Widget? emptyWidget;
   final String? emptyMessage;
-
-  const AsyncStateBuilder({
-    super.key,
-    required this.state,
-    required this.builder,
-    this.loadingWidget,
-    this.errorBuilder,
-    this.emptyWidget,
-    this.emptyMessage,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +41,6 @@ class AsyncStateBuilder<T> extends StatelessWidget {
       }
       return error_widget.ErrorWidget(
         failure: state.failure!,
-        onRetry: null, // Can be passed as parameter if needed
       );
     }
 
@@ -62,16 +61,15 @@ class AsyncStateBuilder<T> extends StatelessWidget {
 
 /// Simplified async state builder for common use cases
 class SimpleAsyncStateBuilder<T> extends StatelessWidget {
+  const SimpleAsyncStateBuilder({
+    required this.state,
+    required this.builder,
+    super.key,
+    this.onRetry,
+  });
   final AsyncState<T> state;
   final Widget Function(T data) builder;
   final VoidCallback? onRetry;
-
-  const SimpleAsyncStateBuilder({
-    super.key,
-    required this.state,
-    required this.builder,
-    this.onRetry,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -85,4 +83,3 @@ class SimpleAsyncStateBuilder<T> extends StatelessWidget {
     );
   }
 }
-

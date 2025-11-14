@@ -9,34 +9,31 @@
 /// - Sliver-based layout for performance
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// UI Utils - Use only these for consistency
-import '../utils/theme_helpers.dart';
-import '../utils/responsive_system.dart';
-import '../utils/screen_handlers.dart';
-// Core imports
-import '../../core/utils/validation/profile_completion_checker.dart';
-import '../../core/services/user/user_service.dart';
-import '../../core/utils/either.dart';
-import '../../core/services/language/translation_service.dart';
-import '../../core/navigation/animated_navigation.dart';
-import '../../core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
-import '../../core/logging/logging_helper.dart';
-// UI Components - Reusable components
-import '../components/cards/main_cta_card.dart';
-import '../components/home/index.dart';
-import '../components/common/index.dart';
-import '../components/dialogs/feature_access_dialog.dart';
-// Audio imports
-import '../../core/services/audio/audio_controller.dart';
-// Screen imports
-import 'calendar_screen.dart';
-import 'predictions_screen.dart';
-import 'matching_screen.dart';
-import 'user_edit_screen.dart';
-import 'pradakshana_screen.dart';
-import 'books_screen.dart';
+import 'package:skvk_application/core/logging/logging_helper.dart';
+import 'package:skvk_application/core/navigation/animated_navigation.dart';
+import 'package:skvk_application/core/navigation/hero_navigation.dart'; // For HeroNavigationWithRipple
+import 'package:skvk_application/core/services/audio/audio_controller.dart';
+import 'package:skvk_application/core/services/language/translation_service.dart';
+import 'package:skvk_application/core/services/user/user_service.dart';
+import 'package:skvk_application/core/utils/either.dart';
+import 'package:skvk_application/core/utils/validation/profile_completion_checker.dart';
+import 'package:skvk_application/ui/components/cards/main_cta_card.dart';
+import 'package:skvk_application/ui/components/common/index.dart';
+import 'package:skvk_application/ui/components/dialogs/feature_access_dialog.dart';
+import 'package:skvk_application/ui/components/home/index.dart';
+import 'package:skvk_application/ui/screens/books_screen.dart';
+import 'package:skvk_application/ui/screens/calendar_screen.dart';
+import 'package:skvk_application/ui/screens/matching_screen.dart';
+import 'package:skvk_application/ui/screens/pradakshana_screen.dart';
+import 'package:skvk_application/ui/screens/predictions_screen.dart';
+import 'package:skvk_application/ui/screens/user_edit_screen.dart';
+import 'package:skvk_application/ui/utils/responsive_system.dart';
+import 'package:skvk_application/ui/utils/screen_handlers.dart';
+import 'package:skvk_application/ui/utils/theme_helpers.dart';
 
 /// Home Screen with Premium Modern Layout
 class HomeScreen extends ConsumerStatefulWidget {
@@ -55,14 +52,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Initialize with a slight delay for entrance animation
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        setState(() {
-          _isInitialized = true;
-        });
-      }
-    });
+    unawaited(
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          setState(() {
+            _isInitialized = true;
+          });
+        }
+      }),
+    );
   }
 
   @override
@@ -85,8 +83,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget build(BuildContext context) {
     final translationService = ref.watch(translationServiceProvider);
     final playerState = ref.watch(audioControllerProvider);
-    
-    // Calculate bottom padding for mini player
+
     final safeAreaBottom = MediaQuery.of(context).padding.bottom;
     final miniPlayerHeight = ResponsiveSystem.responsive(
       context,
@@ -110,9 +107,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           slivers: [
             // Step 1: SliverAppBar pinned at top with header branding
             HomeAppBar(
-              onProfileTap: () => ScreenHandlers.handleProfileTap(context, ref, translationService),
-              onLanguageChanged: (value) => ScreenHandlers.handleLanguageChange(ref, value),
-              onThemeChanged: (value) => ScreenHandlers.handleThemeChange(ref, value),
+              onProfileTap: () => ScreenHandlers.handleProfileTap(
+                  context, ref, translationService,),
+              onLanguageChanged: (value) =>
+                  ScreenHandlers.handleLanguageChange(ref, value),
+              onThemeChanged: (value) =>
+                  ScreenHandlers.handleThemeChange(ref, value),
             ),
 
             // Content padding - Responsive padding based on screen size
@@ -124,7 +124,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   mobile: ResponsiveSystem.spacing(context, baseSpacing: 16),
                   tablet: ResponsiveSystem.spacing(context, baseSpacing: 24),
                   desktop: ResponsiveSystem.spacing(context, baseSpacing: 32),
-                  largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 40),
+                  largeDesktop:
+                      ResponsiveSystem.spacing(context, baseSpacing: 40),
                 ),
                 // Reduced top vertical padding by 35% (24 * 0.65 = 15.6)
                 vertical: ResponsiveSystem.spacing(context, baseSpacing: 15.6),
@@ -139,10 +140,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     context,
                     height: ResponsiveSystem.responsive(
                       context,
-                      mobile: ResponsiveSystem.spacing(context, baseSpacing: 24),
-                      tablet: ResponsiveSystem.spacing(context, baseSpacing: 28),
-                      desktop: ResponsiveSystem.spacing(context, baseSpacing: 32),
-                      largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 36),
+                      mobile:
+                          ResponsiveSystem.spacing(context, baseSpacing: 24),
+                      tablet:
+                          ResponsiveSystem.spacing(context, baseSpacing: 28),
+                      desktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 32),
+                      largeDesktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 36),
                     ),
                   ),
 
@@ -150,14 +155,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   MainCTACard(
                     title: translationService.translateHeader(
                       'todays_guidance',
-                      fallback: 'Today\'s Guidance',
+                      fallback: "Today's Guidance",
                     ),
                     subtitle: 'Get personalized insights for today',
                     icon: Icons.auto_awesome,
                     onTap: () => _navigateWithProfileCheck(
                       context,
                       '/predictions',
-                      'Today\'s Guidance',
+                      "Today's Guidance",
                       translationService,
                     ),
                   ),
@@ -167,10 +172,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     context,
                     height: ResponsiveSystem.responsive(
                       context,
-                      mobile: ResponsiveSystem.spacing(context, baseSpacing: 12),
-                      tablet: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                      desktop: ResponsiveSystem.spacing(context, baseSpacing: 20),
-                      largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 24),
+                      mobile:
+                          ResponsiveSystem.spacing(context, baseSpacing: 12),
+                      tablet:
+                          ResponsiveSystem.spacing(context, baseSpacing: 16),
+                      desktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 20),
+                      largeDesktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 24),
                     ),
                   ),
 
@@ -192,10 +201,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     context,
                     height: ResponsiveSystem.responsive(
                       context,
-                      mobile: ResponsiveSystem.spacing(context, baseSpacing: 19.68),
-                      tablet: ResponsiveSystem.spacing(context, baseSpacing: 22.96),
-                      desktop: ResponsiveSystem.spacing(context, baseSpacing: 26.24),
-                      largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 32.8),
+                      mobile:
+                          ResponsiveSystem.spacing(context, baseSpacing: 19.68),
+                      tablet:
+                          ResponsiveSystem.spacing(context, baseSpacing: 22.96),
+                      desktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 26.24),
+                      largeDesktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 32.8),
                     ),
                   ),
 
@@ -214,10 +227,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     context,
                     height: ResponsiveSystem.responsive(
                       context,
-                      mobile: ResponsiveSystem.spacing(context, baseSpacing: 12),
-                      tablet: ResponsiveSystem.spacing(context, baseSpacing: 16),
-                      desktop: ResponsiveSystem.spacing(context, baseSpacing: 20),
-                      largeDesktop: ResponsiveSystem.spacing(context, baseSpacing: 24),
+                      mobile:
+                          ResponsiveSystem.spacing(context, baseSpacing: 12),
+                      tablet:
+                          ResponsiveSystem.spacing(context, baseSpacing: 16),
+                      desktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 20),
+                      largeDesktop:
+                          ResponsiveSystem.spacing(context, baseSpacing: 24),
                     ),
                   ),
 
@@ -265,11 +282,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-
-
-
-  // Note: _handleProfileTap and _showProfileCompletionPopup have been moved to ScreenHandlers utility
-
   /// Navigate to a screen with profile completion check
   Future<void> _navigateWithProfileCheck(
     BuildContext context,
@@ -279,7 +291,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   ) async {
     // Prevent multiple simultaneous navigation calls
     if (_isNavigating) {
-      LoggingHelper.logDebug(
+      await LoggingHelper.logDebug(
         'Home screen navigation already in progress, skipping',
         source: 'HomeScreen',
       );
@@ -291,32 +303,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final user = result.isSuccess ? result.value : null;
 
     if (user == null || !ProfileCompletionChecker.isProfileComplete(user)) {
-      // Show our custom themed popup instead of the default one
-      if (mounted) {
-        _showFeatureAccessPopup(context, featureName, translationService);
-      }
+      if (!mounted) return;
+      final popupContext = context;
+      if (!popupContext.mounted) return;
+      _showFeatureAccessPopup(popupContext, featureName, translationService);
     } else {
-      // Navigate to the requested route
-      if (mounted && !_isNavigating) {
-        _isNavigating = true;
-        // Use a small delay to prevent navigation conflicts
-        await Future.delayed(const Duration(milliseconds: 100));
-        if (mounted) {
-          _navigateToRoute(context, route);
-          // Reset navigation flag after a delay to ensure navigation completes
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted) {
-              _isNavigating = false;
-            }
-          });
-        }
-      }
+      if (!mounted || _isNavigating) return;
+      _isNavigating = true;
+      final navigationContext = context;
+      // Use a small delay to prevent navigation conflicts
+      unawaited(
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted && navigationContext.mounted) {
+            _navigateToRoute(navigationContext, route);
+            // Reset navigation flag after a delay to ensure navigation completes
+            unawaited(
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted) {
+                  _isNavigating = false;
+                }
+              }),
+            );
+          }
+        }),
+      );
     }
   }
 
   /// Show feature access popup
-  void _showFeatureAccessPopup(BuildContext context, String featureName,
-      TranslationService translationService) {
+  void _showFeatureAccessPopup(
+    BuildContext context,
+    String featureName,
+    TranslationService translationService,
+  ) {
     FeatureAccessDialog.show(
       context,
       translationService: translationService,
@@ -330,7 +349,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     AnimatedNavigation.pushSlide(
       context,
       const CalendarScreen(),
-      direction: SlideDirection.rightToLeft,
       duration: const Duration(milliseconds: 400),
     );
   }
@@ -340,7 +358,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     AnimatedNavigation.pushSlide(
       context,
       const PradakshanaScreen(),
-      direction: SlideDirection.rightToLeft,
       duration: const Duration(milliseconds: 400),
     );
   }
@@ -360,7 +377,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     AnimatedNavigation.pushSlide(
       context,
       const BooksScreen(),
-      direction: SlideDirection.rightToLeft,
       duration: const Duration(milliseconds: 400),
     );
   }
@@ -371,32 +387,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       context,
       const PredictionsScreen(),
       duration: const Duration(milliseconds: 350),
-      beginScale: 0.8,
-      endScale: 1.0,
     );
   }
-
-  // Note: _handleLanguageChange and _handleThemeChange have been moved to ScreenHandlers utility
 
   /// Navigate to user edit screen with hero animation
   /// Uses ScreenHandlers for profile navigation
   void _navigateToUser(BuildContext context) {
-    // Get the screen size for positioning using ResponsiveSystem
     // Using ResponsiveSystemExtensions.screenSize for consistency
     final screenSize = ResponsiveSystemExtensions.screenSize(context);
 
-    // Calculate approximate position of profile icon (top right)
     final sourcePosition = Offset(
       screenSize.width -
-          ResponsiveSystem.spacing(context,
-              baseSpacing: 60), // Approximate position of profile icon
-      ResponsiveSystem.spacing(context,
-          baseSpacing: 60), // Approximate Y position
+          ResponsiveSystem.spacing(
+            context,
+            baseSpacing: 60,
+          ), // Approximate position of profile icon
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 60,
+      ), // Approximate Y position
     );
     final sourceSize = Size(
-        ResponsiveSystem.spacing(context, baseSpacing: 40),
-        ResponsiveSystem.spacing(context,
-            baseSpacing: 40)); // Approximate size of profile icon
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 40,
+      ),
+      ResponsiveSystem.spacing(
+        context,
+        baseSpacing: 40,
+      ),
+    ); // Approximate size of profile icon
 
     // Use hero navigation with zoom-out effect from profile icon
     HeroNavigationWithRipple.pushWithRipple(
@@ -404,8 +424,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       const UserEditScreen(),
       sourcePosition,
       sourceSize,
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOut,
       rippleColor: ThemeHelpers.getPrimaryColor(context),
       rippleRadius: ResponsiveSystem.spacing(context, baseSpacing: 100),
     );
@@ -425,7 +443,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     AnimatedNavigation.pushSlide(
       context,
       const MatchingScreen(),
-      direction: SlideDirection.rightToLeft,
       duration: const Duration(milliseconds: 400),
     );
   }
@@ -453,9 +470,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         break;
       default:
         // Default slide animation for unknown routes
-        // Navigate to home if route is unknown
         Navigator.of(context).pop();
     }
   }
 }
-
